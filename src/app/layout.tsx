@@ -8,11 +8,11 @@ import { siteConfig } from "@/config/site";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "No Limit Fest Dubai 2026 | Ruger & Fido Live at Helipad by Frozen Cherry",
+    default: "No Limit Fest Dubai 2026 | Music, Energy, No limit | Ruger & Fido Live",
     template: "%s | No Limit Fest",
   },
   description:
-    "Official website for No Limit Fest Dubai 2026. Global Afrobeats superstars RUGER and FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026 (6:00 PM Till Late). Organized by Shurlaybor Empire and Typical Naija. Reserve Individual Passes, VIP Table for 6, Table for 8, or Table for 10 via instant WhatsApp EOI.",
+    "No Limit Fest — Music, Energy, No limit. Dubai 2026 starring global Afrobeats superstars RUGER and FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026 (6:00 PM Till Late). Organized by Shurlaybor Empire and Typical Naija. Reserve Individual Passes, VIP Table for 6, Table for 8, or Table for 10 via instant WhatsApp EOI.",
   keywords: [
     "No Limit Fest",
     "No Limit Fest Dubai",

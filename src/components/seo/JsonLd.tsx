@@ -13,6 +13,7 @@ export default function JsonLd() {
     "@id": `${siteConfig.url}/#organization`,
     "name": siteConfig.name,
     "alternateName": ["No Limit Fest", "No Limit Festival", "No Limit Fest Dubai"],
+    "slogan": siteConfig.tagline,
     "url": siteConfig.url,
     "logo": {
       "@type": "ImageObject",
@@ -58,6 +59,7 @@ export default function JsonLd() {
     "@id": `${siteConfig.url}/#festival-dubai-2026`,
     "name": "No Limit Fest Dubai 2026 | Ruger & Fido Live at Helipad by Frozen Cherry",
     "alternateName": "No Limit Fest Dubai Edition 01",
+    "slogan": siteConfig.tagline,
     "description": currentEvent.description,
     "url": `${siteConfig.url}/events/dubai`,
     "image": [
@@ -110,6 +112,12 @@ export default function JsonLd() {
         "name": "Typical Naija",
         "url": siteConfig.url,
         "logo": `${siteConfig.url}/images/organizers/typical-naija.png`,
+      },
+      {
+        "@type": "Organization",
+        "name": "Helipad by Frozen Cherry",
+        "url": siteConfig.url,
+        "logo": `${siteConfig.url}/images/organizers/helipad.png`,
       },
     ],
     "performer": [

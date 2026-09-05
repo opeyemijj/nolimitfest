@@ -34,6 +34,14 @@ export default function Footer() {
               </div>
             </Link>
 
+            <div>
+              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
+                  Music, Energy, No limit
+                </span>
+              </div>
+            </div>
+
             <p className="text-sm text-gray-400 max-w-md leading-relaxed">
               No Limit Fest is a global music, art, and urban culture spectacle curating the world’s most iconic talents across Afrobeats, Hip-Hop, Electronic, Amapiano, and Latin sounds. Elevating live entertainment with boundary-pushing stage architecture and luxury hospitality.
             </p>
@@ -185,59 +193,86 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Festival Organizers Section */}
+        {/* Festival Organizers & Venue Partner Section */}
         <div className="my-10 pt-10 border-t border-white/10">
           <div className="rounded-3xl bg-[#0E111C]/90 border border-white/10 p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
             {/* Background glowing gradients */}
             <div className="absolute -top-12 -left-12 w-64 h-64 bg-[#FFD600]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#B86E30]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-left">
               {/* Heading & Subtitle */}
               <div className="space-y-1.5 max-w-md">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFD600]/15 border border-[#FFD600]/30 text-[#FFD600] text-[10px] font-black uppercase tracking-widest">
                   <Sparkles className="w-3 h-3" />
-                  <span>Executive Organizers</span>
+                  <span>Organizers &amp; Host Venue</span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
-                  ORGANIZED &amp; PRESENTED BY
+                  ORGANIZED &amp; HOSTED BY
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-                  No Limit Fest is proudly organized and produced by <strong className="text-[#FFD600]">Shurlaybor Empire</strong> and <strong className="text-emerald-400">Typical Naija</strong>.
+                  No Limit Fest is proudly presented by <strong className="text-[#FFD600]">Shurlaybor Empire</strong> and <strong className="text-emerald-400">Typical Naija</strong>, hosted live at <strong className="text-[#E08A3E]">Helipad by Frozen Cherry</strong>.
                 </p>
               </div>
 
-              {/* Organizer Logos Showcase */}
+              {/* Organizer & Venue Logos Showcase */}
               <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-14">
                 {/* Shurlaybor Empire */}
-                <div className="flex flex-col items-center gap-2.5 group">
-                  <div className="relative h-20 sm:h-24 w-36 sm:w-44 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <div className="flex flex-col items-center gap-3 group">
+                  <div 
+                    className="relative h-20 sm:h-24 w-36 sm:w-44 flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                    title="Shurlaybor Empire"
+                  >
                     <Image
                       src="/images/organizers/shurlaybor.png"
-                      alt="Shurlaybor Empire - Official Festival Organizer"
+                      alt="Shurlaybor Empire"
                       fill
                       className="object-contain filter drop-shadow-[0_0_20px_rgba(255,214,0,0.35)]"
                     />
                   </div>
-                  <span className="text-[11px] font-black uppercase tracking-wider text-gray-300 group-hover:text-[#FFD600] transition-colors">
-                    Shurlaybor Empire
+                  <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+                    Festival Organizer
                   </span>
                 </div>
 
-                <div className="hidden sm:block w-px h-16 bg-white/15" />
+                <div className="hidden sm:block w-px h-20 bg-white/15" />
 
                 {/* Typical Naija */}
-                <div className="flex flex-col items-center gap-2.5 group">
-                  <div className="relative h-20 sm:h-24 w-44 sm:w-56 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <div className="flex flex-col items-center gap-3 group">
+                  <div 
+                    className="relative h-20 sm:h-24 w-44 sm:w-52 flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                    title="Typical Naija"
+                  >
                     <Image
                       src="/images/organizers/typical-naija.png"
-                      alt="Typical Naija - Official Festival Organizer"
+                      alt="Typical Naija"
                       fill
                       className="object-contain filter drop-shadow-[0_0_20px_rgba(0,230,118,0.35)]"
                     />
                   </div>
-                  <span className="text-[11px] font-black uppercase tracking-wider text-gray-300 group-hover:text-emerald-400 transition-colors">
-                    Typical Naija
+                  <span className="text-[10px] text-emerald-400/90 font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/20">
+                    Festival Organizer
+                  </span>
+                </div>
+
+                <div className="hidden sm:block w-px h-20 bg-white/15" />
+
+                {/* Helipad by Frozen Cherry */}
+                <div className="flex flex-col items-center gap-3 group">
+                  <div 
+                    className="relative h-20 sm:h-24 w-40 sm:w-48 flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                    title="Helipad by Frozen Cherry"
+                  >
+                    <Image
+                      src="/images/organizers/helipad.png"
+                      alt="Helipad by Frozen Cherry"
+                      fill
+                      className="object-contain filter drop-shadow-[0_0_20px_rgba(224,138,62,0.45)] brightness-110"
+                    />
+                  </div>
+                  <span className="text-[10px] text-[#E08A3E] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#E08A3E]/10 border border-[#E08A3E]/20">
+                    Official Venue
                   </span>
                 </div>
               </div>

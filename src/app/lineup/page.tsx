@@ -103,7 +103,8 @@ export default function LineupPage() {
           </h1>
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-            Headlined by Nigerian Afrobeats icon <strong className="text-white">RUGER</strong> with high-octane undercard direct support by <strong className="text-white">FIDO</strong> performing live at <strong className="text-white">Helipad by Frozen Cherry, Dubai</strong>. 6PM Till Late.
+            <span className="font-bold text-[#FFD600] uppercase tracking-wide block sm:inline mr-1">Music, Energy, No limit.</span>
+            Headlined by Afrobeats powerhouse <strong className="text-[#FF5722]">RUGER</strong> with official undercard sensation <strong className="text-[#00E5FF]">FIDO</strong> live at the iconic Helipad by Frozen Cherry.
           </p>
         </div>
       </div>

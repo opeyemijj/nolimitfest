@@ -84,7 +84,7 @@ export default function Hero() {
         </div>
 
         {/* Official Logo Hero Display - Large & Standalone */}
-        <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[420px] lg:h-[420px] mb-4 animate-float">
+        <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[420px] lg:h-[420px] mb-2 animate-float">
           <Image
             src="/images/logo.png"
             alt="No Limit Fest"
@@ -92,6 +92,17 @@ export default function Hero() {
             priority
             className="object-contain drop-shadow-[0_0_50px_rgba(255,87,34,0.7)]"
           />
+        </div>
+
+        {/* Official Brand Payoff Line */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <span className="h-px w-6 sm:w-12 bg-gradient-to-r from-transparent to-[#FF5722]" />
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 rounded-full bg-black/60 border border-white/15 backdrop-blur-md shadow-[0_0_30px_rgba(255,87,34,0.25)]">
+            <span className="text-xs sm:text-sm md:text-base font-black tracking-[0.25em] sm:tracking-[0.3em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
+              Music, Energy, No limit
+            </span>
+          </div>
+          <span className="h-px w-6 sm:w-12 bg-gradient-to-l from-transparent to-[#00E5FF]" />
         </div>
 
         {/* Headline Starring Ruger & Fido */}
@@ -201,13 +212,13 @@ export default function Hero() {
           </Link>
         </div>
 
-        {/* Organizers Banner */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-gray-400">
+        {/* Organizers & Venue Banner */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-xs text-gray-400">
           <span className="text-[11px] uppercase tracking-widest font-black text-gray-400">
-            Organized By:
+            Presented &amp; Hosted By:
           </span>
-          <div className="flex items-center gap-6 sm:gap-8">
-            <div className="relative h-8 w-24 sm:w-28 flex items-center justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+            <div className="relative h-7 sm:h-8 w-24 sm:w-28 flex items-center justify-center" title="Shurlaybor Empire - Organizer">
               <Image
                 src="/images/organizers/shurlaybor.png"
                 alt="Shurlaybor Empire - Official Festival Organizer"
@@ -216,12 +227,21 @@ export default function Hero() {
               />
             </div>
             <span className="text-gray-600 text-sm">•</span>
-            <div className="relative h-7 w-28 sm:w-32 flex items-center justify-center">
+            <div className="relative h-6 sm:h-7 w-28 sm:w-32 flex items-center justify-center" title="Typical Naija - Organizer">
               <Image
                 src="/images/organizers/typical-naija.png"
                 alt="Typical Naija - Official Festival Organizer"
                 fill
                 className="object-contain filter drop-shadow-[0_0_10px_rgba(0,230,118,0.3)]"
+              />
+            </div>
+            <span className="text-gray-600 text-sm">•</span>
+            <div className="relative h-6 sm:h-7 w-28 sm:w-36 flex items-center justify-center" title="Helipad by Frozen Cherry - Venue">
+              <Image
+                src="/images/organizers/helipad.png"
+                alt="Helipad by Frozen Cherry - Official Host Venue"
+                fill
+                className="object-contain filter drop-shadow-[0_0_10px_rgba(224,138,62,0.4)] brightness-110"
               />
             </div>
           </div>
@@ -231,15 +251,17 @@ export default function Hero() {
       {/* Marquee Ticker */}
       <div className="w-full mt-12 overflow-hidden border-y border-white/10 bg-[#0C0E17]/80 py-3.5 backdrop-blur-md">
         <div className="flex animate-marquee whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-widest text-gray-300">
+          <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
           <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
-          <span className="mx-4 text-[#FFD600]">★ SATURDAY 24TH OCTOBER 2026</span>
+          <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
-          <span className="mx-4 text-white">★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)</span>
+          <span className="mx-4 text-[#00E5FF]">★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)</span>
+          <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
           <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
-          <span className="mx-4 text-[#FFD600]">★ SATURDAY 24TH OCTOBER 2026</span>
+          <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
         </div>
