@@ -17,9 +17,9 @@ import { getActiveEvent } from "@/data/events";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: "Official Lineup: Ruger & Fido Live | No Limit Fest Dubai 2026",
+  title: "Official Lineup: Headliner Ruger & Undercard Fido | No Limit Fest Dubai 2026",
   description:
-    "Official headliners for No Limit Fest Dubai: Afrobeats superstars RUGER and FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026. Hit anthems 'Asiwaju', 'Bounce', 'Dior', 'Awolowo'. Register EOI now.",
+    "Official lineup for No Limit Fest Dubai: Headlined by Afrobeats superstar RUGER with official undercard performance by FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026. Hit anthems 'Asiwaju', 'Bounce', 'Dior', 'Awolowo'. Register EOI now.",
   keywords: [
     "Ruger live in Dubai",
     "Fido live in Dubai",
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     canonical: `${siteConfig.url}/lineup`,
   },
   openGraph: {
-    title: "Ruger & Fido Live at No Limit Fest Dubai 2026",
-    description: "Official Lineup starring Ruger and Fido at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026 (6PM Till Late).",
+    title: "Ruger (Headliner) & Fido (Undercard) Live at No Limit Fest Dubai 2026",
+    description: "Official Lineup starring Headliner Ruger and Undercard Fido at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026 (6PM Till Late).",
     url: `${siteConfig.url}/lineup`,
     images: [
       {
@@ -73,15 +73,15 @@ export default function LineupPage() {
     {
       id: "fido",
       name: "FIDO",
-      role: "Headliner",
-      subtitle: "Viral Afrobeats Sensation",
+      role: "Undercard",
+      subtitle: "Official Undercard Sensation",
       date: "Saturday 24th October 2026",
       time: "9:45 PM - 11:15 PM",
       venue: "Helipad by Frozen Cherry",
       image: "/images/artists/fido.jpg",
       hits: ["Awolowo", "Joy", "Vibe Machine"],
       spotifyUrl: "https://open.spotify.com",
-      bio: "Viral breakout sensation sweeping streaming charts across Africa and the diaspora with massive anthems like 'Awolowo', delivering unstoppable rhythm and high-octane energy.",
+      bio: "Viral breakout sensation sweeping streaming charts across Africa and the diaspora with massive anthems like 'Awolowo', delivering unstoppable rhythm and high-octane energy as the official undercard act.",
     },
   ];
 
@@ -103,7 +103,7 @@ export default function LineupPage() {
           </h1>
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-            Starring Nigerian Afrobeats giants <strong className="text-white">RUGER</strong> and <strong className="text-white">FIDO</strong> performing live at <strong className="text-white">Helipad by Frozen Cherry, Dubai</strong>. 6PM Till Late.
+            Headlined by Nigerian Afrobeats icon <strong className="text-white">RUGER</strong> with high-octane undercard direct support by <strong className="text-white">FIDO</strong> performing live at <strong className="text-white">Helipad by Frozen Cherry, Dubai</strong>. 6PM Till Late.
           </p>
         </div>
       </div>
@@ -114,7 +114,11 @@ export default function LineupPage() {
           {headliners.map((artist) => (
             <div
               key={artist.id}
-              className="group relative rounded-3xl overflow-hidden bg-[#131624] border border-white/15 hover:border-[#FF5722] transition-all duration-300 shadow-2xl flex flex-col justify-between"
+              className={`group relative rounded-3xl overflow-hidden bg-[#131624] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${
+                artist.role === "Headliner"
+                  ? "border-amber-500/50 shadow-orange-500/10 ring-1 ring-amber-500/30"
+                  : "border-white/15 hover:border-[#00E5FF]"
+              }`}
             >
               <div className="relative aspect-[9/13] w-full overflow-hidden">
                 <Image
@@ -127,8 +131,12 @@ export default function LineupPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131624] via-[#131624]/30 to-transparent" />
 
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-xs font-black uppercase text-white">
-                    {artist.role}
+                  <span className={`px-3 py-1 rounded-full backdrop-blur-md text-xs font-black uppercase ${
+                    artist.role === "Headliner"
+                      ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-black shadow-lg"
+                      : "bg-black/70 border border-[#00E5FF]/40 text-[#00E5FF]"
+                  }`}>
+                    {artist.role === "Headliner" ? "★ HEADLINER ★" : "★ UNDERCARD ★"}
                   </span>
                   <span className="px-3 py-1 rounded-full bg-[#FF5722] text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
                     Oct 24 • Dubai

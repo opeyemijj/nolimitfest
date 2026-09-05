@@ -100,7 +100,7 @@ export default function Hero() {
             RUGER <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">&amp; FIDO</span>
           </h1>
           <p className="text-xl sm:text-2xl font-black uppercase text-[#FFD600] tracking-widest">
-            LIVE IN DUBAI
+            HEADLINER: RUGER • UNDERCARD: FIDO
           </p>
         </div>
 
@@ -126,18 +126,18 @@ export default function Hero() {
 
         {/* Official Headliner Flyers Preview */}
         <div className="mt-8 grid grid-cols-2 gap-4 max-w-md w-full">
-          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-white/15 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1">
+          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-amber-500/40 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1">
             <div className="relative aspect-[9/16] w-full">
               <Image
                 src="/images/artists/ruger.jpg"
-                alt="Ruger Live at No Limit Fest Dubai - Helipad by Frozen Cherry"
+                alt="Ruger Live at No Limit Fest Dubai - Official Headliner"
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
             <div className="p-2.5 bg-[#121422] text-center">
               <span className="text-xs font-black uppercase text-[#FF5722] block">★ RUGER ★</span>
-              <span className="text-[10px] text-gray-400">Headliner</span>
+              <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider">Official Headliner</span>
             </div>
           </Link>
 
@@ -145,14 +145,14 @@ export default function Hero() {
             <div className="relative aspect-[9/16] w-full">
               <Image
                 src="/images/artists/fido.jpg"
-                alt="Fido Live at No Limit Fest Dubai - Helipad by Frozen Cherry"
+                alt="Fido Live at No Limit Fest Dubai - Official Undercard"
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
             <div className="p-2.5 bg-[#121422] text-center">
               <span className="text-xs font-black uppercase text-[#00E5FF] block">★ FIDO ★</span>
-              <span className="text-[10px] text-gray-400">Headliner</span>
+              <span className="text-[10px] text-cyan-400 font-black uppercase tracking-wider">Official Undercard</span>
             </div>
           </Link>
         </div>
@@ -231,14 +231,14 @@ export default function Hero() {
       {/* Marquee Ticker */}
       <div className="w-full mt-12 overflow-hidden border-y border-white/10 bg-[#0C0E17]/80 py-3.5 backdrop-blur-md">
         <div className="flex animate-marquee whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-widest text-gray-300">
-          <span className="mx-4 text-[#FF5722]">★ RUGER LIVE IN DUBAI</span>
-          <span className="mx-4 text-[#00E5FF]">★ FIDO LIVE AT HELIPAD</span>
+          <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
+          <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
           <span className="mx-4 text-[#FFD600]">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
           <span className="mx-4 text-white">★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)</span>
-          <span className="mx-4 text-[#FF5722]">★ RUGER LIVE IN DUBAI</span>
-          <span className="mx-4 text-[#00E5FF]">★ FIDO LIVE AT HELIPAD</span>
+          <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
+          <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
           <span className="mx-4 text-[#FFD600]">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>

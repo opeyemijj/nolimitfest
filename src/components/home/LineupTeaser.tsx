@@ -20,14 +20,14 @@ export default function LineupTeaser() {
     {
       id: "fido",
       name: "FIDO",
-      role: "Headliner",
-      subtitle: "Viral Afrobeats Sensation",
+      role: "Undercard",
+      subtitle: "Official Undercard Sensation",
       date: "Saturday 24th October 2026",
       venue: "Helipad by Frozen Cherry",
       image: "/images/artists/fido.jpg",
       hits: ["Awolowo", "Joy", "Vibe Machine"],
       spotifyUrl: "https://open.spotify.com",
-      bio: "Unstoppable breakout sensation sweeping streaming charts and concert stages with high-energy crowd favorites and irresistible rhythm.",
+      bio: "Unstoppable breakout sensation sweeping streaming charts, setting the stage ablaze with high-energy crowd favorites and irresistible rhythm before the headline set.",
       color: "from-[#00E5FF] to-[#FF5722]",
     },
   ];
@@ -43,7 +43,7 @@ export default function LineupTeaser() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF5722]/15 border border-[#FF5722]/30 text-[#FF6E40] text-xs font-black uppercase tracking-widest">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
-            <span>Dubai Headliners Announcement</span>
+            <span>Dubai Headliners & Undercard</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight">
@@ -51,17 +51,21 @@ export default function LineupTeaser() {
           </h2>
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg">
-            Headlined by Afrobeats icons <strong className="text-white">RUGER</strong> and <strong className="text-white">FIDO</strong> live on the Dubai waterfront. Saturday 24th October 2026.
+            Headlined by Afrobeats superstar <strong className="text-white">RUGER</strong> with high-voltage undercard performance by <strong className="text-white">FIDO</strong> live on the Dubai waterfront. Saturday 24th October 2026.
           </p>
         </div>
 
         {/* Headliner Cards Grid + More To Join Teaser */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
-          {/* Ruger Card */}
+          {/* Artists Cards */}
           {headliners.map((artist) => (
             <div
               key={artist.id}
-              className="group relative rounded-3xl overflow-hidden bg-[#131624] border border-white/15 hover:border-[#FF5722] transition-all duration-300 hover:-translate-y-2 shadow-2xl flex flex-col justify-between"
+              className={`group relative rounded-3xl overflow-hidden bg-[#131624] border transition-all duration-300 hover:-translate-y-2 shadow-2xl flex flex-col justify-between ${
+                artist.role === "Headliner"
+                  ? "border-amber-500/50 shadow-orange-500/10 ring-1 ring-amber-500/30"
+                  : "border-white/15 hover:border-[#00E5FF]"
+              }`}
             >
               <div className="relative aspect-[9/13] w-full overflow-hidden">
                 <Image
@@ -73,8 +77,12 @@ export default function LineupTeaser() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131624] via-[#131624]/30 to-transparent" />
 
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-xs font-black uppercase text-white">
-                    {artist.role}
+                  <span className={`px-3 py-1 rounded-full backdrop-blur-md text-xs font-black uppercase ${
+                    artist.role === "Headliner"
+                      ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-black shadow-lg shadow-orange-500/20"
+                      : "bg-black/70 border border-[#00E5FF]/40 text-[#00E5FF]"
+                  }`}>
+                    {artist.role === "Headliner" ? "★ HEADLINER ★" : "★ UNDERCARD ★"}
                   </span>
                   <span className="px-3 py-1 rounded-full bg-[#FF5722] text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
                     Oct 24 • Dubai

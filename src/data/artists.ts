@@ -1,7 +1,7 @@
 export interface Artist {
   id: string;
   name: string;
-  role: "Headliner" | "Co-Headliner" | "Special Guest" | "Supporting Act";
+  role: "Headliner" | "Co-Headliner" | "Undercard" | "Special Guest" | "Supporting Act";
   genre: "Afrobeats" | "Hip-Hop" | "EDM / Electronic" | "Amapiano" | "Latin & Pop";
   day: "Day 1" | "Day 2" | "Day 3";
   stage: string;
@@ -31,13 +31,13 @@ export const festivalArtists: Artist[] = [
   {
     id: "fido",
     name: "FIDO",
-    role: "Headliner",
+    role: "Undercard",
     genre: "Afrobeats",
     day: "Day 1",
     stage: "Helipad Mainstage",
     time: "9:45 PM - 11:15 PM",
     image: "/images/artists/fido.jpg",
-    bio: "Viral breakout sensation dominating streaming charts across Africa and the diaspora with massive anthems like 'Awolowo', delivering unstoppable rhythm and high-octane energy.",
+    bio: "Viral breakout sensation dominating streaming charts across Africa and the diaspora with massive anthems like 'Awolowo', delivering unstoppable rhythm and high-octane energy as the official undercard act.",
     origin: "Lagos, Nigeria",
     hits: ["Awolowo", "Joy", "Vibe Machine"],
     spotifyUrl: "https://open.spotify.com",

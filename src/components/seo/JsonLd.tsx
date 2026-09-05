@@ -128,7 +128,7 @@ export default function JsonLd() {
         "@type": "Person",
         "name": "FIDO",
         "genre": "Afrobeats",
-        "jobTitle": "Headliner",
+        "jobTitle": "Undercard Performer",
         "image": `${siteConfig.url}/images/artists/fido.jpg`,
         "sameAs": [
           "https://open.spotify.com/artist/7zC8Y6sUqLp558B1dK7t51",
