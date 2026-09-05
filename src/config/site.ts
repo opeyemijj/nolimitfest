@@ -1,0 +1,40 @@
+export const siteConfig = {
+  name: "No Limit Fest",
+  shortName: "No Limit",
+  tagline: "Unleash The Pulse. Curating The World's Greatest Sounds & Culture.",
+  description: "No Limit Fest Dubai starring Afrobeats giants RUGER and FIDO live at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026, 6PM till late.",
+  url: "https://nolimitfest.com",
+  ogImage: "/images/og-image.png",
+  logo: "/images/logo.png",
+  defaultWhatsApp: "+971508894210",
+  email: "contact@nolimitfest.com",
+  socials: {
+    instagram: "https://instagram.com/nolimitfest",
+    tiktok: "https://tiktok.com/@nolimitfest",
+    twitter: "https://x.com/nolimitfest",
+    youtube: "https://youtube.com/@nolimitfest",
+    spotify: "https://open.spotify.com",
+  },
+  dubaiEdition: {
+    dates: "Saturday 24th October 2026",
+    time: "6:00 PM till Late",
+    venue: "Helipad by Frozen Cherry",
+    city: "Dubai",
+    country: "United Arab Emirates",
+    artists: ["RUGER", "FIDO"],
+    status: "EOI Phase Open",
+    ageLimit: "21+ (Valid ID / Passport Required)",
+  },
+  organizers: [
+    {
+      name: "Shurlaybor Empire",
+      role: "Official Festival Organizer",
+      logo: "/images/organizers/shurlaybor.png",
+    },
+    {
+      name: "Typical Naija",
+      role: "Official Festival Organizer",
+      logo: "/images/organizers/typical-naija.png",
+    },
+  ],
+};
