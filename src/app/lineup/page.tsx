@@ -17,15 +17,13 @@ import { getActiveEvent } from "@/data/events";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: "Official Lineup: Headliner Ruger & Undercard Fido | No Limit Fest Dubai 2026",
+  title: "Official Lineup: Headliner Ruger Live in Dubai | No Limit Fest 2026",
   description:
-    "Official lineup for No Limit Fest Dubai: Headlined by Afrobeats superstar RUGER with official undercard performance by FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026. Hit anthems 'Asiwaju', 'Bounce', 'Dior', 'Awolowo'. Register EOI now.",
+    "Official lineup for No Limit Fest Dubai: Headlined by Afrobeats superstar RUGER live at Helipad by Frozen Cherry on Saturday 24th October 2026. Hit anthems 'Asiwaju', 'Bounce', 'Dior', 'Tour'. Supporting artists to be announced. Register EOI now.",
   keywords: [
     "Ruger live in Dubai",
-    "Fido live in Dubai",
     "No Limit Fest Lineup",
     "Ruger Dubai concert 2026",
-    "Fido Awolowo Dubai",
     "Afrobeats artists Dubai 2026",
     "Helipad by Frozen Cherry live performers",
   ],
@@ -33,8 +31,8 @@ export const metadata: Metadata = {
     canonical: `${siteConfig.url}/lineup`,
   },
   openGraph: {
-    title: "Ruger (Headliner) & Fido (Undercard) Live at No Limit Fest Dubai 2026",
-    description: "Official Lineup starring Headliner Ruger and Undercard Fido at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026 (6PM Till Late).",
+    title: "Ruger (Official Headliner) Live at No Limit Fest Dubai 2026",
+    description: "Official Lineup starring Headliner Ruger at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026 (6PM Till Late).",
     url: `${siteConfig.url}/lineup`,
     images: [
       {
@@ -42,12 +40,6 @@ export const metadata: Metadata = {
         width: 1080,
         height: 1920,
         alt: "Ruger Live at No Limit Fest Dubai",
-      },
-      {
-        url: "/images/artists/fido.jpg",
-        width: 1080,
-        height: 1920,
-        alt: "Fido Live at No Limit Fest Dubai",
       },
     ],
   },
@@ -70,19 +62,6 @@ export default function LineupPage() {
       spotifyUrl: "https://open.spotify.com/artist/05h1s39qL0tD2a3P6kHl7h",
       bio: "Global Afrobeats icon and multi-platinum sensation recognized worldwide for his signature eyepatch, magnetic stage presence, and record-shattering worldwide stadium anthems.",
     },
-    {
-      id: "fido",
-      name: "FIDO",
-      role: "Undercard",
-      subtitle: "Official Undercard Sensation",
-      date: "Saturday 24th October 2026",
-      time: "9:45 PM - 11:15 PM",
-      venue: "Helipad by Frozen Cherry",
-      image: "/images/artists/fido.jpg",
-      hits: ["Awolowo", "Joy", "Vibe Machine"],
-      spotifyUrl: "https://open.spotify.com",
-      bio: "Viral breakout sensation sweeping streaming charts across Africa and the diaspora with massive anthems like 'Awolowo', delivering unstoppable rhythm and high-octane energy as the official undercard act.",
-    },
   ];
 
   return (
@@ -104,7 +83,7 @@ export default function LineupPage() {
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
             <span className="font-bold text-[#FFD600] uppercase tracking-wide block sm:inline mr-1">Music, Energy, No limit.</span>
-            Headlined by Afrobeats powerhouse <strong className="text-[#FF5722]">RUGER</strong> with official undercard sensation <strong className="text-[#00E5FF]">FIDO</strong> live at the iconic Helipad by Frozen Cherry.
+            Headlined by Afrobeats powerhouse <strong className="text-[#FF5722]">RUGER</strong> live at the iconic Helipad by Frozen Cherry. More artists to be announced in Phase 2.
           </p>
         </div>
       </div>

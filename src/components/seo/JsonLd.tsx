@@ -57,7 +57,7 @@ export default function JsonLd() {
     "@context": "https://schema.org",
     "@type": "MusicFestival",
     "@id": `${siteConfig.url}/#festival-dubai-2026`,
-    "name": "No Limit Fest Dubai 2026 | Ruger & Fido Live at Helipad by Frozen Cherry",
+    "name": "No Limit Fest Dubai 2026 | Ruger Live at Helipad by Frozen Cherry",
     "alternateName": "No Limit Fest Dubai Edition 01",
     "slogan": siteConfig.tagline,
     "description": currentEvent.description,
@@ -65,7 +65,6 @@ export default function JsonLd() {
     "image": [
       `${siteConfig.url}/images/logo.png`,
       `${siteConfig.url}/images/artists/ruger.jpg`,
-      `${siteConfig.url}/images/artists/fido.jpg`,
     ],
     "startDate": "2026-10-24T18:00:00+04:00",
     "endDate": "2026-10-25T04:00:00+04:00",
@@ -132,22 +131,11 @@ export default function JsonLd() {
           "https://www.instagram.com/rugerofficial",
         ],
       },
-      {
-        "@type": "Person",
-        "name": "FIDO",
-        "genre": "Afrobeats",
-        "jobTitle": "Undercard Performer",
-        "image": `${siteConfig.url}/images/artists/fido.jpg`,
-        "sameAs": [
-          "https://open.spotify.com/artist/7zC8Y6sUqLp558B1dK7t51",
-          "https://www.instagram.com/fidofidobaby",
-        ],
-      },
     ],
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "AED",
-      "lowPrice": 295,
+      "lowPrice": 150,
       "highPrice": 14500,
       "offerCount": 4,
       "availability": "https://schema.org/PreOrder",
@@ -157,12 +145,12 @@ export default function JsonLd() {
         {
           "@type": "Offer",
           "name": "Individual Pass",
-          "price": "295",
+          "price": "150",
           "priceCurrency": "AED",
           "availability": "https://schema.org/PreOrder",
           "validFrom": "2026-09-01T00:00:00+04:00",
           "url": `${siteConfig.url}/events/dubai`,
-          "description": "General Admission access to Helipad by Frozen Cherry festival grounds and live headline performances by Ruger and Fido.",
+          "description": "General Admission access to Helipad by Frozen Cherry festival grounds and live headline performance by Ruger.",
         },
         {
           "@type": "Offer",
@@ -248,7 +236,7 @@ export default function JsonLd() {
       {
         "@type": "ListItem",
         "position": 3,
-        "name": "Lineup (Ruger & Fido)",
+        "name": "Lineup (Headliner Ruger)",
         "item": `${siteConfig.url}/lineup`,
       },
       {

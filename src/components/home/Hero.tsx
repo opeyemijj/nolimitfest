@@ -105,13 +105,13 @@ export default function Hero() {
           <span className="h-px w-6 sm:w-12 bg-gradient-to-l from-transparent to-[#00E5FF]" />
         </div>
 
-        {/* Headline Starring Ruger & Fido */}
+        {/* Headline Starring Ruger */}
         <div className="space-y-2">
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight uppercase leading-[0.95]">
-            RUGER <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">&amp; FIDO</span>
+            RUGER <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">LIVE</span>
           </h1>
           <p className="text-xl sm:text-2xl font-black uppercase text-[#FFD600] tracking-widest">
-            HEADLINER: RUGER • UNDERCARD: FIDO
+            OFFICIAL HEADLINER • DUBAI
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Official Headliner Flyers Preview */}
+        {/* Official Headliner & Phase 2 Teaser Preview */}
         <div className="mt-8 grid grid-cols-2 gap-4 max-w-md w-full">
           <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-amber-500/40 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1">
             <div className="relative aspect-[9/16] w-full">
@@ -152,18 +152,24 @@ export default function Hero() {
             </div>
           </Link>
 
-          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-white/15 hover:border-[#00E5FF] transition-all shadow-xl hover:-translate-y-1">
-            <div className="relative aspect-[9/16] w-full">
-              <Image
-                src="/images/artists/fido.jpg"
-                alt="Fido Live at No Limit Fest Dubai - Official Undercard"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-dashed border-white/20 hover:border-[#00E5FF] transition-all shadow-xl hover:-translate-y-1 bg-[#121422] flex flex-col justify-between">
+            <div className="relative aspect-[9/16] w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#121422] via-[#1a1e35] to-[#121422]">
+              <div className="w-12 h-12 rounded-full bg-white/5 border border-white/15 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                <Sparkles className="w-6 h-6 text-[#00E5FF] animate-pulse" />
+              </div>
+              <span className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
+                More Artists
+              </span>
+              <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-semibold">
+                To Join In...
+              </span>
+              <span className="mt-3 inline-block text-[9px] font-black uppercase text-[#00E5FF] px-2.5 py-0.5 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30">
+                Phase 2 TBA
+              </span>
             </div>
-            <div className="p-2.5 bg-[#121422] text-center">
-              <span className="text-xs font-black uppercase text-[#00E5FF] block">★ FIDO ★</span>
-              <span className="text-[10px] text-cyan-400 font-black uppercase tracking-wider">Official Undercard</span>
+            <div className="p-2.5 bg-[#0C0E17] text-center border-t border-white/10">
+              <span className="text-xs font-black uppercase text-[#00E5FF] block">★ LINEUP ★</span>
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Supporting Acts</span>
             </div>
           </Link>
         </div>
@@ -253,14 +259,14 @@ export default function Hero() {
         <div className="flex animate-marquee whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-widest text-gray-300">
           <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
-          <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
+          <span className="mx-4 text-[#00E5FF]">★ MORE ARTISTS DROPPING SOON</span>
           <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
           <span className="mx-4 text-[#00E5FF]">★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)</span>
           <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
-          <span className="mx-4 text-[#00E5FF]">★ UNDERCARD: FIDO LIVE</span>
+          <span className="mx-4 text-[#00E5FF]">★ MORE ARTISTS DROPPING SOON</span>
           <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
           <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>

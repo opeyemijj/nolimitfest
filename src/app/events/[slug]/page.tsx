@@ -27,11 +27,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const isDubai = event.isCurrentEdition;
   const title = isDubai
-    ? `${event.name} Dubai 2026 | Ruger & Fido Live | Tickets & VIP Tables`
+    ? `${event.name} Dubai 2026 | Ruger Live | Tickets & VIP Tables`
     : `${event.name} (${event.city}) | Waitlist, Passes & EOI Registration`;
 
   const desc = isDubai
-    ? `Saturday 24th October 2026 at Helipad by Frozen Cherry, Dubai. Starring Ruger & Fido. Individual Passes, Table for 6, Table for 8, Table for 10. Register Expression of Interest.`
+    ? `Saturday 24th October 2026 at Helipad by Frozen Cherry, Dubai. Starring Headliner Ruger. Individual Passes, Table for 6, Table for 8, Table for 10. Register Expression of Interest.`
     : `Official ${event.name} in ${event.city}, ${event.country}. ${event.tagline} Register Expression of Interest for Individual Passes and VIP Table allocations on WhatsApp.`;
 
   return {

@@ -15,8 +15,8 @@ export const festivalFaqs: FAQItem[] = [
   {
     id: "headliners-lineup",
     category: "Tickets & EOI",
-    question: "Who is headlining and who is on the undercard for No Limit Fest Dubai?",
-    answer: "The premier Dubai edition is headlined by global Afrobeats superstar RUGER (chart-topper behind 'Asiwaju', 'Bounce', and 'Dior'), with viral breakout star FIDO ('Awolowo') performing as the official undercard direct support act. Supporting international and regional guest DJs, percussionists, and entertainers will be announced in Phase 2.",
+    question: "Who is headlining No Limit Fest Dubai 2026?",
+    answer: "The premier Dubai edition is headlined by global Afrobeats superstar RUGER (chart-topper behind 'Asiwaju', 'Bounce', and 'Dior'). Supporting international and regional guest artists, DJs, percussionists, and entertainers will be announced in Phase 2.",
   },
   {
     id: "organizers-presenters",

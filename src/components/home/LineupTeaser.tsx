@@ -17,19 +17,6 @@ export default function LineupTeaser() {
       bio: "Global Afrobeats powerhouse famous for his signature eyepatch, magnetic vocals, and record-shattering worldwide stadium anthems.",
       color: "from-[#FF5722] to-[#FFD600]",
     },
-    {
-      id: "fido",
-      name: "FIDO",
-      role: "Undercard",
-      subtitle: "Official Undercard Sensation",
-      date: "Saturday 24th October 2026",
-      venue: "Helipad by Frozen Cherry",
-      image: "/images/artists/fido.jpg",
-      hits: ["Awolowo", "Joy", "Vibe Machine"],
-      spotifyUrl: "https://open.spotify.com",
-      bio: "Unstoppable breakout sensation sweeping streaming charts, setting the stage ablaze with high-energy crowd favorites and irresistible rhythm before the headline set.",
-      color: "from-[#00E5FF] to-[#FF5722]",
-    },
   ];
 
   return (
@@ -43,7 +30,7 @@ export default function LineupTeaser() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF5722]/15 border border-[#FF5722]/30 text-[#FF6E40] text-xs font-black uppercase tracking-widest">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
-            <span>Dubai Headliners & Undercard</span>
+            <span>Dubai Official Headliner</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight">
@@ -51,12 +38,12 @@ export default function LineupTeaser() {
           </h2>
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg">
-            Headlined by Afrobeats superstar <strong className="text-white">RUGER</strong> with high-voltage undercard performance by <strong className="text-white">FIDO</strong> live on the Dubai waterfront. Saturday 24th October 2026.
+            Headlined by Afrobeats superstar <strong className="text-white">RUGER</strong> live on the Dubai waterfront. Saturday 24th October 2026. More artists to be announced in Phase 2.
           </p>
         </div>
 
-        {/* Headliner Cards Grid + More To Join Teaser */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+        {/* Headliner Card + More To Join Teaser */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch max-w-4xl mx-auto">
           {/* Artists Cards */}
           {headliners.map((artist) => (
             <div

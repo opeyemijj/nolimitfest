@@ -8,19 +8,17 @@ import { siteConfig } from "@/config/site";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "No Limit Fest Dubai 2026 | Music, Energy, No limit | Ruger & Fido Live",
+    default: "No Limit Fest Dubai 2026 | Music, Energy, No limit | Ruger Live",
     template: "%s | No Limit Fest",
   },
   description:
-    "No Limit Fest — Music, Energy, No limit. Dubai 2026 starring global Afrobeats superstars RUGER and FIDO live at Helipad by Frozen Cherry on Saturday 24th October 2026 (6:00 PM Till Late). Organized by Shurlaybor Empire and Typical Naija. Reserve Individual Passes, VIP Table for 6, Table for 8, or Table for 10 via instant WhatsApp EOI.",
+    "No Limit Fest — Music, Energy, No limit. Dubai 2026 starring global Afrobeats superstar RUGER live at Helipad by Frozen Cherry on Saturday 24th October 2026 (6:00 PM Till Late). Organized by Shurlaybor Empire and Typical Naija. Reserve Individual Passes, VIP Table for 6, Table for 8, or Table for 10 via instant WhatsApp EOI.",
   keywords: [
     "No Limit Fest",
     "No Limit Fest Dubai",
     "No Limit Fest Dubai 2026",
     "Ruger in Dubai",
     "Ruger live concert Dubai 2026",
-    "Fido live Dubai",
-    "Fido Awolowo concert Dubai",
     "Helipad by Frozen Cherry Dubai",
     "Helipad by Frozen Cherry festival",
     "Dubai music festival October 2026",
@@ -56,9 +54,9 @@ export const metadata: Metadata = {
     telephone: true,
   },
   openGraph: {
-    title: "No Limit Fest Dubai 2026 | Ruger & Fido Live at Helipad by Frozen Cherry",
+    title: "No Limit Fest Dubai 2026 | Ruger Live at Helipad by Frozen Cherry",
     description:
-      "Saturday 24th October 2026 (6PM Till Late). Global Afrobeats superstars Ruger & Fido live at Helipad by Frozen Cherry, Dubai. Reserve Individual Passes and VIP Table packages (Table for 6, 8, 10) now.",
+      "Saturday 24th October 2026 (6PM Till Late). Global Afrobeats superstar Ruger live at Helipad by Frozen Cherry, Dubai. Reserve Individual Passes and VIP Table packages (Table for 6, 8, 10) now.",
     url: siteConfig.url,
     siteName: siteConfig.name,
     images: [
@@ -66,7 +64,7 @@ export const metadata: Metadata = {
         url: "/images/og-image.png",
         width: 1200,
         height: 630,
-        alt: "No Limit Fest Dubai 2026 - Ruger & Fido Live at Helipad by Frozen Cherry",
+        alt: "No Limit Fest Dubai 2026 - Ruger Live at Helipad by Frozen Cherry",
       },
       {
         url: "/images/logo.png",
@@ -80,9 +78,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "No Limit Fest Dubai 2026 | Ruger & Fido Live at Helipad",
+    title: "No Limit Fest Dubai 2026 | Ruger Live at Helipad",
     description:
-      "Saturday 24th October 2026. Ruger & Fido live at Helipad by Frozen Cherry, Dubai. Register Expression of Interest on WhatsApp!",
+      "Saturday 24th October 2026. Ruger live at Helipad by Frozen Cherry, Dubai. Register Expression of Interest on WhatsApp!",
     images: ["/images/og-image.png"],
     creator: "@nolimitfest",
     site: "@nolimitfest",

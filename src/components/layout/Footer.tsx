@@ -115,8 +115,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#stages" className="hover:text-white transition-colors">
-                  Stages & Sound Matrix
+                <Link href="/experience" className="hover:text-white transition-colors">
+                  Experience & Production
                 </Link>
               </li>
               <li>

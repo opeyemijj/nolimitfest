@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "The Festival Experience | No Limit Fest Dubai 2026",
-    description: "Helipad sunset views, world-class sound matrix, luxury VIP tables, and live performances by Ruger & Fido.",
+    description: "Helipad sunset views, world-class sound matrix, luxury VIP tables, and live headline performance by Ruger.",
     url: `${siteConfig.url}/experience`,
     images: ["/images/logo.png"],
   },
