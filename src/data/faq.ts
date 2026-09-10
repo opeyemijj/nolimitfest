@@ -34,7 +34,7 @@ export const festivalFaqs: FAQItem[] = [
     id: "eoi-process",
     category: "Tickets & EOI",
     question: "How does the Expression of Interest (EOI) work and why submit via WhatsApp?",
-    answer: "The Expression of Interest (EOI) form allows fans and VIP guests to secure priority allocation before general public sales open. When you submit your form (name, email, phone, location, and selected pass tier), your request is instantly formatted and transmitted to our festival concierge on WhatsApp (+971 50 889 4210) for personalized reservation assistance.",
+    answer: "The Expression of Interest (EOI) form allows fans and VIP guests to secure priority allocation before general public sales open. When you submit your form (name, email, phone, location, and selected pass tier), your request is instantly formatted and transmitted to our festival concierge on WhatsApp (+971 50 688 5946) for personalized reservation assistance.",
   },
   {
     id: "gcc-tour-waitlist",

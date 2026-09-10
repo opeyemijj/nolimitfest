@@ -6,7 +6,7 @@ export const siteConfig = {
   url: "https://nolimitfest.com",
   ogImage: "/images/og-image.png",
   logo: "/images/logo.png",
-  defaultWhatsApp: "+971508894210",
+  defaultWhatsApp: "+971506885946",
   email: "contact@nolimitfest.com",
   socials: {
     instagram: "https://instagram.com/nolimitfest",

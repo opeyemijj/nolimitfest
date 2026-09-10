@@ -130,7 +130,7 @@ export default function LeadsDrawer({ isOpen, onClose }: LeadsDrawerProps) {
                   type="text"
                   value={customPhone}
                   onChange={(e) => handleSavePhone(e.target.value)}
-                  placeholder="+971508894210"
+                  placeholder="+971506885946"
                   className="flex-1 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-[#FF5722] focus:outline-none"
                 />
               </div>
