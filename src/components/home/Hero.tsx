@@ -202,11 +202,11 @@ export default function Hero() {
         {/* Call to Actions */}
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
           <a
-            href="#events"
+            href="#tickets"
             className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-2xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Flame className="w-5 h-5 text-white animate-bounce" />
-            <span>Register EOI / Book Table</span>
+            <span>Get Tickets / Register EOI</span>
           </a>
 
           <Link

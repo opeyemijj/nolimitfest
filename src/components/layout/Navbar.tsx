@@ -59,6 +59,7 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
+    { name: "Tickets", href: "/#tickets" },
     { name: "Dubai Lineup", href: "/lineup" },
     { name: "Experience", href: "/experience" },
     { name: "VIP & Hospitality", href: "/vip" },

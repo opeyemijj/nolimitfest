@@ -1,4 +1,16 @@
-export type PassType = "Individual Pass" | "Table for 6" | "Table for 8" | "Table for 10";
+export type PassType =
+  | "Early Bird (AED 129)"
+  | "Phase 1 (AED 150)"
+  | "Phase 2 (AED 175)"
+  | "Phase 3 (AED 200)"
+  | "At Event Door (AED 250)"
+  | "Group (3 pax) (AED 400)"
+  | "Group (4 pax) (AED 500)"
+  | "Individual Pass"
+  | "Table for 6"
+  | "Table for 8"
+  | "Table for 10"
+  | string;
 
 export interface EOILead {
   id: string;
@@ -18,6 +30,13 @@ export interface EOILead {
 
 export function formatWhatsAppMessage(lead: Omit<EOILead, "id" | "createdAt">): string {
   const capacityMap: Record<string, string> = {
+    "Early Bird (AED 129)": "1 Guest",
+    "Phase 1 (AED 150)": "1 Guest",
+    "Phase 2 (AED 175)": "1 Guest",
+    "Phase 3 (AED 200)": "1 Guest",
+    "At Event Door (AED 250)": "1 Guest",
+    "Group (3 pax) (AED 400)": "3 Guests (Squad Bundle)",
+    "Group (4 pax) (AED 500)": "4 Guests (Best Squad Deal)",
     "Individual Pass": "1 Guest",
     "Table for 6": "6 Guests",
     "Table for 8": "8 Guests",

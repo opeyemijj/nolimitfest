@@ -27,7 +27,7 @@ interface EventCardWithEOIProps {
 }
 
 export default function EventCardWithEOI({ event, isInitialExpanded = true }: EventCardWithEOIProps) {
-  const [selectedPass, setSelectedPass] = useState<PassType>("Table for 8");
+  const [selectedPass, setSelectedPass] = useState<PassType>(event.ticketTiers[0]?.name || "Early Bird (AED 129)");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -205,8 +205,8 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
             </span>
           </div>
 
-          {/* 4 Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Cards Grid: 1 col mobile, 2 col tablet, 3 col desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {event.ticketTiers.map((tier) => {
               const isSelected = selectedPass === tier.name;
               return (
@@ -235,10 +235,12 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
                     </div>
 
                     <h4 className="text-lg font-black text-white flex items-center gap-1.5">
-                      {tier.name === "Individual Pass" ? (
-                        <User className="w-4 h-4 text-[#00E5FF]" />
-                      ) : (
+                      {tier.name.includes("Table") ? (
                         <Crown className="w-4 h-4 text-[#FFD600]" />
+                      ) : tier.name.includes("Group") ? (
+                        <Users className="w-4 h-4 text-[#00E5FF]" />
+                      ) : (
+                        <User className="w-4 h-4 text-[#FF5722]" />
                       )}
                       <span>{tier.name}</span>
                     </h4>
@@ -348,19 +350,19 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
                       <label className="block text-xs font-bold uppercase tracking-wider text-gray-300 mb-1.5">
                         Selected Pass / Table
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {(["Individual Pass", "Table for 6", "Table for 8", "Table for 10"] as PassType[]).map((pass) => (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {event.ticketTiers.map((tier) => (
                           <button
                             type="button"
-                            key={pass}
-                            onClick={() => setSelectedPass(pass)}
+                            key={tier.id}
+                            onClick={() => setSelectedPass(tier.name)}
                             className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
-                              selectedPass === pass
+                              selectedPass === tier.name
                                 ? "bg-[#FF5722] text-white border-[#FF5722] shadow-md shadow-orange-500/20"
                                 : "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:text-white"
                             }`}
                           >
-                            {pass}
+                            {tier.name}
                           </button>
                         ))}
                       </div>

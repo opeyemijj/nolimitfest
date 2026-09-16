@@ -1,12 +1,39 @@
 export interface TicketTier {
   id: string;
-  name: "Individual Pass" | "Table for 6" | "Table for 8" | "Table for 10";
+  name: string;
   badge?: string;
   capacity: number;
   capacityLabel: string;
   priceEstimate: string;
   perks: string[];
   popular?: boolean;
+}
+
+export interface TicketPhase {
+  id: string;
+  phase: string;
+  name: string;
+  price: number;
+  currency: string;
+  formattedPrice: string;
+  status: "active" | "upcoming" | "door";
+  badge?: string;
+  description: string;
+}
+
+export interface GroupPackage {
+  id: string;
+  name: string;
+  pax: number;
+  totalPrice: number;
+  pricePerPerson: number;
+  currency: string;
+  formattedPrice: string;
+  savings: string;
+  badge?: string;
+  popular?: boolean;
+  description: string;
+  perks: string[];
 }
 
 export interface FestivalEvent {
@@ -35,19 +62,147 @@ export interface FestivalEvent {
   partners?: { name: string; role: string }[];
 }
 
+export const dubaiTicketPhases: TicketPhase[] = [
+  {
+    id: "early-bird",
+    phase: "Phase 0",
+    name: "Early Bird",
+    price: 129,
+    currency: "AED",
+    formattedPrice: "AED 129",
+    status: "active",
+    badge: "Now Selling • Limited",
+    description: "Lowest available entry price for early supporters. Instant access to Helipad festival grounds and Ruger live headline show.",
+  },
+  {
+    id: "phase-1",
+    phase: "Phase 1",
+    name: "Phase 1",
+    price: 150,
+    currency: "AED",
+    formattedPrice: "AED 150",
+    status: "upcoming",
+    badge: "Next Tier",
+    description: "Standard advance general admission once Early Bird allocation sells out.",
+  },
+  {
+    id: "phase-2",
+    phase: "Phase 2",
+    name: "Phase 2",
+    price: 175,
+    currency: "AED",
+    formattedPrice: "AED 175",
+    status: "upcoming",
+    badge: "Upcoming",
+    description: "Mid-tier advance general admission.",
+  },
+  {
+    id: "phase-3",
+    phase: "Phase 3",
+    name: "Phase 3",
+    price: 200,
+    currency: "AED",
+    formattedPrice: "AED 200",
+    status: "upcoming",
+    badge: "Final Advance Tier",
+    description: "Final advance release prior to festival week.",
+  },
+  {
+    id: "door",
+    phase: "Door",
+    name: "At Event Door",
+    price: 250,
+    currency: "AED",
+    formattedPrice: "AED 250",
+    status: "door",
+    badge: "Gate Price",
+    description: "At the gate at Helipad by Frozen Cherry on Saturday 24th Oct 2026 (subject to remaining venue capacity).",
+  },
+];
+
+export const dubaiGroupPackages: GroupPackage[] = [
+  {
+    id: "group-3",
+    name: "Group (3 pax)",
+    pax: 3,
+    totalPrice: 400,
+    pricePerPerson: 133,
+    currency: "AED",
+    formattedPrice: "AED 400",
+    savings: "Save AED 350 vs Door",
+    badge: "Squad Pass (3 Guests)",
+    popular: false,
+    description: "Bring 2 friends and party together. Total AED 400 (~AED 133/person) for 3 full festival passes.",
+    perks: [
+      "3x Full festival admission passes to Helipad grounds",
+      "Live performance by RUGER and supporting acts",
+      "Express group check-in & wristband allocation",
+      "Sunset cocktail bar & food village access",
+    ],
+  },
+  {
+    id: "group-4",
+    name: "Group (4 pax)",
+    pax: 4,
+    totalPrice: 500,
+    pricePerPerson: 125,
+    currency: "AED",
+    formattedPrice: "AED 500",
+    savings: "Save AED 500 vs Door • Best Value",
+    badge: "Best Squad Value",
+    popular: true,
+    description: "Best crew deal! Total AED 500 (only AED 125/person!) for 4 full festival passes.",
+    perks: [
+      "4x Full festival admission passes to Helipad grounds",
+      "Live performance by RUGER and supporting acts",
+      "Express group check-in & wristband allocation",
+      "Sunset cocktail bar & food village access",
+    ],
+  },
+];
+
 export const standardTiersDubai: TicketTier[] = [
   {
-    id: "individual",
-    name: "Individual Pass",
-    badge: "General Entry",
+    id: "early-bird",
+    name: "Early Bird (AED 129)",
+    badge: "Now Selling • Limited",
     capacity: 1,
     capacityLabel: "1 Guest",
-    priceEstimate: "Early Bird AED 150",
+    priceEstimate: "AED 129",
     perks: [
       "Access to Helipad by Frozen Cherry festival grounds",
       "Full headline live concert by RUGER and guest performers",
       "Access to sunset cocktail bars & food stations",
       "Official commemorative wristband & fast entry",
+    ],
+  },
+  {
+    id: "group-3",
+    name: "Group (3 pax) (AED 400)",
+    badge: "Squad Pass",
+    capacity: 3,
+    capacityLabel: "3 Guests",
+    priceEstimate: "AED 400",
+    perks: [
+      "Full admission for 3 guests (~AED 133/person)",
+      "Save AED 350 vs Event Door price",
+      "Full headline live concert by RUGER",
+      "Express group wristband allocation & entry",
+    ],
+  },
+  {
+    id: "group-4",
+    name: "Group (4 pax) (AED 500)",
+    badge: "Best Squad Value",
+    popular: true,
+    capacity: 4,
+    capacityLabel: "4 Guests",
+    priceEstimate: "AED 500",
+    perks: [
+      "Full admission for 4 guests (Only AED 125/person!)",
+      "Save AED 500 vs Event Door price",
+      "Full headline live concert by RUGER",
+      "Express group wristband allocation & entry",
     ],
   },
   {

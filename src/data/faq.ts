@@ -27,8 +27,8 @@ export const festivalFaqs: FAQItem[] = [
   {
     id: "pass-and-table-tiers",
     category: "VIP & Tables",
-    question: "What pass categories and VIP table packages are available?",
-    answer: "No Limit Fest offers 4 distinct pass and hospitality tiers: 1) Individual Pass (General Admission access to festival grounds and sunset bars); 2) Table for 6 (Reserved VIP lounge table with beverage credit and fast-track entry); 3) Table for 8 (Most popular prime center-tier table with unobstructed stage views and premium bottle service); and 4) Table for 10 (VVIP Helipad Deck Cabana with dedicated personal butler, vintage champagne, and backstage access).",
+    question: "What pass categories, ticket phases, and VIP table packages are available?",
+    answer: "No Limit Fest offers 3 main ticket categories: 1) Individual Tickets with phased pricing: Early Bird (AED 129), Phase 1 (AED 150), Phase 2 (AED 175), Phase 3 (AED 200), and At Event Door (AED 250); 2) Squad Group Passes: Group of 3 pax (AED 400, saving AED 350 vs Door) and Group of 4 pax (AED 500, saving AED 500 vs Door — only AED 125/person); and 3) VIP Table Hospitality: Table for 6 (Packages from AED 6,500), Table for 8 (Packages from AED 9,500), and Table for 10 (VVIP Helipad Deck Cabana from AED 14,500 with personal butler and backstage access).",
   },
   {
     id: "eoi-process",
