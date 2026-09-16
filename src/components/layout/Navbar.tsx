@@ -62,8 +62,6 @@ export default function Navbar() {
     { name: "Tickets", href: "/#tickets" },
     { name: "Dubai Lineup", href: "/lineup" },
     { name: "Experience", href: "/experience" },
-    { name: "VIP & Hospitality", href: "/vip" },
-    { name: "Global Tour", href: "/events" },
     { name: "Festival Guide", href: "/info" },
     { name: "Contact", href: "/contact" },
   ];
