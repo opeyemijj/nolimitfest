@@ -6,6 +6,16 @@ export type PassType =
   | "At Event Door (AED 250)"
   | "Group (3 pax) (AED 400)"
   | "Group (4 pax) (AED 500)"
+  | "4 Pax Standing Table (AED 2,000)"
+  | "VIP Table for 5 (AED 4,000)"
+  | "VIP Table for 8 (AED 6,000)"
+  | "VIP Table for 10 (AED 8,000)"
+  | "VVIP Zone Back of DJ (10 pax) (AED 10,000)"
+  | "4 Pax Standing Table"
+  | "VIP Table for 5"
+  | "VIP Table for 8"
+  | "VIP Table for 10"
+  | "VVIP Zone Back of DJ (10 pax)"
   | "Individual Pass"
   | "Table for 6"
   | "Table for 8"
@@ -37,6 +47,16 @@ export function formatWhatsAppMessage(lead: Omit<EOILead, "id" | "createdAt">): 
     "At Event Door (AED 250)": "1 Guest",
     "Group (3 pax) (AED 400)": "3 Guests (Squad Bundle)",
     "Group (4 pax) (AED 500)": "4 Guests (Best Squad Deal)",
+    "4 Pax Standing Table (AED 2,000)": "4 Guests (Standing Table)",
+    "4 Pax Standing Table": "4 Guests (Standing Table)",
+    "VIP Table for 5 (AED 4,000)": "5 Guests (VIP Table)",
+    "VIP Table for 5": "5 Guests (VIP Table)",
+    "VIP Table for 8 (AED 6,000)": "8 Guests (VIP Table)",
+    "VIP Table for 8": "8 Guests (VIP Table)",
+    "VIP Table for 10 (AED 8,000)": "10 Guests (VIP Table)",
+    "VIP Table for 10": "10 Guests (VIP Table)",
+    "VVIP Zone Back of DJ (10 pax) (AED 10,000)": "10 Guests (VVIP Back of DJ)",
+    "VVIP Zone Back of DJ (10 pax)": "10 Guests (VVIP Back of DJ)",
     "Individual Pass": "1 Guest",
     "Table for 6": "6 Guests",
     "Table for 8": "8 Guests",

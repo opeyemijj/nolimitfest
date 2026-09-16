@@ -235,7 +235,7 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
                     </div>
 
                     <h4 className="text-lg font-black text-white flex items-center gap-1.5">
-                      {tier.name.includes("Table") ? (
+                      {tier.name.includes("Table") || tier.name.includes("VVIP") ? (
                         <Crown className="w-4 h-4 text-[#FFD600]" />
                       ) : tier.name.includes("Group") ? (
                         <Users className="w-4 h-4 text-[#00E5FF]" />

@@ -214,7 +214,7 @@ export default function Hero() {
             className="w-full sm:w-auto px-8 py-4 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-base flex items-center justify-center gap-2 transition-all hover:border-white/40"
           >
             <Crown className="w-4 h-4 text-[#FFD600]" />
-            <span>VIP Tables (6, 8, 10)</span>
+            <span>VIP Tables &amp; Cabanas</span>
           </Link>
         </div>
 

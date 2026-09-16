@@ -18,15 +18,17 @@ import { getActiveEvent } from "@/data/events";
 import EventCardWithEOI from "@/components/events/EventCardWithEOI";
 
 export const metadata: Metadata = {
-  title: "VIP Tables & Passes (Early Bird AED 129, Tables for 6, 8, 10) | No Limit Fest Dubai 2026",
+  title: "VIP Tables & Cabanas (From AED 2,000 to VVIP DJ Deck) | No Limit Fest Dubai 2026",
   description:
-    "Official tickets & ultra-luxury VIP table bookings at Helipad by Frozen Cherry for No Limit Fest Dubai 2026. Early Bird AED 129, Group Passes from AED 400, and VIP Tables for 6, 8, and 10 guests.",
+    "Official tickets & ultra-luxury VIP table bookings at Helipad by Frozen Cherry for No Limit Fest Dubai 2026. 4 Pax Standing Table (AED 2,000), 5 Pax (AED 4,000), 8 Pax (AED 6,000), 10 Pax (AED 8,000), and VVIP Zone Back of DJ (AED 10,000).",
   keywords: [
     "VIP table booking Dubai",
     "Helipad by Frozen Cherry VIP tables",
-    "Table for 6 Dubai festival",
-    "Table for 8 Dubai concert",
-    "Table for 10 VIP cabana Dubai",
+    "4 pax standing table Dubai",
+    "5 pax VIP table Dubai",
+    "8 pax VIP table Dubai",
+    "10 pax VIP cabana Dubai",
+    "VVIP DJ deck Dubai festival",
     "Dubai nightlife VIP packages",
     "No Limit Fest VIP reservations",
     "No Limit Fest tickets Dubai",
@@ -35,8 +37,8 @@ export const metadata: Metadata = {
     canonical: `${siteConfig.url}/vip`,
   },
   openGraph: {
-    title: "VIP Tables & Passes | No Limit Fest Dubai 2026",
-    description: "Reserve your Early Bird ticket (AED 129), Group Pass, or VIP Table for 6, 8, or 10 guests at Helipad by Frozen Cherry.",
+    title: "VIP Tables & Cabanas | No Limit Fest Dubai 2026",
+    description: "Reserve your 4 Pax Standing Table (AED 2,000), VIP Table for 5, 8, 10, or VVIP Zone Back of DJ (AED 10,000) at Helipad by Frozen Cherry.",
     url: `${siteConfig.url}/vip`,
     images: ["/images/logo.png"],
   },
@@ -66,7 +68,6 @@ export default function VIPPage() {
       price: "3 Pax AED 400 | 4 Pax AED 500",
       badge: "Save Up To AED 500",
       icon: Users,
-      popular: true,
       desc: "Party together with friends. Group of 3 for AED 400 (~AED 133/person) or Group of 4 for AED 500 (only AED 125/person — best value!).",
       features: [
         "Bundled festival admission passes for 3 or 4 guests",
@@ -76,45 +77,75 @@ export default function VIPPage() {
       ],
     },
     {
-      title: "Table for 6",
-      tier: "Private Table (6 Guests)",
-      price: "Packages from AED 6,500",
+      title: "4 Pax Standing Table",
+      tier: "High Standing Table (4 Guests)",
+      price: "AED 2,000",
+      badge: "Standing Table",
+      icon: Crown,
+      desc: "Reserved high standing table on the festival perimeter with fast-track entry and beverage credit for 4 guests.",
+      features: [
+        "Reserved high standing table for up to 4 guests",
+        "Fast-track expedited entry queue at Helipad",
+        "Includes beverage bottle service credit",
+        "Dedicated table server and cocktail service",
+      ],
+    },
+    {
+      title: "VIP Table for 5",
+      tier: "VIP Lounge Table (5 Guests)",
+      price: "AED 4,000",
+      badge: "VIP Lounge",
+      icon: Crown,
+      desc: "Reserved VIP lounge seating table for up to 5 guests with elevated stage views and bottle service allocation.",
+      features: [
+        "Reserved VIP Lounge seating for up to 5 guests",
+        "Fast-track VIP entry queue at Helipad",
+        "Premium bottle service and beverage credit package",
+        "Dedicated table hostess and VIP restroom access",
+      ],
+    },
+    {
+      title: "VIP Table for 8",
+      tier: "Prime VIP Table (8 Guests)",
+      price: "AED 6,000",
+      badge: "Most Popular VIP",
+      popular: true,
+      icon: Crown,
+      desc: "Prime center-tier VIP table for up to 8 guests with direct unobstructed panoramic stage views of Ruger.",
+      features: [
+        "Prime elevated VIP table for up to 8 guests",
+        "Direct unobstructed panoramic mainstage sightlines",
+        "Top-shelf spirits & vintage bottle service credit",
+        "Chef finger-food platters & dedicated table hostess",
+      ],
+    },
+    {
+      title: "VIP Table for 10",
+      tier: "VIP Deck Table (10 Guests)",
+      price: "AED 8,000",
       badge: "VIP Deck",
       icon: Crown,
-      desc: "An intimate elevated VIP lounge table overlooking the mainstage, with dedicated hostess service and beverage credit.",
+      desc: "Spacious elevated VIP deck table for up to 10 guests with luxury hospitality, bottle service, and valet privileges.",
       features: [
-        "Reserved elevated VIP Lounge Table for up to 6 guests",
-        "Fast-track expedited VIP security & check-in queue at the Helipad",
-        "AED 3,000 credit towards vintage champagne & premium spirits",
-        "Dedicated table hostess & private VIP restroom access",
+        "Spacious elevated VIP deck table for up to 10 guests",
+        "Expedited VIP entrance & complimentary valet parking",
+        "Luxury bottle service and champagne allocation",
+        "Dedicated table hostesses & security escort",
       ],
     },
     {
-      title: "Table for 8",
-      tier: "Prime VIP Table (8 Guests)",
-      price: "Packages from AED 9,500",
-      badge: "Most Popular VIP",
+      title: "VVIP Zone - Back of DJ (10 pax)",
+      tier: "Ultra VVIP Deck (10 Guests)",
+      price: "AED 10,000",
+      badge: "★ Ultra VVIP DJ Booth ★",
+      popular: true,
       icon: Crown,
-      desc: "Prime center-stage elevation for groups of 8 with expansive panoramic sightlines and top-shelf bottle service.",
+      desc: "The ultimate insider experience: private center-stage VVIP enclosure positioned directly behind the DJ booth with unrivaled artist proximity.",
       features: [
-        "Prime tier elevated VIP table with unobstructed mainstage views",
-        "AED 5,000 top-shelf bottle service and vintage champagne credit",
-        "Personal table hostess and dedicated security escort",
-        "Complimentary chef finger-food platters & VIP parking",
-      ],
-    },
-    {
-      title: "Table for 10",
-      tier: "VVIP Helipad Deck Cabana (10 Guests)",
-      price: "Packages from AED 14,500",
-      badge: "Ultra Luxury",
-      icon: Crown,
-      desc: "The pinnacle of festival hospitality: private center-stage VVIP cabana suite, personal butler, and artist backstage access.",
-      features: [
-        "Exclusive center-stage VVIP Cabana/Table for 10 guests",
-        "AED 8,500 premium vintage champagne & spirits package",
-        "Dedicated personal butler, private hostesses & private security",
-        "Artist backstage meet & greet opportunity and photo pass",
+        "Exclusive VVIP Cabana positioned directly behind the DJ booth",
+        "Direct proximity to Ruger, headlining DJs & stage action",
+        "Dedicated personal butler & private security detail",
+        "Premium vintage champagne and top-shelf bottle package",
         "Complimentary VIP valet parking for 3 vehicles",
       ],
     },
@@ -133,11 +164,11 @@ export default function VIPPage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight uppercase">
-            INDIVIDUAL PASSES & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#FF007F]">TABLE CABANAS</span>
+            INDIVIDUAL PASSES &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#FF007F]">TABLE CABANAS</span>
           </h1>
 
           <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            Redefining festival hospitality on the Dubai waterfront. Select from Individual Passes or private VIP tables for 6, 8, and 10 guests.
+            Redefining festival hospitality on the Dubai waterfront. Select from Individual Passes, Squad Bundles, or private VIP tables from 4 to 10 guests and the exclusive VVIP Zone behind the DJ booth.
           </p>
 
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-gray-300">

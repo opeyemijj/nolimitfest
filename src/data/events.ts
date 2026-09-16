@@ -36,6 +36,20 @@ export interface GroupPackage {
   perks: string[];
 }
 
+export interface TablePackage {
+  id: string;
+  name: string;
+  pax: number;
+  price: number;
+  currency: string;
+  formattedPrice: string;
+  badge?: string;
+  popular?: boolean;
+  isVVIP?: boolean;
+  description: string;
+  perks: string[];
+}
+
 export interface FestivalEvent {
   id: string;
   slug: string;
@@ -161,6 +175,93 @@ export const dubaiGroupPackages: GroupPackage[] = [
   },
 ];
 
+export const dubaiTablePackages: TablePackage[] = [
+  {
+    id: "table-4-standing",
+    name: "4 Pax Standing Table",
+    pax: 4,
+    price: 2000,
+    currency: "AED",
+    formattedPrice: "AED 2,000",
+    badge: "Standing High Table",
+    description: "Reserved high standing table for up to 4 guests with fast-track entry and beverage credit.",
+    perks: [
+      "Reserved high standing table for up to 4 guests",
+      "Fast-track expedited VIP entry queue at Helipad",
+      "Beverage bottle service allocation included",
+      "Dedicated table server and cocktail service",
+    ],
+  },
+  {
+    id: "table-5",
+    name: "VIP Table for 5",
+    pax: 5,
+    price: 4000,
+    currency: "AED",
+    formattedPrice: "AED 4,000",
+    badge: "VIP Lounge Table",
+    description: "Reserved VIP lounge seating table for up to 5 guests with elevated views and bottle service.",
+    perks: [
+      "Reserved VIP Lounge seating for up to 5 guests",
+      "Fast-track VIP entry queue at Helipad",
+      "Premium bottle service and beverage package",
+      "Dedicated table hostess and VIP restroom access",
+    ],
+  },
+  {
+    id: "table-8",
+    name: "VIP Table for 8",
+    pax: 8,
+    price: 6000,
+    currency: "AED",
+    formattedPrice: "AED 6,000",
+    badge: "Most Popular VIP",
+    popular: true,
+    description: "Prime center-tier VIP table for up to 8 guests with direct stage sightlines to Ruger.",
+    perks: [
+      "Prime elevated VIP table for up to 8 guests",
+      "Direct unobstructed panoramic view of the mainstage",
+      "Top-shelf spirits & vintage bottle service credit",
+      "Chef finger-food platters & dedicated hostess",
+    ],
+  },
+  {
+    id: "table-10",
+    name: "VIP Table for 10",
+    pax: 10,
+    price: 8000,
+    currency: "AED",
+    formattedPrice: "AED 8,000",
+    badge: "VIP Deck Table",
+    description: "Spacious front-tier VIP table for up to 10 guests with luxury hospitality and bottle service.",
+    perks: [
+      "Spacious elevated VIP deck table for up to 10 guests",
+      "Expedited VIP entrance & complimentary valet parking",
+      "Luxury bottle service and champagne allocation",
+      "Dedicated table hostesses & security escort",
+    ],
+  },
+  {
+    id: "table-vvip-dj",
+    name: "VVIP Zone Back of DJ (10 pax)",
+    pax: 10,
+    price: 10000,
+    currency: "AED",
+    formattedPrice: "AED 10,000",
+    badge: "★ VVIP • Back of DJ Booth ★",
+    popular: true,
+    isVVIP: true,
+    description: "The ultimate insider experience: private VVIP enclosure situated directly behind the DJ booth with unrivaled stage proximity.",
+    perks: [
+      "Exclusive VVIP Cabana positioned directly behind the DJ booth",
+      "Direct proximity to Ruger, headlining DJs, and stage action",
+      "Dedicated personal butler & private security detail",
+      "Premium vintage champagne and top-shelf bottle package",
+      "Complimentary VIP valet parking for 3 vehicles",
+    ],
+  },
+];
+
 export const standardTiersDubai: TicketTier[] = [
   {
     id: "early-bird",
@@ -206,46 +307,75 @@ export const standardTiersDubai: TicketTier[] = [
     ],
   },
   {
-    id: "table-6",
-    name: "Table for 6",
-    badge: "VIP Table",
-    capacity: 6,
-    capacityLabel: "6 Guests",
-    priceEstimate: "Packages from AED 6,500",
+    id: "table-4-standing",
+    name: "4 Pax Standing Table (AED 2,000)",
+    badge: "Standing Table",
+    capacity: 4,
+    capacityLabel: "4 Guests",
+    priceEstimate: "AED 2,000",
     perks: [
-      "Reserved elevated VIP Lounge Table for up to 6 guests",
-      "Fast-track expedited VIP entry queue at the Helipad",
-      "AED 3,000 beverage allocation for premium bottle service",
-      "Dedicated table hostess and cocktail servers",
+      "Reserved high standing table for up to 4 guests",
+      "Fast-track expedited VIP entry queue at Helipad",
+      "Beverage bottle service allocation included",
+      "Dedicated table server and cocktail service",
+    ],
+  },
+  {
+    id: "table-5",
+    name: "VIP Table for 5 (AED 4,000)",
+    badge: "VIP Table",
+    capacity: 5,
+    capacityLabel: "5 Guests",
+    priceEstimate: "AED 4,000",
+    perks: [
+      "Reserved VIP Lounge seating for up to 5 guests",
+      "Fast-track VIP entry queue at Helipad",
+      "Premium bottle service and beverage package",
+      "Dedicated table hostess and VIP restroom access",
     ],
   },
   {
     id: "table-8",
-    name: "Table for 8",
-    badge: "Most Popular",
+    name: "VIP Table for 8 (AED 6,000)",
+    badge: "Most Popular VIP",
     popular: true,
     capacity: 8,
     capacityLabel: "8 Guests",
-    priceEstimate: "Packages from AED 9,500",
+    priceEstimate: "AED 6,000",
     perks: [
-      "Prime front-tier VIP table for up to 8 guests",
-      "Direct unobstructed panoramic stage view of Ruger & live stage",
-      "AED 5,000 top-shelf bottle service and champagne credit",
-      "Chef finger-food platters and VIP parking access",
+      "Prime elevated VIP table for up to 8 guests",
+      "Direct unobstructed panoramic view of Ruger live stage",
+      "Top-shelf spirits & vintage bottle service credit",
+      "Chef finger-food platters & dedicated hostess",
     ],
   },
   {
     id: "table-10",
-    name: "Table for 10",
-    badge: "VVIP Helipad Deck",
+    name: "VIP Table for 10 (AED 8,000)",
+    badge: "VIP Deck",
+    capacity: 10,
+    capacityLabel: "10 Guests",
+    priceEstimate: "AED 8,000",
+    perks: [
+      "Spacious elevated VIP deck table for up to 10 guests",
+      "Expedited VIP entrance & complimentary valet parking",
+      "Luxury bottle service and champagne allocation",
+      "Dedicated table hostesses & security escort",
+    ],
+  },
+  {
+    id: "table-vvip-dj",
+    name: "VVIP Zone Back of DJ (10 pax) (AED 10,000)",
+    badge: "★ Ultra VVIP DJ Deck ★",
+    popular: true,
     capacity: 10,
     capacityLabel: "10 Guests (VVIP)",
-    priceEstimate: "Packages from AED 14,500",
+    priceEstimate: "AED 10,000",
     perks: [
-      "Exclusive center-stage VVIP Cabana/Table for 10 guests",
-      "Dedicated personal butler & private security team",
-      "AED 8,500 premium vintage champagne & spirits package",
-      "Artist backstage meet & greet opportunity and photo pass",
+      "Exclusive VVIP Cabana positioned directly behind DJ booth",
+      "Direct proximity to Ruger, headlining DJs & stage action",
+      "Dedicated personal butler & private security detail",
+      "Premium vintage champagne & top-shelf bottle package",
       "Complimentary VIP valet parking for 3 vehicles",
     ],
   },

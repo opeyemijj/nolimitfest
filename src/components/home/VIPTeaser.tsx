@@ -15,7 +15,7 @@ import {
   Zap,
   Clock
 } from "lucide-react";
-import { getActiveEvent, dubaiTicketPhases, dubaiGroupPackages } from "@/data/events";
+import { getActiveEvent, dubaiTicketPhases, dubaiGroupPackages, dubaiTablePackages } from "@/data/events";
 import { siteConfig } from "@/config/site";
 
 export default function VIPTeaser() {
@@ -92,7 +92,7 @@ export default function VIPTeaser() {
               }`}
             >
               <Crown className="w-3 h-3" />
-              VIP Tables (6, 8, 10 Guests)
+              VIP Tables (From AED 2,000)
             </button>
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function VIPTeaser() {
           </div>
         )}
 
-        {/* 3. VIP TABLE PACKAGES (6, 8, 10 GUESTS) */}
+        {/* 3. VIP TABLE PACKAGES (4, 5, 8, 10 GUESTS & VVIP DJ ZONE) */}
         {(filter === "all" || filter === "vip") && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -332,6 +332,9 @@ export default function VIPTeaser() {
                 <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
                   VIP TABLES &amp; VVIP CABANAS (HELIPAD DECK)
                 </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  From high standing cocktail tables to the ultra-exclusive VVIP Zone located directly behind the DJ booth.
+                </p>
               </div>
 
               <Link
@@ -344,78 +347,96 @@ export default function VIPTeaser() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-              {currentEvent.ticketTiers
-                .filter((tier) => tier.name.includes("Table"))
-                .map((tier) => (
-                  <div
-                    key={tier.id}
-                    className={`rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative transition-all duration-300 ${
-                      tier.popular
-                        ? "bg-gradient-to-b from-[#1E2336] to-[#121524] border-2 border-[#FFD600] shadow-2xl shadow-yellow-500/15 scale-100 lg:-translate-y-2"
-                        : "bg-[#11131E] border border-white/10 hover:border-white/20"
-                    }`}
-                  >
-                    {tier.badge && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-[#FFD600] to-[#FF5722] text-black text-[9px] font-black uppercase tracking-widest shadow-md whitespace-nowrap">
-                        {tier.badge}
-                      </div>
-                    )}
+              {dubaiTablePackages.map((tier) => (
+                <div
+                  key={tier.id}
+                  className={`rounded-3xl p-6 sm:p-7 flex flex-col justify-between relative transition-all duration-300 ${
+                    tier.isVVIP
+                      ? "bg-gradient-to-b from-[#251838] via-[#1A142A] to-[#10101E] border-2 border-[#FFD600] shadow-2xl shadow-yellow-500/25 ring-2 ring-[#FFD600]/30 scale-100 lg:-translate-y-2"
+                      : tier.popular
+                      ? "bg-gradient-to-b from-[#1E2336] to-[#121524] border-2 border-[#FF5722] shadow-xl shadow-orange-500/15"
+                      : "bg-[#11131E] border border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  {tier.badge && (
+                    <div
+                      className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md whitespace-nowrap ${
+                        tier.isVVIP
+                          ? "bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#E040FB] text-black font-extrabold shadow-yellow-500/30 animate-pulse"
+                          : tier.popular
+                          ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white"
+                          : "bg-white/10 text-gray-200 border border-white/20"
+                      }`}
+                    >
+                      {tier.badge}
+                    </div>
+                  )}
 
-                    <div>
-                      <div className="mb-4">
-                        <div className="flex items-center gap-1.5 text-xs text-[#FFD600] font-black uppercase tracking-wider mb-1">
-                          <Crown className="w-3.5 h-3.5" />
-                          <span>{tier.capacityLabel}</span>
-                        </div>
-                        <h4 className="text-xl font-black text-white">{tier.name}</h4>
-                        <p className="text-xl sm:text-2xl font-black text-[#FFD600] mt-2 font-mono">
-                          {tier.priceEstimate}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Includes beverage credit &amp; dedicated hostess</p>
+                  <div>
+                    <div className="mb-4">
+                      <div className="flex items-center gap-1.5 text-xs text-[#FFD600] font-black uppercase tracking-wider mb-1">
+                        <Crown className="w-3.5 h-3.5" />
+                        <span>{tier.pax} Guests</span>
                       </div>
-
-                      <div className="space-y-2.5 pt-4 border-t border-white/10 mb-6">
-                        <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider block">
-                          VIP Privileges:
-                        </span>
-                        {tier.perks.map((perk) => (
-                          <div key={perk} className="flex items-start gap-2 text-xs text-gray-300">
-                            <div className="w-4 h-4 rounded-full bg-[#FFD600]/20 text-[#FFD600] flex items-center justify-center shrink-0 mt-0.5">
-                              <Check className="w-2.5 h-2.5" />
-                            </div>
-                            <span className="leading-snug text-[11px]">{perk}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <h4 className="text-xl font-black text-white">{tier.name}</h4>
+                      <p className="text-2xl sm:text-3xl font-black text-[#FFD600] mt-2 font-mono">
+                        {tier.formattedPrice}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                        {tier.description}
+                      </p>
                     </div>
 
-                    <div className="space-y-2 pt-4 border-t border-white/10">
-                      <a
-                        href={`#event-${currentEvent.slug}`}
-                        className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
-                          tier.popular
-                            ? "bg-gradient-to-r from-[#FFD600] to-[#FF5722] text-black shadow-lg shadow-yellow-500/25 hover:scale-[1.02]"
-                            : "bg-white/10 hover:bg-white/15 text-white border border-white/10"
-                        }`}
-                      >
-                        <span>Select {tier.name}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </a>
-
-                      <a
-                        href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-                          `Hello! I would like to inquire about reserving ${tier.name} for No Limit Fest Dubai at Helipad by Frozen Cherry.`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
-                      >
-                        <MessageCircle className="w-3 h-3" />
-                        <span>WhatsApp VIP Concierge</span>
-                      </a>
+                    <div className="space-y-2.5 pt-4 border-t border-white/10 mb-6">
+                      <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider block">
+                        VIP Privileges:
+                      </span>
+                      {tier.perks.map((perk, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-gray-300">
+                          <div
+                            className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                              tier.isVVIP
+                                ? "bg-[#FFD600]/20 text-[#FFD600]"
+                                : "bg-emerald-500/20 text-emerald-400"
+                            }`}
+                          >
+                            <Check className="w-2.5 h-2.5" />
+                          </div>
+                          <span className="leading-snug text-[11px]">{perk}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+
+                  <div className="space-y-2 pt-4 border-t border-white/10">
+                    <a
+                      href={`#event-${currentEvent.slug}`}
+                      className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                        tier.isVVIP
+                          ? "bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#E040FB] text-black font-extrabold shadow-lg shadow-yellow-500/30 hover:scale-[1.02]"
+                          : tier.popular
+                          ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white shadow-lg shadow-orange-500/25 hover:scale-[1.02]"
+                          : "bg-white/10 hover:bg-white/15 text-white border border-white/10"
+                      }`}
+                    >
+                      <span>Select {tier.name}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+
+                    <a
+                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+                        `Hello! I would like to inquire about reserving ${tier.name} (${tier.formattedPrice}) for No Limit Fest Dubai at Helipad by Frozen Cherry.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/20"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      <span>WhatsApp VIP Concierge</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
