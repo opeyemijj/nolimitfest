@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, hasPermission } from "@/lib/auth";
-import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
+import { dbQuery, dbExecute } from "@/lib/db";
 
 export async function GET() {
   const user = await getAuthUser();
   if (!user || !hasPermission(user, "lineup"))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const artists = dbQuery("SELECT * FROM artists ORDER BY id ASC");
-  return NextResponse.json({
-    artists: artists.map((a: any) => ({
-      ...a,
-      hits: typeof a.hits === "string" ? JSON.parse(a.hits) : a.hits || [],
-    })),
-  });
+  const artists = await dbQuery(
+    `SELECT id, name, role, genre, day, stage, time, image, bio, origin,
+            hits, spotify_url AS "spotifyUrl"
+     FROM artists
+     ORDER BY id ASC`,
+  );
+
+  // hits is JSONB — already parsed by pg driver
+  return NextResponse.json({ artists });
 }
 
 export async function PUT(req: NextRequest) {
@@ -38,11 +40,21 @@ export async function PUT(req: NextRequest) {
       spotifyUrl,
     } = body;
 
-    dbExecute(
-      `UPDATE artists SET 
-        name = ?, role = ?, genre = ?, day = ?, stage = ?, time = ?, 
-        image = ?, bio = ?, origin = ?, hits = ?, spotifyUrl = ?, updatedAt = datetime('now')
-       WHERE id = ?`,
+    await dbExecute(
+      `UPDATE artists SET
+        name        = $1,
+        role        = $2,
+        genre       = $3,
+        day         = $4,
+        stage       = $5,
+        time        = $6,
+        image       = $7,
+        bio         = $8,
+        origin      = $9,
+        hits        = $10,
+        spotify_url = $11,
+        updated_at  = NOW()
+       WHERE id = $12`,
       [
         name,
         role,
@@ -53,7 +65,7 @@ export async function PUT(req: NextRequest) {
         image,
         bio,
         origin,
-        JSON.stringify(hits || []),
+        hits || [],
         spotifyUrl,
         id,
       ],
@@ -85,11 +97,12 @@ export async function POST(req: NextRequest) {
       hits,
       spotifyUrl,
     } = body;
+
     const id = name.toLowerCase().replace(/[^a-z0-9]/g, "-");
 
-    dbExecute(
-      `INSERT INTO artists (id, name, role, genre, day, stage, time, image, bio, origin, hits, spotifyUrl)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    await dbExecute(
+      `INSERT INTO artists (id, name, role, genre, day, stage, time, image, bio, origin, hits, spotify_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         id,
         name,
@@ -101,7 +114,7 @@ export async function POST(req: NextRequest) {
         image || "/images/artists/ruger.jpg",
         bio || "",
         origin || "Dubai, UAE",
-        JSON.stringify(hits || []),
+        hits || [],
         spotifyUrl || "",
       ],
     );

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, dbQueryOne, dbExecute, pgExecute } from "@/lib/db";
+import { dbQueryOne, dbExecute } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
 import { sendTicketConfirmationEmail } from "@/lib/email";
 import crypto from "node:crypto";
@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
       customerPhone,
       customerLocation,
       notes,
+      isDeposit = false,
     } = body;
 
     if (!eventId || !items || !Array.isArray(items) || items.length === 0) {
@@ -30,19 +31,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getDb();
-
     // 1. Verify Event
-    const event = dbQueryOne<any>(
-      "SELECT * FROM events WHERE id = ? OR slug = ?",
-      [eventId, eventId],
+    const event = await dbQueryOne<any>(
+      "SELECT * FROM events WHERE id = $1 OR slug = $1",
+      [eventId],
     );
     if (!event) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
     // 2. Validate Tier Inventory and Calculate Total
-    let totalAmount = 0;
+    let fullTotalAmount = 0;
+    let chargeAmount = 0;
     const validatedItems: {
       tier: any;
       quantity: number;
@@ -50,9 +50,28 @@ export async function POST(req: NextRequest) {
     }[] = [];
 
     for (const item of items) {
-      const tier = dbQueryOne<any>("SELECT * FROM ticket_tiers WHERE id = ?", [
-        item.tierId,
-      ]);
+      const tier = await dbQueryOne<any>(
+        `SELECT
+           id,
+           event_id        AS "eventId",
+           name,
+           description,
+           category,
+           price,
+           currency,
+           capacity,
+           sold_count      AS "soldCount",
+           pax_per_unit    AS "paxPerUnit",
+           wristband_color AS "wristbandColor",
+           color,
+           status,
+           sort_order      AS "sortOrder",
+           COALESCE(allow_deposit, true) AS "allowDeposit",
+           COALESCE(deposit_percentage, 20) AS "depositPercentage"
+         FROM ticket_tiers
+         WHERE id = $1`,
+        [item.tierId],
+      );
       if (!tier) {
         return NextResponse.json(
           { error: `Ticket tier ${item.tierId} does not exist.` },
@@ -70,13 +89,32 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      totalAmount += tier.price * item.quantity;
+      const itemFullPrice = tier.price * item.quantity;
+      fullTotalAmount += itemFullPrice;
+
+      // If deposit requested and allowed on table tier
+      if (
+        isDeposit &&
+        (tier.category === "table" || tier.is_vvip || tier.isVVIP) &&
+        tier.allowDeposit
+      ) {
+        const pct = tier.depositPercentage || 20;
+        chargeAmount += Math.round((itemFullPrice * pct) / 100);
+      } else {
+        chargeAmount += itemFullPrice;
+      }
+
       validatedItems.push({
         tier,
         quantity: item.quantity,
         attendeeNames: item.attendeeNames || [],
       });
     }
+
+    const isOrderDeposit = isDeposit && chargeAmount < fullTotalAmount;
+    const remainingBalance = isOrderDeposit
+      ? fullTotalAmount - chargeAmount
+      : 0;
 
     // 3. Generate Order Reference Number
     const orderId = `ord-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
@@ -88,7 +126,6 @@ export async function POST(req: NextRequest) {
     // 4. Handle Stripe Integration if API key is configured
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (stripeSecretKey && !stripeSecretKey.includes("placeholder")) {
-      // Create Stripe Checkout Session using Stripe REST API
       const stripeParams = new URLSearchParams();
       stripeParams.append("mode", "payment");
       stripeParams.append(
@@ -103,24 +140,39 @@ export async function POST(req: NextRequest) {
       stripeParams.append("client_reference_id", orderNumber);
       stripeParams.append("metadata[orderId]", orderId);
       stripeParams.append("metadata[orderNumber]", orderNumber);
+      stripeParams.append(
+        "metadata[isDeposit]",
+        isOrderDeposit ? "true" : "false",
+      );
 
       let lineIndex = 0;
       for (const item of validatedItems) {
+        const isTierDeposit =
+          isOrderDeposit &&
+          (item.tier.category === "table" || item.tier.isVVIP);
+        const itemUnitCost = isTierDeposit
+          ? Math.round(
+              (item.tier.price * (item.tier.depositPercentage || 20)) / 100,
+            )
+          : item.tier.price;
+
         stripeParams.append(
           `line_items[${lineIndex}][price_data][currency]`,
           item.tier.currency.toLowerCase(),
         );
         stripeParams.append(
           `line_items[${lineIndex}][price_data][product_data][name]`,
-          `${event.name} - ${item.tier.name}`,
+          `${event.name} - ${item.tier.name}${isTierDeposit ? ` (${item.tier.depositPercentage || 20}% Table Reservation Deposit)` : ""}`,
         );
         stripeParams.append(
           `line_items[${lineIndex}][price_data][product_data][description]`,
-          item.tier.description || `${item.tier.paxPerUnit} Guest Pass`,
+          isTierDeposit
+            ? `20% Deposit. Remaining balance of ${orderCurrency} ${(item.tier.price * item.quantity - itemUnitCost * item.quantity).toLocaleString()} due prior to event entrance.`
+            : item.tier.description || `${item.tier.paxPerUnit} Guest Pass`,
         );
         stripeParams.append(
           `line_items[${lineIndex}][price_data][unit_amount]`,
-          Math.round(item.tier.price * 100).toString(),
+          Math.round(itemUnitCost * 100).toString(),
         );
         stripeParams.append(
           `line_items[${lineIndex}][quantity]`,
@@ -154,10 +206,10 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Record Order as PENDING in DB
-      dbExecute(
-        `INSERT INTO orders (id, orderNumber, eventId, customerName, customerEmail, customerPhone, customerLocation, notes, totalAmount, currency, status, stripeSessionId)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
+      // Record Order as PENDING in Supabase
+      await dbExecute(
+        `INSERT INTO orders (id, order_number, event_id, customer_name, customer_email, customer_phone, customer_location, notes, total_amount, currency, status, stripe_session_id, is_deposit, deposit_amount, remaining_balance)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PENDING', $11, $12, $13, $14)`,
         [
           orderId,
           orderNumber,
@@ -167,33 +219,16 @@ export async function POST(req: NextRequest) {
           customerPhone,
           customerLocation || "",
           notes || "",
-          totalAmount,
+          chargeAmount,
           orderCurrency,
           stripeSession.id,
+          isOrderDeposit,
+          isOrderDeposit ? chargeAmount : 0,
+          remainingBalance,
         ],
       );
 
-      // Mirror order to Supabase PostgreSQL
-      pgExecute(
-        `INSERT INTO orders (id, order_number, event_id, customer_name, customer_email, customer_phone, customer_location, notes, total_amount, currency, status, stripe_session_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PENDING', $11)
-         ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, stripe_session_id = EXCLUDED.stripe_session_id`,
-        [
-          orderId,
-          orderNumber,
-          event.id,
-          customerName,
-          customerEmail,
-          customerPhone,
-          customerLocation || "",
-          notes || "",
-          totalAmount,
-          orderCurrency,
-          stripeSession.id,
-        ],
-      ).catch(() => {});
-
-      // Pre-generate pending tickets in DB linked to order
+      // Pre-generate pending tickets linked to order
       for (const item of validatedItems) {
         for (let i = 0; i < item.quantity; i++) {
           const ticketId = `tkt-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
@@ -203,9 +238,9 @@ export async function POST(req: NextRequest) {
           const attendeeName =
             item.attendeeNames[i] || `${customerName} (Guest ${i + 1})`;
 
-          dbExecute(
-            `INSERT INTO tickets (id, orderId, tierId, ticketCode, qrHash, attendeeName, attendeeEmail, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
+          await dbExecute(
+            `INSERT INTO tickets (id, order_id, tier_id, ticket_code, qr_hash, attendee_name, attendee_email, status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING')`,
             [
               ticketId,
               orderId,
@@ -216,22 +251,6 @@ export async function POST(req: NextRequest) {
               customerEmail,
             ],
           );
-
-          // Mirror ticket to Supabase PostgreSQL
-          pgExecute(
-            `INSERT INTO tickets (id, order_id, tier_id, ticket_code, qr_hash, attendee_name, attendee_email, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'PENDING')
-             ON CONFLICT (id) DO NOTHING`,
-            [
-              ticketId,
-              orderId,
-              item.tier.id,
-              ticketCode,
-              qrHash,
-              attendeeName,
-              customerEmail,
-            ],
-          ).catch(() => {});
         }
       }
 
@@ -239,10 +258,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Seamless Direct / Test Mode Checkout (Instant Fulfillment & Real Tickets)
-    // Record Order as PAID
-    dbExecute(
-      `INSERT INTO orders (id, orderNumber, eventId, customerName, customerEmail, customerPhone, customerLocation, notes, totalAmount, currency, status, stripeSessionId)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PAID', ?)`,
+    await dbExecute(
+      `INSERT INTO orders (id, order_number, event_id, customer_name, customer_email, customer_phone, customer_location, notes, total_amount, currency, status, stripe_session_id, is_deposit, deposit_amount, remaining_balance)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'PAID', $11, $12, $13, $14)`,
       [
         orderId,
         orderNumber,
@@ -252,18 +270,20 @@ export async function POST(req: NextRequest) {
         customerPhone,
         customerLocation || "",
         notes || "",
-        totalAmount,
+        chargeAmount,
         orderCurrency,
         `test_session_${Date.now()}`,
+        isOrderDeposit,
+        isOrderDeposit ? chargeAmount : 0,
+        remainingBalance,
       ],
     );
 
-    // Generate Tickets with unique QR Codes and decrement inventory
+    // Generate Tickets with unique QR Codes and increment inventory
     const generatedTickets: any[] = [];
     for (const item of validatedItems) {
-      // Increment sold count atomically
-      dbExecute(
-        `UPDATE ticket_tiers SET soldCount = soldCount + ? WHERE id = ?`,
+      await dbExecute(
+        `UPDATE ticket_tiers SET sold_count = sold_count + $1 WHERE id = $2`,
         [item.quantity, item.tier.id],
       );
 
@@ -272,13 +292,12 @@ export async function POST(req: NextRequest) {
         const ticketCode = `NLF-${event.slug.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
         const signature = generateTicketSignature(ticketCode);
         const qrHash = `${ticketCode}:${signature}`;
-
         const attendeeName =
           item.attendeeNames[i] || `${customerName} (Guest ${i + 1})`;
 
-        dbExecute(
-          `INSERT INTO tickets (id, orderId, tierId, ticketCode, qrHash, attendeeName, attendeeEmail, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'VALID')`,
+        await dbExecute(
+          `INSERT INTO tickets (id, order_id, tier_id, ticket_code, qr_hash, attendee_name, attendee_email, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 'VALID')`,
           [
             ticketId,
             orderId,
@@ -292,15 +311,20 @@ export async function POST(req: NextRequest) {
 
         generatedTickets.push({
           id: ticketId,
+          orderId,
+          tierId: item.tier.id,
           ticketCode,
-          tierName: item.tier.name,
+          qrHash,
           attendeeName,
+          attendeeEmail: customerEmail,
+          status: "VALID",
+          tierName: item.tier.name,
           paxPerUnit: item.tier.paxPerUnit,
         });
       }
     }
 
-    // Send Automated Ticket Pass Email
+    // Send instant confirmation email
     await sendTicketConfirmationEmail({
       order: {
         id: orderId,
@@ -309,11 +333,12 @@ export async function POST(req: NextRequest) {
         customerName,
         customerEmail,
         customerPhone,
-        customerLocation,
-        notes,
-        totalAmount,
+        totalAmount: chargeAmount,
         currency: orderCurrency,
         status: "PAID",
+        isDeposit: isOrderDeposit,
+        depositAmount: isOrderDeposit ? chargeAmount : 0,
+        remainingBalance,
         createdAt: new Date().toISOString(),
       },
       tickets: generatedTickets,
@@ -321,13 +346,15 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      url: `/orders/${orderId}?confirmed=true`,
+      success: true,
       orderNumber,
+      orderId,
+      url: `/orders/${orderId}?confirmed=true`,
     });
   } catch (err: any) {
-    console.error("Checkout Exception:", err);
+    console.error("Checkout Route Error:", err);
     return NextResponse.json(
-      { error: err.message || "Checkout could not be processed." },
+      { error: err.message || "Checkout server error" },
       { status: 500 },
     );
   }

@@ -1,5 +1,11 @@
-import { getDb, dbQuery, dbQueryOne, dbExecute, pgExecute } from "./db";
-import { seedDatabase } from "./seed";
+// =============================================================================
+// NO LIMIT FEST — DATA SERVICE (Supabase PostgreSQL Only)
+// =============================================================================
+// All functions are async. All SQL uses PostgreSQL syntax ($1/$2 placeholders,
+// snake_case columns aliased to camelCase for TypeScript compatibility).
+// =============================================================================
+
+import { dbQuery, dbQueryOne, dbExecute } from "./db";
 import { siteConfig } from "@/config/site";
 import { festivalEvents, FestivalEvent, TicketTier } from "@/data/events";
 import { festivalArtists, Artist } from "@/data/artists";
@@ -9,17 +15,9 @@ import { sendTicketConfirmationEmail } from "./email";
 import { generateTicketSignature } from "./qrcode";
 import crypto from "node:crypto";
 
-let isSeeded = false;
-function ensureDb() {
-  if (!isSeeded) {
-    try {
-      seedDatabase();
-      isSeeded = true;
-    } catch (err) {
-      console.error("Error ensuring database seed:", err);
-    }
-  }
-}
+// ---------------------------------------------------------------------------
+// TypeScript Interfaces
+// ---------------------------------------------------------------------------
 
 export interface DbSiteConfig {
   id: string;
@@ -54,6 +52,8 @@ export interface DbTicketTier {
   sortOrder: number;
   color?: string;
   wristbandColor?: string;
+  allowDeposit?: boolean;
+  depositPercentage?: number;
 }
 
 export interface DbEvent {
@@ -96,6 +96,9 @@ export interface DbOrder {
   currency: string;
   status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   stripeSessionId?: string;
+  isDeposit?: boolean;
+  depositAmount?: number;
+  remainingBalance?: number;
   createdAt: string;
   tickets?: DbTicket[];
 }
@@ -122,28 +125,60 @@ export interface DbTicket {
   wristbandColor?: string;
 }
 
-/**
- * Get Site Configuration
- */
-export function getSiteConfig(): DbSiteConfig {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// SQL column aliases for consistent camelCase return values
+// ---------------------------------------------------------------------------
+const TIER_SELECT = `
+  id, event_id AS "eventId", name, category, price, currency, capacity,
+  sold_count AS "soldCount", pax_per_unit AS "paxPerUnit", badge, description,
+  perks, status, popular, is_vvip AS "isVVIP", sort_order AS "sortOrder",
+  COALESCE(color, '#00E676') AS color,
+  COALESCE(wristband_color, 'NEON GREEN') AS "wristbandColor",
+  COALESCE(allow_deposit, true) AS "allowDeposit",
+  COALESCE(deposit_percentage, 20) AS "depositPercentage",
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`;
+
+const EVENT_SELECT = `
+  id, slug, name, edition, city, country, flag, region, status, dates, time, year,
+  venue, address, tagline, description, hero_image AS "heroImage",
+  stages_count AS "stagesCount", expected_attendance AS "expectedAttendance",
+  is_current_edition AS "isCurrentEdition", experiences, partners,
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`;
+
+const ORDER_SELECT = `
+  id, order_number AS "orderNumber", event_id AS "eventId",
+  customer_name AS "customerName", customer_email AS "customerEmail",
+  customer_phone AS "customerPhone", customer_location AS "customerLocation",
+  notes, total_amount AS "totalAmount", currency, status,
+  COALESCE(is_deposit, false) AS "isDeposit",
+  COALESCE(deposit_amount, 0) AS "depositAmount",
+  COALESCE(remaining_balance, 0) AS "remainingBalance",
+  stripe_session_id AS "stripeSessionId", stripe_payment_intent AS "stripePaymentIntent",
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`;
+
+const TICKET_SELECT = `
+  id, order_id AS "orderId", tier_id AS "tierId", ticket_code AS "ticketCode",
+  qr_hash AS "qrHash", attendee_name AS "attendeeName", attendee_email AS "attendeeEmail",
+  status, checked_in_at AS "checkedInAt", checked_in_by AS "checkedInBy",
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`;
+
+// ---------------------------------------------------------------------------
+// Site Configuration
+// ---------------------------------------------------------------------------
+export async function getSiteConfig(): Promise<DbSiteConfig> {
   try {
-    const row = dbQueryOne<any>(
-      "SELECT * FROM site_config WHERE id = 'global'",
-    );
-    if (row) {
-      return {
-        ...row,
-        socials:
-          typeof row.socials === "string"
-            ? JSON.parse(row.socials)
-            : row.socials,
-        organizers:
-          typeof row.organizers === "string"
-            ? JSON.parse(row.organizers)
-            : row.organizers,
-      };
-    }
+    const row = await dbQueryOne<any>(`
+      SELECT id, name, short_name AS "shortName", tagline, description,
+             default_whatsapp AS "defaultWhatsApp", email,
+             marquee_text AS "marqueeText", age_limit AS "ageLimit",
+             socials, organizers
+      FROM site_config WHERE id = 'global'
+    `);
+    if (row) return row as DbSiteConfig;
   } catch (e) {
     console.error("Error fetching site_config:", e);
   }
@@ -157,34 +192,24 @@ export function getSiteConfig(): DbSiteConfig {
     email: siteConfig.email,
     marqueeText:
       "★ MUSIC, ENERGY, NO LIMIT ★ HEADLINER RUGER LIVE AT HELIPAD BY FROZEN CHERRY DUBAI ★ SATURDAY 24TH OCTOBER 2026",
-    ageLimit: siteConfig.dubaiEdition.ageLimit,
-    socials: siteConfig.socials,
-    organizers: siteConfig.organizers,
+    ageLimit: "Strictly 21+",
+    socials: siteConfig.socials || {},
+    organizers: siteConfig.organizers || [],
   };
 }
 
-/**
- * Get All Events
- */
-export function getAllEvents(): DbEvent[] {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+export async function getAllEvents(): Promise<DbEvent[]> {
   try {
-    const rows = dbQuery<any>(
-      "SELECT * FROM events ORDER BY isCurrentEdition DESC, year ASC",
-    );
-    if (rows && rows.length > 0) {
-      return rows.map((r) => ({
-        ...r,
-        isCurrentEdition: Boolean(r.isCurrentEdition),
-        experiences:
-          typeof r.experiences === "string"
-            ? JSON.parse(r.experiences)
-            : r.experiences || [],
-        partners:
-          typeof r.partners === "string"
-            ? JSON.parse(r.partners)
-            : r.partners || [],
-      }));
+    const rows = await dbQuery<any>(`
+      SELECT ${EVENT_SELECT}
+      FROM events
+      ORDER BY is_current_edition DESC, year ASC
+    `);
+    if (rows?.length > 0) {
+      return rows.map(normalizeEvent);
     }
   } catch (e) {
     console.error("Error fetching events:", e);
@@ -192,40 +217,62 @@ export function getAllEvents(): DbEvent[] {
   return festivalEvents as unknown as DbEvent[];
 }
 
-/**
- * Get Active Event (Dubai flagship)
- */
-export function getActiveEvent(): DbEvent {
-  const events = getAllEvents();
+export async function getActiveEvent(): Promise<DbEvent> {
+  const events = await getAllEvents();
   return events.find((e) => e.isCurrentEdition) || events[0];
 }
 
-/**
- * Get Event by Slug
- */
-export function getEventBySlug(slug: string): DbEvent | undefined {
-  const events = getAllEvents();
-  return events.find((e) => e.slug.toLowerCase() === slug.toLowerCase());
+export async function getEventBySlug(
+  slug: string,
+): Promise<DbEvent | undefined> {
+  try {
+    const row = await dbQueryOne<any>(
+      `
+      SELECT ${EVENT_SELECT}
+      FROM events WHERE LOWER(slug) = LOWER($1)
+    `,
+      [slug],
+    );
+    if (row) return normalizeEvent(row);
+  } catch (e) {
+    console.error("Error fetching event by slug:", e);
+  }
+  return undefined;
 }
 
-/**
- * Get Ticket Tiers for an Event
- */
-export function getTicketTiers(eventId: string): DbTicketTier[] {
-  ensureDb();
+function normalizeEvent(r: any): DbEvent {
+  return {
+    ...r,
+    isCurrentEdition: Boolean(r.isCurrentEdition),
+    experiences: Array.isArray(r.experiences)
+      ? r.experiences
+      : typeof r.experiences === "string"
+        ? JSON.parse(r.experiences)
+        : [],
+    partners: Array.isArray(r.partners)
+      ? r.partners
+      : typeof r.partners === "string"
+        ? JSON.parse(r.partners)
+        : [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Ticket Tiers
+// ---------------------------------------------------------------------------
+export async function getTicketTiers(eventId: string): Promise<DbTicketTier[]> {
   try {
-    const rows = dbQuery<any>(
-      "SELECT * FROM ticket_tiers WHERE eventId = ? ORDER BY sortOrder ASC, price ASC",
+    const rows = await dbQuery<any>(
+      `
+      SELECT ${TIER_SELECT}
+      FROM ticket_tiers
+      WHERE event_id = $1
+      ORDER BY sort_order ASC, price ASC
+    `,
       [eventId],
     );
-    if (rows && rows.length > 0) {
-      return rows.map((r) => ({
-        ...r,
-        perks:
-          typeof r.perks === "string" ? JSON.parse(r.perks) : r.perks || [],
-        popular: Boolean(r.popular),
-        isVVIP: Boolean(r.isVVIP),
-      }));
+    if (rows?.length > 0) {
+      return rows.map(normalizeTier);
     }
   } catch (e) {
     console.error("Error fetching tiers:", e);
@@ -233,17 +280,41 @@ export function getTicketTiers(eventId: string): DbTicketTier[] {
   return [];
 }
 
-/**
- * Get Artists / Lineup
- */
-export function getAllArtists(): Artist[] {
-  ensureDb();
+function normalizeTier(r: any): DbTicketTier {
+  return {
+    ...r,
+    perks: Array.isArray(r.perks)
+      ? r.perks
+      : typeof r.perks === "string"
+        ? JSON.parse(r.perks)
+        : [],
+    popular: Boolean(r.popular),
+    isVVIP: Boolean(r.isVVIP),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Artists / Lineup
+// ---------------------------------------------------------------------------
+export async function getAllArtists(): Promise<Artist[]> {
   try {
-    const rows = dbQuery<any>("SELECT * FROM artists ORDER BY id ASC");
-    if (rows && rows.length > 0) {
-      return rows.map((r) => ({
+    const rows = await dbQuery<any>(`
+      SELECT id, name, role, genre, day, stage, time, image, bio,
+             COALESCE(origin, '') AS origin,
+             COALESCE(hits, '[]') AS hits,
+             spotify_url AS "spotifyUrl",
+             created_at AS "createdAt"
+      FROM artists
+      ORDER BY id ASC
+    `);
+    if (rows?.length > 0) {
+      return rows.map((r: any) => ({
         ...r,
-        hits: typeof r.hits === "string" ? JSON.parse(r.hits) : r.hits || [],
+        hits: Array.isArray(r.hits)
+          ? r.hits
+          : typeof r.hits === "string"
+            ? JSON.parse(r.hits)
+            : [],
       }));
     }
   } catch (e) {
@@ -252,22 +323,25 @@ export function getAllArtists(): Artist[] {
   return festivalArtists;
 }
 
-/**
- * Get Stages
- */
-export function getAllStages(): Stage[] {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// Stages
+// ---------------------------------------------------------------------------
+export async function getAllStages(): Promise<Stage[]> {
   try {
-    const rows = dbQuery<any>("SELECT * FROM stages ORDER BY id ASC");
-    if (rows && rows.length > 0) {
-      return rows.map((r) => ({
+    const rows = await dbQuery<any>(`
+      SELECT id, name, subtitle, tagline, description, image,
+             genres, capacity, production
+      FROM stages ORDER BY id ASC
+    `);
+    if (rows?.length > 0) {
+      return rows.map((r: any) => ({
         ...r,
-        genres:
-          typeof r.genres === "string" ? JSON.parse(r.genres) : r.genres || [],
-        production:
-          typeof r.production === "string"
-            ? JSON.parse(r.production)
-            : r.production || {},
+        genres: Array.isArray(r.genres)
+          ? r.genres
+          : typeof r.genres === "string"
+            ? JSON.parse(r.genres)
+            : [],
+        production: typeof r.production === "object" ? r.production : {},
       }));
     }
   } catch (e) {
@@ -276,39 +350,49 @@ export function getAllStages(): Stage[] {
   return festivalStages;
 }
 
-/**
- * Get FAQs
- */
-export function getAllFAQs(): FAQItem[] {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// FAQs
+// ---------------------------------------------------------------------------
+export async function getAllFAQs(): Promise<FAQItem[]> {
   try {
-    const rows = dbQuery<any>("SELECT * FROM faqs ORDER BY sortOrder ASC");
-    if (rows && rows.length > 0) {
-      return rows;
-    }
+    const rows = await dbQuery<any>(`
+      SELECT id, category, question, answer, sort_order AS "sortOrder"
+      FROM faqs ORDER BY sort_order ASC
+    `);
+    if (rows?.length > 0) return rows;
   } catch (e) {
     console.error("Error fetching faqs:", e);
   }
   return festivalFaqs;
 }
 
-/**
- * Get Ticket by Code (for entrance scanning & digital pass)
- */
-export function getTicketByCode(ticketCode: string): DbTicket | null {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// Tickets
+// ---------------------------------------------------------------------------
+export async function getTicketByCode(
+  ticketCode: string,
+): Promise<DbTicket | null> {
   try {
-    const row = dbQueryOne<any>(
-      `SELECT t.*, 
-              tt.name as tierName, tt.paxPerUnit, tt.category,
-              COALESCE(tt.color, '#00E676') as tierColor,
-              COALESCE(tt.wristbandColor, 'NEON GREEN') as wristbandColor,
-              e.id as eventId, e.name as eventName, e.venue as eventVenue, e.dates as eventDates, e.time as eventTime
-       FROM tickets t
-       JOIN ticket_tiers tt ON t.tierId = tt.id
-       JOIN orders o ON t.orderId = o.id
-       JOIN events e ON o.eventId = e.id
-       WHERE t.ticketCode = ?`,
+    const row = await dbQueryOne<any>(
+      `
+      SELECT
+        ${TICKET_SELECT},
+        tt.name AS "tierName",
+        tt.pax_per_unit AS "paxPerUnit",
+        tt.category,
+        COALESCE(tt.color, '#00E676') AS "tierColor",
+        COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor",
+        e.id AS "eventId",
+        e.name AS "eventName",
+        e.venue AS "eventVenue",
+        e.dates AS "eventDates",
+        e.time AS "eventTime"
+      FROM tickets t
+      JOIN ticket_tiers tt ON t.tier_id = tt.id
+      JOIN orders o ON t.order_id = o.id
+      JOIN events e ON o.event_id = e.id
+      WHERE t.ticket_code = $1
+    `,
       [ticketCode],
     );
     return row || null;
@@ -318,74 +402,76 @@ export function getTicketByCode(ticketCode: string): DbTicket | null {
   }
 }
 
-/**
- * Get All Orders
- */
-export function getAllOrders(limit: number = 50): DbOrder[] {
-  ensureDb();
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+export async function getAllOrders(limit = 50): Promise<DbOrder[]> {
   try {
-    const orders = dbQuery<any>(
-      "SELECT * FROM orders ORDER BY createdAt DESC LIMIT ?",
+    return await dbQuery<any>(
+      `
+      SELECT ${ORDER_SELECT}
+      FROM orders
+      ORDER BY created_at DESC
+      LIMIT $1
+    `,
       [limit],
     );
-    return orders;
   } catch (e) {
     console.error("Error fetching orders:", e);
     return [];
   }
 }
 
-/**
- * Get Order by ID with Tickets
- */
-export function getOrderById(
+export async function getOrderById(
   orderId: string,
-): (DbOrder & { tickets: DbTicket[] }) | null {
-  ensureDb();
+): Promise<(DbOrder & { tickets: DbTicket[] }) | null> {
   try {
-    const order = dbQueryOne<any>(
-      "SELECT * FROM orders WHERE id = ? OR orderNumber = ?",
-      [orderId, orderId],
+    const order = await dbQueryOne<any>(
+      `
+      SELECT ${ORDER_SELECT}
+      FROM orders
+      WHERE id = $1 OR order_number = $1
+    `,
+      [orderId],
     );
     if (!order) return null;
 
-    const tickets = dbQuery<any>(
-      `SELECT t.*, tt.name as tierName, tt.paxPerUnit,
-              COALESCE(tt.color, '#00E676') as tierColor,
-              COALESCE(tt.wristbandColor, 'NEON GREEN') as wristbandColor
-       FROM tickets t 
-       JOIN ticket_tiers tt ON t.tierId = tt.id 
-       WHERE t.orderId = ?`,
+    const tickets = await dbQuery<any>(
+      `
+      SELECT
+        ${TICKET_SELECT},
+        tt.name AS "tierName",
+        tt.pax_per_unit AS "paxPerUnit",
+        COALESCE(tt.color, '#00E676') AS "tierColor",
+        COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor"
+      FROM tickets t
+      JOIN ticket_tiers tt ON t.tier_id = tt.id
+      WHERE t.order_id = $1
+    `,
       [order.id],
     );
 
-    return {
-      ...order,
-      tickets: tickets || [],
-    };
+    return { ...order, tickets: tickets || [] };
   } catch (e) {
     console.error("Error fetching order with tickets:", e);
     return null;
   }
 }
 
-/**
- * Check In Ticket (Atomic)
- */
-export function performTicketCheckIn(
+// ---------------------------------------------------------------------------
+// Gate Check-In (Atomic)
+// ---------------------------------------------------------------------------
+export async function performTicketCheckIn(
   ticketCode: string,
   staffEmail: string,
   deviceInfo?: string,
-): {
+): Promise<{
   success: boolean;
   status: "CHECKED_IN" | "ALREADY_CHECKED_IN" | "NOT_FOUND";
   ticket?: DbTicket;
   message: string;
-} {
-  ensureDb();
-  const db = getDb();
-
-  const ticket = getTicketByCode(ticketCode);
+}> {
+  const ticket = await getTicketByCode(ticketCode);
   if (!ticket) {
     return {
       success: false,
@@ -395,14 +481,11 @@ export function performTicketCheckIn(
   }
 
   if (ticket.status === "CHECKED_IN") {
-    dbExecute(
-      `INSERT INTO check_in_logs (id, ticketId, result, staffEmail, deviceInfo) VALUES (?, ?, 'DUPLICATE', ?, ?)`,
-      [
-        `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        ticket.id,
-        staffEmail,
-        deviceInfo || "web",
-      ],
+    const logId = `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    await dbExecute(
+      `INSERT INTO check_in_logs (id, ticket_id, result, staff_email, device_info)
+       VALUES ($1, $2, 'DUPLICATE', $3, $4)`,
+      [logId, ticket.id, staffEmail, deviceInfo || "web"],
     );
     return {
       success: false,
@@ -413,22 +496,21 @@ export function performTicketCheckIn(
   }
 
   const now = new Date().toISOString();
-  dbExecute(
-    `UPDATE tickets SET status = 'CHECKED_IN', checkedInAt = ?, checkedInBy = ?, updatedAt = ? WHERE id = ?`,
+  await dbExecute(
+    `UPDATE tickets
+     SET status = 'CHECKED_IN', checked_in_at = $1, checked_in_by = $2, updated_at = $3
+     WHERE id = $4`,
     [now, staffEmail, now, ticket.id],
   );
 
-  dbExecute(
-    `INSERT INTO check_in_logs (id, ticketId, result, staffEmail, deviceInfo) VALUES (?, ?, 'SUCCESS', ?, ?)`,
-    [
-      `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      ticket.id,
-      staffEmail,
-      deviceInfo || "web",
-    ],
+  const logId = `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  await dbExecute(
+    `INSERT INTO check_in_logs (id, ticket_id, result, staff_email, device_info)
+     VALUES ($1, $2, 'SUCCESS', $3, $4)`,
+    [logId, ticket.id, staffEmail, deviceInfo || "web"],
   );
 
-  const updatedTicket = getTicketByCode(ticketCode);
+  const updatedTicket = await getTicketByCode(ticketCode);
   return {
     success: true,
     status: "CHECKED_IN",
@@ -437,32 +519,31 @@ export function performTicketCheckIn(
   };
 }
 
-/**
- * Reconciles and fulfills an order via Stripe Checkout Session
- */
+// ---------------------------------------------------------------------------
+// Stripe Order Fulfillment
+// ---------------------------------------------------------------------------
 export async function fulfillOrderFromStripeSession(
   sessionId: string,
   baseUrl?: string,
 ): Promise<(DbOrder & { tickets: DbTicket[] }) | null> {
-  ensureDb();
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) return null;
 
   try {
     const res = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${sessionId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${stripeSecretKey}`,
-        },
-      },
+      { headers: { Authorization: `Bearer ${stripeSecretKey}` } },
     );
     if (!res.ok) return null;
     const session = await res.json();
 
     if (session.payment_status === "paid") {
-      const order = dbQueryOne<any>(
-        "SELECT * FROM orders WHERE stripeSessionId = ? OR id = ?",
+      const order = await dbQueryOne<any>(
+        `
+        SELECT ${ORDER_SELECT}
+        FROM orders
+        WHERE stripe_session_id = $1 OR id = $2
+      `,
         [sessionId, session.metadata?.orderId || ""],
       );
 
@@ -473,53 +554,57 @@ export async function fulfillOrderFromStripeSession(
           order.customerEmail;
 
         if (order.status !== "PAID") {
-          dbExecute(
-            `UPDATE orders SET status = 'PAID', stripePaymentIntent = ?, customerEmail = COALESCE(NULLIF(customerEmail, ''), ?), updatedAt = datetime('now') WHERE id = ?`,
+          await dbExecute(
+            `UPDATE orders
+             SET status = 'PAID',
+                 stripe_payment_intent = $1,
+                 customer_email = COALESCE(NULLIF(customer_email, ''), $2),
+                 updated_at = NOW()
+             WHERE id = $3`,
             [session.payment_intent || "", stripeCustomerEmail, order.id],
           );
 
-          // Activate pending tickets
-          dbExecute(`UPDATE tickets SET status = 'VALID' WHERE orderId = ?`, [
-            order.id,
-          ]);
-
-          // Mirror payment status and active tickets to Supabase PostgreSQL
-          pgExecute(
-            `UPDATE orders SET status = 'PAID', stripe_payment_intent = $1, customer_email = COALESCE(NULLIF(customer_email, ''), $2), updated_at = NOW() WHERE id = $3`,
-            [session.payment_intent || "", stripeCustomerEmail, order.id],
-          ).catch(() => {});
-          pgExecute(
+          await dbExecute(
             `UPDATE tickets SET status = 'VALID', updated_at = NOW() WHERE order_id = $1`,
             [order.id],
-          ).catch(() => {});
+          );
 
-          // Fetch all tickets for order
-          let tickets = dbQuery<any>(
-            `SELECT t.*, tt.name as tierName, tt.paxPerUnit 
-             FROM tickets t 
-             JOIN ticket_tiers tt ON t.tierId = tt.id 
-             WHERE t.orderId = ?`,
+          let tickets = await dbQuery<any>(
+            `
+            SELECT
+              ${TICKET_SELECT},
+              tt.name AS "tierName",
+              tt.pax_per_unit AS "paxPerUnit"
+            FROM tickets t
+            JOIN ticket_tiers tt ON t.tier_id = tt.id
+            WHERE t.order_id = $1
+          `,
             [order.id],
           );
 
-          // If no tickets were pre-inserted, generate them from tier
           if (!tickets || tickets.length === 0) {
-            const tier = dbQueryOne<any>(
-              "SELECT * FROM ticket_tiers WHERE eventId = ? AND status = 'active' LIMIT 1",
+            const tier = await dbQueryOne<any>(
+              `
+              SELECT ${TIER_SELECT}
+              FROM ticket_tiers
+              WHERE event_id = $1 AND status = 'active'
+              LIMIT 1
+            `,
               [order.eventId],
             );
+
             if (tier) {
               const ticketId = `tkt-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
-              const festivalEvent = dbQueryOne<any>(
-                "SELECT * FROM events WHERE id = ?",
+              const festivalEvent = await dbQueryOne<any>(
+                `SELECT slug FROM events WHERE id = $1`,
                 [order.eventId],
               );
-              const ticketCode = `NLF-${festivalEvent?.slug.toUpperCase() || "DXB"}-${Math.floor(10000 + Math.random() * 90000)}`;
+              const ticketCode = `NLF-${(festivalEvent?.slug || "DXB").toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
               const qrHash = `${ticketCode}:${generateTicketSignature(ticketCode)}`;
 
-              dbExecute(
-                `INSERT INTO tickets (id, orderId, tierId, ticketCode, qrHash, attendeeName, attendeeEmail, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'VALID')`,
+              await dbExecute(
+                `INSERT INTO tickets (id, order_id, tier_id, ticket_code, qr_hash, attendee_name, attendee_email, status)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, 'VALID')`,
                 [
                   ticketId,
                   order.id,
@@ -530,33 +615,36 @@ export async function fulfillOrderFromStripeSession(
                   stripeCustomerEmail,
                 ],
               );
-              dbExecute(
-                `UPDATE ticket_tiers SET soldCount = soldCount + 1 WHERE id = ?`,
+              await dbExecute(
+                `UPDATE ticket_tiers SET sold_count = sold_count + 1 WHERE id = $1`,
                 [tier.id],
               );
 
-              tickets = dbQuery<any>(
-                `SELECT t.*, tt.name as tierName, tt.paxPerUnit 
-                 FROM tickets t 
-                 JOIN ticket_tiers tt ON t.tierId = tt.id 
-                 WHERE t.orderId = ?`,
+              tickets = await dbQuery<any>(
+                `
+                SELECT
+                  ${TICKET_SELECT},
+                  tt.name AS "tierName",
+                  tt.pax_per_unit AS "paxPerUnit"
+                FROM tickets t
+                JOIN ticket_tiers tt ON t.tier_id = tt.id
+                WHERE t.order_id = $1
+              `,
                 [order.id],
               );
             }
           } else {
-            // Increment sold count for pre-created tickets
             for (const t of tickets) {
-              dbExecute(
-                `UPDATE ticket_tiers SET soldCount = soldCount + 1 WHERE id = ?`,
+              await dbExecute(
+                `UPDATE ticket_tiers SET sold_count = sold_count + 1 WHERE id = $1`,
                 [t.tierId],
               );
             }
           }
 
-          // Send confirmation email with genuine QR passes via Postmark
           try {
             console.log(
-              `[ORDER FULFILLMENT] Dispatching ticket confirmation email for Order #${order.orderNumber} to ${stripeCustomerEmail}...`,
+              `[ORDER FULFILLMENT] Dispatching confirmation email for Order #${order.orderNumber} to ${stripeCustomerEmail}...`,
             );
             await sendTicketConfirmationEmail({
               order: {
@@ -571,10 +659,7 @@ export async function fulfillOrderFromStripeSession(
                 "https://nolimitfest.com",
             });
           } catch (mailErr) {
-            console.error(
-              "Failed to send postmark confirmation email:",
-              mailErr,
-            );
+            console.error("Failed to send confirmation email:", mailErr);
           }
         }
 

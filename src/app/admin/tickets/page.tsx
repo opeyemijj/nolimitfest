@@ -446,6 +446,67 @@ export default function AdminTicketsPage() {
                 </div>
               </div>
 
+              {/* Table Deposit Configuration Option */}
+              {(editingTier.category === "table" || editingTier.isVVIP) && (
+                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-amber-300">
+                        Table Reservation Deposit
+                      </p>
+                      <p className="text-[11px] text-gray-400">
+                        Allow guests to reserve with 20% deposit (or
+                        configurable %)
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingTier.allowDeposit ?? true}
+                        onChange={(e) =>
+                          setEditingTier({
+                            ...editingTier,
+                            allowDeposit: e.target.checked,
+                          })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FFD600]"></div>
+                    </label>
+                  </div>
+
+                  {(editingTier.allowDeposit ?? true) && (
+                    <div className="flex items-center gap-3 pt-2 border-t border-amber-500/20">
+                      <label className="text-xs text-gray-300 font-bold whitespace-nowrap">
+                        Deposit Percentage (%):
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={editingTier.depositPercentage ?? 20}
+                        onChange={(e) =>
+                          setEditingTier({
+                            ...editingTier,
+                            depositPercentage: parseFloat(e.target.value) || 20,
+                          })
+                        }
+                        className="w-24 bg-white/10 border border-white/20 rounded-xl px-2.5 py-1 text-white font-mono text-xs"
+                      />
+                      <span className="text-[11px] text-[#FFD600] font-mono font-bold">
+                        = {editingTier.currency || "AED"}{" "}
+                        {Math.round(
+                          (editingTier.price *
+                            (editingTier.depositPercentage ?? 20)) /
+                            100,
+                        ).toLocaleString()}{" "}
+                        deposit
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block font-bold text-gray-300 mb-1">
                   Perks (One per line)

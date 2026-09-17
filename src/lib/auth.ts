@@ -110,36 +110,29 @@ export async function getAuthUser(): Promise<AuthUser | null> {
     if (!payload) return null;
 
     try {
-      const dbUser = dbQueryOne<any>(
-        "SELECT id, name, email, role, isActive, permissions, assignedEvents FROM users WHERE id = ? AND isActive = 1",
+      const dbUser = await dbQueryOne<any>(
+        `SELECT id, name, email, role, is_active AS "isActive",
+                permissions, assigned_events AS "assignedEvents"
+         FROM users WHERE id = $1 AND is_active = true`,
         [payload.id],
       );
       if (dbUser) {
-        let parsedPermissions: PermissionKey[] = [];
-        try {
-          if (dbUser.permissions) {
-            parsedPermissions =
-              typeof dbUser.permissions === "string"
-                ? JSON.parse(dbUser.permissions)
-                : dbUser.permissions;
-          }
-        } catch {}
-        let parsedEvents: string[] = ["ALL"];
-        try {
-          if (dbUser.assignedEvents) {
-            parsedEvents =
-              typeof dbUser.assignedEvents === "string"
-                ? JSON.parse(dbUser.assignedEvents)
-                : dbUser.assignedEvents;
-          }
-        } catch {}
+        // JSONB comes back as arrays already in pg; guard against null
+        const parsedPermissions: PermissionKey[] = Array.isArray(
+          dbUser.permissions,
+        )
+          ? dbUser.permissions
+          : [];
+        const parsedEvents: string[] = Array.isArray(dbUser.assignedEvents)
+          ? dbUser.assignedEvents
+          : ["ALL"];
 
         return {
           id: String(dbUser.id),
           name: String(dbUser.name),
           email: String(dbUser.email),
           role: dbUser.role,
-          isActive: Number(dbUser.isActive),
+          isActive: dbUser.isActive ? 1 : 0,
           permissions: parsedPermissions,
           assignedEvents: parsedEvents,
         };

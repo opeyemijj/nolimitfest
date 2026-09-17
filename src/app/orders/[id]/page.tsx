@@ -23,7 +23,7 @@ export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await props.params;
-  const order = getOrderById(id);
+  const order = await getOrderById(id);
   if (!order) return { title: "Order Not Found - No Limit Fest" };
   return {
     title: `Order #${order.orderNumber} Confirmed | No Limit Fest`,
@@ -52,7 +52,7 @@ export default async function OrderConfirmationPage(props: {
     await fulfillOrderFromStripeSession(sessionId, origin);
   }
 
-  let order = getOrderById(id);
+  let order = await getOrderById(id);
   if (order && order.status === "PENDING" && order.stripeSessionId) {
     const updated = await fulfillOrderFromStripeSession(
       order.stripeSessionId,
@@ -65,7 +65,7 @@ export default async function OrderConfirmationPage(props: {
     notFound();
   }
 
-  const currentEvent = getActiveEvent();
+  const currentEvent = await getActiveEvent();
 
   return (
     <div className="min-h-screen bg-[#08090E] text-white pt-24 pb-16 px-4 sm:px-6 relative overflow-hidden">

@@ -20,7 +20,7 @@ export async function POST(
       );
     }
 
-    const existingTicket = getTicketByCode(code);
+    const existingTicket = await getTicketByCode(code);
     if (!existingTicket) {
       return NextResponse.json(
         { error: "Invalid ticket pass. Code not found.", status: "NOT_FOUND" },
@@ -39,7 +39,7 @@ export async function POST(
     }
 
     const deviceInfo = req.headers.get("user-agent") || "web-mobile";
-    const result = performTicketCheckIn(
+    const result = await performTicketCheckIn(
       code,
       `${user.name} (${user.role})`,
       deviceInfo,
@@ -77,7 +77,7 @@ export async function GET(
 ) {
   try {
     const { code } = await context.params;
-    const ticket = getTicketByCode(code);
+    const ticket = await getTicketByCode(code);
     if (!ticket) {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }

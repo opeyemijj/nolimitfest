@@ -23,7 +23,7 @@ function formatPhoneForExcel(phone: string | null | undefined): string {
   if (!phone) return '""';
   const clean = phone.trim();
   // Prepending ="..." in Excel forces it to be treated as a literal text cell
-  return `="""${clean}"""`;
+  return `="${clean}"`;
 }
 
 export async function GET(req: NextRequest) {
@@ -41,62 +41,64 @@ export async function GET(req: NextRequest) {
   const assignedEvents = getUserAssignedEvents(user);
 
   let sql = `
-    SELECT 
-      t.id AS ticketId,
-      t.ticketCode,
-      t.attendeeName,
-      t.attendeeEmail,
-      t.status AS ticketStatus,
-      t.checkedInAt,
-      t.checkedInBy,
-      t.createdAt AS ticketCreatedAt,
-      o.id AS orderId,
-      o.orderNumber,
-      o.customerName,
-      o.customerEmail,
-      o.customerPhone,
-      o.customerLocation,
-      o.notes AS orderNotes,
-      o.totalAmount AS orderTotalAmount,
-      o.currency AS orderCurrency,
-      o.status AS orderStatus,
-      o.createdAt AS orderCreatedAt,
-      tt.id AS tierId,
-      COALESCE(tt.name, 'General Admission') AS tierName,
-      COALESCE(tt.category, 'phase') AS tierCategory,
-      COALESCE(tt.price, 0) AS tierPrice,
-      COALESCE(tt.currency, o.currency) AS tierCurrency,
-      COALESCE(tt.paxPerUnit, 1) AS paxPerUnit,
-      COALESCE(tt.wristbandColor, 'NEON GREEN') AS wristbandColor,
-      e.id AS eventId,
-      e.slug AS eventSlug,
-      COALESCE(e.name, o.eventId) AS eventName,
-      COALESCE(e.city, '') AS eventCity,
-      COALESCE(e.country, '') AS eventCountry
+    SELECT
+      t.id                                          AS "ticketId",
+      t.ticket_code                                 AS "ticketCode",
+      t.attendee_name                               AS "attendeeName",
+      t.attendee_email                              AS "attendeeEmail",
+      t.status                                      AS "ticketStatus",
+      t.checked_in_at                               AS "checkedInAt",
+      t.checked_in_by                               AS "checkedInBy",
+      t.created_at                                  AS "ticketCreatedAt",
+      o.id                                          AS "orderId",
+      o.order_number                                AS "orderNumber",
+      o.customer_name                               AS "customerName",
+      o.customer_email                              AS "customerEmail",
+      o.customer_phone                              AS "customerPhone",
+      o.customer_location                           AS "customerLocation",
+      o.notes                                       AS "orderNotes",
+      o.total_amount                                AS "orderTotalAmount",
+      o.currency                                    AS "orderCurrency",
+      o.status                                      AS "orderStatus",
+      o.created_at                                  AS "orderCreatedAt",
+      tt.id                                         AS "tierId",
+      COALESCE(tt.name, 'General Admission')        AS "tierName",
+      COALESCE(tt.category, 'phase')                AS "tierCategory",
+      COALESCE(tt.price, 0)                         AS "tierPrice",
+      COALESCE(tt.currency, o.currency)             AS "tierCurrency",
+      COALESCE(tt.pax_per_unit, 1)                  AS "paxPerUnit",
+      COALESCE(tt.wristband_color, 'NEON GREEN')    AS "wristbandColor",
+      e.id                                          AS "eventId",
+      e.slug                                        AS "eventSlug",
+      COALESCE(e.name, o.event_id)                  AS "eventName",
+      COALESCE(e.city, '')                          AS "eventCity",
+      COALESCE(e.country, '')                       AS "eventCountry"
     FROM tickets t
-    JOIN orders o ON t.orderId = o.id
-    LEFT JOIN ticket_tiers tt ON t.tierId = tt.id
-    LEFT JOIN events e ON o.eventId = e.id
+    JOIN orders o ON t.order_id = o.id
+    LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+    LEFT JOIN events e ON o.event_id = e.id
   `;
 
   const whereClauses: string[] = [];
   const params: any[] = [];
+  let paramIndex = 1;
 
   if (!assignedEvents.includes("ALL")) {
-    whereClauses.push(
-      `o.eventId IN (${assignedEvents.map(() => "?").join(",")})`,
-    );
-    params.push(...assignedEvents);
+    whereClauses.push(`o.event_id = ANY($${paramIndex}::text[])`);
+    params.push(assignedEvents);
+    paramIndex++;
   }
 
   if (eventId && eventId !== "ALL") {
-    whereClauses.push("o.eventId = ?");
+    whereClauses.push(`o.event_id = $${paramIndex}`);
     params.push(eventId);
+    paramIndex++;
   }
 
   if (tierId && tierId !== "ALL") {
-    whereClauses.push("t.tierId = ?");
+    whereClauses.push(`t.tier_id = $${paramIndex}`);
     params.push(tierId);
+    paramIndex++;
   }
 
   if (status && status !== "ALL") {
@@ -115,34 +117,26 @@ export async function GET(req: NextRequest) {
 
   if (query) {
     whereClauses.push(`(
-      LOWER(o.customerName) LIKE ? 
-      OR LOWER(o.customerEmail) LIKE ? 
-      OR LOWER(o.customerPhone) LIKE ? 
-      OR LOWER(t.attendeeName) LIKE ? 
-      OR LOWER(t.ticketCode) LIKE ? 
-      OR LOWER(o.orderNumber) LIKE ? 
-      OR LOWER(COALESCE(o.customerLocation, '')) LIKE ? 
-      OR LOWER(COALESCE(tt.name, '')) LIKE ?
+      o.customer_name                      ILIKE $${paramIndex}
+      OR o.customer_email                  ILIKE $${paramIndex}
+      OR o.customer_phone                  ILIKE $${paramIndex}
+      OR t.attendee_name                   ILIKE $${paramIndex}
+      OR t.ticket_code                     ILIKE $${paramIndex}
+      OR o.order_number                    ILIKE $${paramIndex}
+      OR COALESCE(o.customer_location, '') ILIKE $${paramIndex}
+      OR COALESCE(tt.name, '')             ILIKE $${paramIndex}
     )`);
-    params.push(
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-      `%${query}%`,
-    );
+    params.push(`%${query}%`);
+    paramIndex++;
   }
 
   if (whereClauses.length > 0) {
     sql += " WHERE " + whereClauses.join(" AND ");
   }
 
-  sql += " ORDER BY o.createdAt DESC, t.createdAt DESC";
+  sql += " ORDER BY o.created_at DESC, t.created_at DESC";
 
-  const records = dbQuery(sql, params);
+  const records = await dbQuery(sql, params);
 
   const headers = [
     "Order Number",

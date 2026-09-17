@@ -48,10 +48,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LineupPage() {
-  const currentEvent = getActiveEvent();
-  const artists = getAllArtists();
-  const tiers = getTicketTiers(currentEvent.id);
+export default async function LineupPage() {
+  const currentEvent = await getActiveEvent();
+  const artists = await getAllArtists();
+  const tiers = await getTicketTiers(currentEvent.id);
 
   return (
     <div className="pt-28 pb-20 bg-[#08090E] min-h-screen text-white">

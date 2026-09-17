@@ -18,42 +18,38 @@ export async function GET() {
     );
   }
 
-  const rawUsers = dbQuery(
-    "SELECT id, name, email, role, isActive, permissions, assignedEvents, createdAt, updatedAt FROM users ORDER BY createdAt DESC",
+  const rawUsers = await dbQuery<any>(
+    `SELECT id, name, email, role,
+            is_active AS "isActive",
+            permissions,
+            assigned_events AS "assignedEvents",
+            created_at AS "createdAt",
+            updated_at AS "updatedAt"
+     FROM users
+     ORDER BY created_at ASC`,
   );
 
-  const users = rawUsers.map((u) => {
-    let parsedPermissions = [];
-    try {
-      if (u.permissions) {
-        parsedPermissions =
-          typeof u.permissions === "string"
-            ? JSON.parse(u.permissions)
-            : u.permissions;
-      }
-    } catch {}
+  const users = rawUsers.map((u: any) => {
+    // JSONB comes back as array already — just guard against null/empty
+    let parsedPermissions: string[] = Array.isArray(u.permissions)
+      ? u.permissions
+      : [];
     if (!parsedPermissions || parsedPermissions.length === 0) {
       parsedPermissions =
         ROLE_DEFAULT_PERMISSIONS[u.role as UserRole] ||
         ROLE_DEFAULT_PERMISSIONS.GATE_STAFF;
     }
 
-    let parsedEvents = ["ALL"];
-    try {
-      if (u.assignedEvents) {
-        parsedEvents =
-          typeof u.assignedEvents === "string"
-            ? JSON.parse(u.assignedEvents)
-            : u.assignedEvents;
-      }
-    } catch {}
+    const parsedEvents: string[] = Array.isArray(u.assignedEvents)
+      ? u.assignedEvents
+      : ["ALL"];
 
     return {
       id: u.id,
       name: u.name,
       email: u.email,
       role: u.role,
-      isActive: Number(u.isActive),
+      isActive: Boolean(u.isActive),
       permissions: parsedPermissions,
       assignedEvents: parsedEvents,
       createdAt: u.createdAt,
@@ -61,8 +57,9 @@ export async function GET() {
     };
   });
 
-  const events = dbQuery(
-    "SELECT id, name, city, country, isCurrentEdition FROM events ORDER BY isCurrentEdition DESC, name ASC",
+  const events = await dbQuery(
+    `SELECT id, name, city, country, is_current_edition AS "isCurrentEdition"
+     FROM events ORDER BY is_current_edition DESC, name ASC`,
   );
 
   return NextResponse.json({
@@ -94,8 +91,7 @@ export async function POST(req: NextRequest) {
 
     const cleanEmail = email.toLowerCase().trim();
 
-    // Check duplicate email
-    const existing = dbQueryOne("SELECT id FROM users WHERE email = ?", [
+    const existing = await dbQueryOne("SELECT id FROM users WHERE email = $1", [
       cleanEmail,
     ]);
     if (existing) {
@@ -121,17 +117,17 @@ export async function POST(req: NextRequest) {
     const id = `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const passwordHash = hashPassword(password);
 
-    dbExecute(
-      `INSERT INTO users (id, name, email, passwordHash, role, isActive, permissions, assignedEvents) 
-       VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+    await dbExecute(
+      `INSERT INTO users (id, name, email, password_hash, role, is_active, permissions, assigned_events)
+       VALUES ($1, $2, $3, $4, $5, true, $6, $7)`,
       [
         id,
         name.trim(),
         cleanEmail,
         passwordHash,
         userRole,
-        JSON.stringify(userPermissions),
-        JSON.stringify(userEvents),
+        userPermissions, // JSONB — pass array directly
+        userEvents, // JSONB — pass array directly
       ],
     );
 
@@ -170,9 +166,11 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const targetUser = dbQueryOne<any>("SELECT * FROM users WHERE id = ?", [
-      id,
-    ]);
+    const targetUser = await dbQueryOne<any>(
+      `SELECT id, role, is_active AS "isActive", permissions, assigned_events AS "assignedEvents"
+       FROM users WHERE id = $1`,
+      [id],
+    );
     if (!targetUser) {
       return NextResponse.json(
         { error: "Staff account not found." },
@@ -199,9 +197,8 @@ export async function PUT(req: NextRequest) {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    // Check duplicate email on another account
-    const duplicate = dbQueryOne(
-      "SELECT id FROM users WHERE email = ? AND id != ?",
+    const duplicate = await dbQueryOne(
+      "SELECT id FROM users WHERE email = $1 AND id != $2",
       [cleanEmail, id],
     );
     if (duplicate) {
@@ -212,64 +209,64 @@ export async function PUT(req: NextRequest) {
     }
 
     const newRole = (role as UserRole) || targetUser.role;
-    const newIsActive = isActive === 0 || isActive === false ? 0 : 1;
+    const newIsActive = isActive === 0 || isActive === false ? false : true;
 
     const userPermissions =
       permissions && Array.isArray(permissions)
         ? permissions
-        : targetUser.permissions
-          ? JSON.parse(targetUser.permissions)
+        : Array.isArray(targetUser.permissions)
+          ? targetUser.permissions
           : ROLE_DEFAULT_PERMISSIONS[newRole];
 
     const userEvents =
       assignedEvents && Array.isArray(assignedEvents)
         ? assignedEvents
-        : targetUser.assignedEvents
-          ? JSON.parse(targetUser.assignedEvents)
+        : Array.isArray(targetUser.assignedEvents)
+          ? targetUser.assignedEvents
           : ["ALL"];
 
     if (password && password.trim().length > 0) {
       const passwordHash = hashPassword(password.trim());
-      dbExecute(
-        `UPDATE users SET 
-          name = ?, 
-          email = ?, 
-          passwordHash = ?, 
-          role = ?, 
-          isActive = ?, 
-          permissions = ?, 
-          assignedEvents = ?, 
-          updatedAt = datetime('now') 
-        WHERE id = ?`,
+      await dbExecute(
+        `UPDATE users SET
+          name = $1,
+          email = $2,
+          password_hash = $3,
+          role = $4,
+          is_active = $5,
+          permissions = $6,
+          assigned_events = $7,
+          updated_at = NOW()
+        WHERE id = $8`,
         [
           name.trim(),
           cleanEmail,
           passwordHash,
           newRole,
           newIsActive,
-          JSON.stringify(userPermissions),
-          JSON.stringify(userEvents),
+          userPermissions, // JSONB — array directly
+          userEvents, // JSONB — array directly
           id,
         ],
       );
     } else {
-      dbExecute(
-        `UPDATE users SET 
-          name = ?, 
-          email = ?, 
-          role = ?, 
-          isActive = ?, 
-          permissions = ?, 
-          assignedEvents = ?, 
-          updatedAt = datetime('now') 
-        WHERE id = ?`,
+      await dbExecute(
+        `UPDATE users SET
+          name = $1,
+          email = $2,
+          role = $3,
+          is_active = $4,
+          permissions = $5,
+          assigned_events = $6,
+          updated_at = NOW()
+        WHERE id = $7`,
         [
           name.trim(),
           cleanEmail,
           newRole,
           newIsActive,
-          JSON.stringify(userPermissions),
-          JSON.stringify(userEvents),
+          userPermissions, // JSONB — array directly
+          userEvents, // JSONB — array directly
           id,
         ],
       );
@@ -307,14 +304,14 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Safety: Ensure at least 1 other active Super Admin remains
-    const superAdmins = dbQuery(
-      "SELECT id FROM users WHERE role = 'SUPER_ADMIN' AND isActive = 1 AND id != ?",
+    const superAdmins = await dbQuery(
+      "SELECT id FROM users WHERE role = 'SUPER_ADMIN' AND is_active = true AND id != $1",
       [id],
     );
-    const targetUser = dbQueryOne<any>("SELECT role FROM users WHERE id = ?", [
-      id,
-    ]);
+    const targetUser = await dbQueryOne<any>(
+      "SELECT role FROM users WHERE id = $1",
+      [id],
+    );
 
     if (targetUser?.role === "SUPER_ADMIN" && superAdmins.length === 0) {
       return NextResponse.json(
@@ -325,7 +322,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    dbExecute("DELETE FROM users WHERE id = ?", [id]);
+    await dbExecute("DELETE FROM users WHERE id = $1", [id]);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

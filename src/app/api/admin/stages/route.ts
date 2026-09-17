@@ -7,18 +7,12 @@ export async function GET() {
   if (!user || !hasPermission(user, "stages"))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const stages = dbQuery("SELECT * FROM stages ORDER BY id ASC");
-  return NextResponse.json({
-    stages: stages.map((s: any) => ({
-      ...s,
-      genres:
-        typeof s.genres === "string" ? JSON.parse(s.genres) : s.genres || [],
-      production:
-        typeof s.production === "string"
-          ? JSON.parse(s.production)
-          : s.production || {},
-    })),
-  });
+  const stages = await dbQuery(
+    "SELECT * FROM stages ORDER BY id ASC",
+  );
+
+  // genres and production are JSONB — already parsed by pg driver
+  return NextResponse.json({ stages });
 }
 
 export async function PUT(req: NextRequest) {
@@ -40,11 +34,18 @@ export async function PUT(req: NextRequest) {
       production,
     } = body;
 
-    dbExecute(
-      `UPDATE stages SET 
-        name = ?, subtitle = ?, tagline = ?, description = ?, capacity = ?, 
-        image = ?, genres = ?, production = ?, updatedAt = datetime('now')
-       WHERE id = ?`,
+    await dbExecute(
+      `UPDATE stages SET
+        name        = $1,
+        subtitle    = $2,
+        tagline     = $3,
+        description = $4,
+        capacity    = $5,
+        image       = $6,
+        genres      = $7,
+        production  = $8,
+        updated_at  = NOW()
+       WHERE id = $9`,
       [
         name,
         subtitle,
@@ -52,8 +53,8 @@ export async function PUT(req: NextRequest) {
         description,
         capacity,
         image,
-        JSON.stringify(genres || []),
-        JSON.stringify(production || {}),
+        genres || [],
+        production || {},
         id,
       ],
     );

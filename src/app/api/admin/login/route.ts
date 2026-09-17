@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbQueryOne, pgQueryOne } from "@/lib/db";
+import { dbQueryOne } from "@/lib/db";
 import {
   verifyPassword,
   createSessionToken,
   AUTH_COOKIE_NAME,
   AuthUser,
 } from "@/lib/auth";
-import { seedDatabase } from "@/lib/seed";
 
 export async function POST(req: NextRequest) {
   try {
-    seedDatabase(); // Ensure default users exist
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -21,20 +19,14 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    let user = dbQueryOne<any>(
-      "SELECT * FROM users WHERE email = ? AND isActive = 1",
+
+    const user = await dbQueryOne<any>(
+      `SELECT id, name, email, password_hash AS "passwordHash", role, is_active AS "isActive"
+       FROM users
+       WHERE email = $1 AND is_active = true`,
       [cleanEmail],
     );
 
-    if (!user) {
-      try {
-        const pgUser = await pgQueryOne<any>(
-          'SELECT id, name, email, password_hash as "passwordHash", role, is_active as "isActive" FROM users WHERE email = $1 AND is_active = 1',
-          [cleanEmail],
-        );
-        if (pgUser) user = pgUser;
-      } catch {}
-    }
     if (!user) {
       return NextResponse.json(
         { error: "Invalid credentials." },

@@ -8,7 +8,6 @@ import {
 } from "@/lib/auth";
 import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
-import crypto from "node:crypto";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
@@ -19,46 +18,65 @@ export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q")?.toLowerCase();
   const status = req.nextUrl.searchParams.get("status");
 
-  let sql = `
-    SELECT o.*, 
-           COUNT(t.id) as ticketsCount,
-           SUM(CASE WHEN t.status = 'CHECKED_IN' THEN 1 ELSE 0 END) as checkedInCount,
-           e.name as eventName
-    FROM orders o
-    LEFT JOIN tickets t ON o.id = t.orderId
-    LEFT JOIN events e ON o.eventId = e.id
-  `;
   const whereClauses: string[] = [];
   const params: any[] = [];
+  let paramIdx = 1;
 
   // Scoped to staff assigned events if not ALL
   const assignedEvents = getUserAssignedEvents(user);
   if (!assignedEvents.includes("ALL")) {
-    whereClauses.push(
-      `o.eventId IN (${assignedEvents.map(() => "?").join(",")})`,
-    );
+    const placeholders = assignedEvents.map(() => `$${paramIdx++}`).join(",");
+    whereClauses.push(`o.event_id IN (${placeholders})`);
     params.push(...assignedEvents);
   }
 
   if (status) {
-    whereClauses.push("o.status = ?");
+    whereClauses.push(`o.status = $${paramIdx++}`);
     params.push(status);
   }
 
   if (query) {
     whereClauses.push(
-      "(LOWER(o.customerName) LIKE ? OR LOWER(o.customerEmail) LIKE ? OR LOWER(o.orderNumber) LIKE ? OR o.id IN (SELECT orderId FROM tickets WHERE LOWER(ticketCode) LIKE ?))",
+      `(LOWER(o.customer_name) LIKE $${paramIdx} OR LOWER(o.customer_email) LIKE $${paramIdx + 1} OR LOWER(o.order_number) LIKE $${paramIdx + 2} OR o.id IN (SELECT order_id FROM tickets WHERE LOWER(ticket_code) LIKE $${paramIdx + 3}))`,
     );
     params.push(`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`);
+    paramIdx += 4;
   }
 
-  if (whereClauses.length > 0) {
-    sql += " WHERE " + whereClauses.join(" AND ");
-  }
+  const whereSQL =
+    whereClauses.length > 0 ? "WHERE " + whereClauses.join(" AND ") : "";
 
-  sql += " GROUP BY o.id ORDER BY o.createdAt DESC LIMIT 100";
+  const sql = `
+    SELECT
+      o.id,
+      o.order_number         AS "orderNumber",
+      o.event_id             AS "eventId",
+      o.customer_name        AS "customerName",
+      o.customer_email       AS "customerEmail",
+      o.customer_phone       AS "customerPhone",
+      o.customer_location    AS "customerLocation",
+      o.total_amount         AS "totalAmount",
+      o.currency,
+      o.status,
+      o.notes,
+      o.stripe_session_id    AS "stripeSessionId",
+      o.created_at           AS "createdAt",
+      e.name                 AS "eventName",
+      COUNT(t.id)            AS "ticketsCount",
+      SUM(CASE WHEN t.status = 'CHECKED_IN' THEN 1 ELSE 0 END) AS "checkedInCount"
+    FROM orders o
+    LEFT JOIN tickets t ON o.id = t.order_id
+    LEFT JOIN events e  ON o.event_id = e.id
+    ${whereSQL}
+    GROUP BY
+      o.id, o.order_number, o.event_id, o.customer_name, o.customer_email,
+      o.customer_phone, o.customer_location, o.total_amount, o.currency,
+      o.status, o.notes, o.stripe_session_id, o.created_at, e.name
+    ORDER BY o.created_at DESC
+    LIMIT 100
+  `;
 
-  const orders = dbQuery(sql, params);
+  const orders = await dbQuery(sql, params);
   return NextResponse.json({ orders });
 }
 
@@ -101,12 +119,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const event = dbQueryOne<any>("SELECT * FROM events WHERE id = ?", [
-      eventId,
+    const [event, tier] = await Promise.all([
+      dbQueryOne<any>("SELECT * FROM events WHERE id = $1", [eventId]),
+      dbQueryOne<any>("SELECT * FROM ticket_tiers WHERE id = $1", [tierId]),
     ]);
-    const tier = dbQueryOne<any>("SELECT * FROM ticket_tiers WHERE id = ?", [
-      tierId,
-    ]);
+
     if (!event || !tier)
       return NextResponse.json(
         { error: "Event or Tier not found" },
@@ -116,9 +133,11 @@ export async function POST(req: NextRequest) {
     const orderId = `ord-comp-${Date.now()}`;
     const orderNumber = `COMP-${event.slug.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    dbExecute(
-      `INSERT INTO orders (id, orderNumber, eventId, customerName, customerEmail, customerPhone, notes, totalAmount, currency, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'AED', 'PAID')`,
+    await dbExecute(
+      `INSERT INTO orders
+         (id, order_number, event_id, customer_name, customer_email,
+          customer_phone, notes, total_amount, currency, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 'AED', 'PAID')`,
       [
         orderId,
         orderNumber,
@@ -130,15 +149,17 @@ export async function POST(req: NextRequest) {
       ],
     );
 
-    const createdTickets = [];
+    const createdTickets: string[] = [];
     for (let i = 0; i < quantity; i++) {
       const ticketId = `tkt-comp-${Date.now()}-${i}`;
       const ticketCode = `COMP-${event.slug.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
       const qrHash = `${ticketCode}:${generateTicketSignature(ticketCode)}`;
 
-      dbExecute(
-        `INSERT INTO tickets (id, orderId, tierId, ticketCode, qrHash, attendeeName, attendeeEmail, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'VALID')`,
+      await dbExecute(
+        `INSERT INTO tickets
+           (id, order_id, tier_id, ticket_code, qr_hash,
+            attendee_name, attendee_email, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'VALID')`,
         [
           ticketId,
           orderId,

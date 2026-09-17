@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const events = getAllEvents();
+  const events = await getAllEvents();
   return events.map((evt) => ({
     slug: evt.slug,
   }));
@@ -25,7 +25,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event) {
     return { title: "Event Not Found | No Limit Fest" };
@@ -64,13 +64,13 @@ export async function generateMetadata({
 
 export default async function SingleEventPage({ params }: PageProps) {
   const { slug } = await params;
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
 
   if (!event) {
     notFound();
   }
 
-  const tiers = getTicketTiers(event.id);
+  const tiers = await getTicketTiers(event.id);
 
   return (
     <div className="pt-28 pb-20 bg-[#08090E] min-h-screen text-white">

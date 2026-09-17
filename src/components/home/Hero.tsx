@@ -73,20 +73,22 @@ export default function Hero() {
       </div>
 
       <div className="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
-        {/* Live Status Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 border border-white/15 backdrop-blur-md mb-6 animate-pulse">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#00E676] animate-ping" />
-          <span className="text-xs font-black tracking-widest text-[#00E5FF] uppercase">
-            Official 1st Edition • Dubai
-          </span>
-          <span className="text-gray-500">|</span>
-          <span className="text-xs font-semibold text-[#FFD600]">
+        {/* Live Status Pill - Mobile Optimized */}
+        <div className="inline-flex flex-col xs:flex-row items-center gap-1.5 xs:gap-2 px-3 sm:px-4 py-1.5 rounded-2xl xs:rounded-full bg-black/60 border border-white/15 backdrop-blur-md mb-4 sm:mb-6 animate-pulse text-center">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#00E676] animate-ping" />
+            <span className="text-[11px] sm:text-xs font-black tracking-widest text-[#00E5FF] uppercase">
+              Official 1st Edition • Dubai
+            </span>
+          </div>
+          <span className="hidden xs:inline text-gray-500">|</span>
+          <span className="text-[10px] sm:text-xs font-semibold text-[#FFD600]">
             Saturday 24th Oct 2026 • 6PM Till Late
           </span>
         </div>
 
-        {/* Official Logo Hero Display - Large & Standalone */}
-        <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[420px] lg:h-[420px] mb-2 animate-float">
+        {/* Official Logo Hero Display - Responsive & Mobile Sharp */}
+        <div className="relative w-48 h-48 xs:w-56 xs:h-56 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[420px] lg:h-[420px] mb-2 animate-float">
           <Image
             src="/images/logo.png"
             alt="No Limit Fest"
@@ -108,19 +110,19 @@ export default function Hero() {
         </div>
 
         {/* Headline Starring Ruger */}
-        <div className="space-y-2">
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight uppercase leading-[0.95]">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight uppercase leading-[0.95]">
             RUGER{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
               LIVE
             </span>
           </h1>
-          <p className="text-xl sm:text-2xl font-black uppercase text-[#FFD600] tracking-widest">
+          <p className="text-base xs:text-lg sm:text-2xl font-black uppercase text-[#FFD600] tracking-wider sm:tracking-widest">
             OFFICIAL HEADLINER • DUBAI
           </p>
         </div>
 
-        <p className="mt-4 text-base sm:text-lg text-gray-300 max-w-2xl font-medium leading-relaxed">
+        <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-gray-300 max-w-2xl font-medium leading-relaxed px-2 sm:px-0">
           The global debut of No Limit Fest takes over the breathtaking{" "}
           <strong className="text-white">Helipad by Frozen Cherry</strong>. An
           unforgettable sunset-to-night spectacle with Afrobeats, Amapiano, and

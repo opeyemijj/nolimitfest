@@ -46,6 +46,9 @@ interface BuyerRecord {
   orderTotalAmount: number;
   orderCurrency: string;
   orderStatus: string;
+  isDeposit?: boolean;
+  depositAmount?: number;
+  remainingBalance?: number;
   orderCreatedAt: string;
   tierId: string;
   tierName: string;
@@ -650,7 +653,20 @@ function BuyersTableContent() {
                           {r.orderCurrency}{" "}
                           {Number(r.orderTotalAmount).toLocaleString()}
                         </div>
-                        <div className="text-[10px] font-mono text-gray-400">
+                        {r.isDeposit && (
+                          <div className="mt-0.5">
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-[9px] uppercase">
+                              20% Deposit
+                            </span>
+                            {Number(r.remainingBalance) > 0 && (
+                              <div className="text-[10px] text-amber-200/90 font-mono mt-0.5">
+                                Due: {r.orderCurrency}{" "}
+                                {Number(r.remainingBalance).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div className="text-[10px] font-mono text-gray-400 mt-0.5">
                           {r.orderNumber}
                         </div>
                         <span

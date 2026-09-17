@@ -10,7 +10,7 @@ export async function generateMetadata(props: {
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
   const { code } = await props.params;
-  const ticket = getTicketByCode(code);
+  const ticket = await getTicketByCode(code);
   if (!ticket) return { title: "Ticket Not Found - No Limit Fest" };
   return {
     title: `Pass #${ticket.ticketCode} - ${ticket.attendeeName} | No Limit Fest Dubai`,
@@ -22,7 +22,7 @@ export default async function TicketPage(props: {
   params: Promise<{ code: string }>;
 }) {
   const { code } = await props.params;
-  const ticket = getTicketByCode(code);
+  const ticket = await getTicketByCode(code);
 
   if (!ticket) {
     notFound();

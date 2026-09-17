@@ -13,8 +13,18 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const assignedEvents = getUserAssignedEvents(user);
-  let events = dbQuery(
-    "SELECT * FROM events ORDER BY isCurrentEdition DESC, year ASC",
+
+  let events = await dbQuery<any>(
+    `SELECT id, name, edition, city, country, status, dates, time, venue, address,
+            tagline, description,
+            hero_image AS "heroImage",
+            expected_attendance AS "expectedAttendance",
+            stages_count AS "stagesCount",
+            is_current_edition AS "isCurrentEdition",
+            year,
+            created_at AS "createdAt"
+     FROM events
+     ORDER BY is_current_edition DESC, year ASC`,
   );
 
   if (!assignedEvents.includes("ALL")) {
@@ -68,16 +78,29 @@ export async function PUT(req: NextRequest) {
     }
 
     if (isCurrentEdition) {
-      // If setting this event as flagship, reset others
-      dbExecute("UPDATE events SET isCurrentEdition = 0");
+      // Reset all other events before promoting this one as the flagship
+      await dbExecute("UPDATE events SET is_current_edition = false");
     }
 
-    dbExecute(
-      `UPDATE events SET 
-        name = ?, edition = ?, city = ?, country = ?, status = ?, dates = ?, time = ?, 
-        venue = ?, address = ?, tagline = ?, description = ?, heroImage = ?, 
-        expectedAttendance = ?, stagesCount = ?, isCurrentEdition = ?, updatedAt = datetime('now')
-       WHERE id = ?`,
+    await dbExecute(
+      `UPDATE events SET
+        name                = $1,
+        edition             = $2,
+        city                = $3,
+        country             = $4,
+        status              = $5,
+        dates               = $6,
+        time                = $7,
+        venue               = $8,
+        address             = $9,
+        tagline             = $10,
+        description         = $11,
+        hero_image          = $12,
+        expected_attendance = $13,
+        stages_count        = $14,
+        is_current_edition  = $15,
+        updated_at          = NOW()
+       WHERE id = $16`,
       [
         name,
         edition,
@@ -93,12 +116,25 @@ export async function PUT(req: NextRequest) {
         heroImage,
         expectedAttendance,
         stagesCount || 2,
-        isCurrentEdition ? 1 : 0,
+        isCurrentEdition ? true : false,
         id,
       ],
     );
 
-    const updated = dbQueryOne("SELECT * FROM events WHERE id = ?", [id]);
+    const updated = await dbQueryOne<any>(
+      `SELECT id, name, edition, city, country, status, dates, time, venue, address,
+              tagline, description,
+              hero_image AS "heroImage",
+              expected_attendance AS "expectedAttendance",
+              stages_count AS "stagesCount",
+              is_current_edition AS "isCurrentEdition",
+              year,
+              created_at AS "createdAt"
+       FROM events
+       WHERE id = $1`,
+      [id],
+    );
+
     return NextResponse.json({ success: true, event: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

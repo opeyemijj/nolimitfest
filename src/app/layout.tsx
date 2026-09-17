@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import MobileBottomBar from "@/components/layout/MobileBottomBar";
 import JsonLd from "@/components/seo/JsonLd";
 import { siteConfig } from "@/config/site";
 
@@ -90,8 +91,16 @@ export const metadata: Metadata = {
       { url: "/favicon.ico" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+      {
+        url: "/android-chrome-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/android-chrome-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
     ],
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
@@ -100,7 +109,7 @@ export const metadata: Metadata = {
     "geo.region": "AE-DU",
     "geo.placename": "Dubai, United Arab Emirates",
     "geo.position": "25.2048;55.2708",
-    "ICBM": "25.2048, 55.2708",
+    ICBM: "25.2048, 55.2708",
     "event:start_time": "2026-10-24T18:00:00+04:00",
     "event:end_time": "2026-10-25T04:00:00+04:00",
   },
@@ -127,10 +136,11 @@ export default function RootLayout({
       <head>
         <JsonLd />
       </head>
-      <body className="min-h-screen bg-[#08090E] text-[#F3F4F6] antialiased flex flex-col selection:bg-[#FF5722] selection:text-white">
+      <body className="min-h-screen bg-[#08090E] text-[#F3F4F6] antialiased flex flex-col selection:bg-[#FF5722] selection:text-white pb-16 lg:pb-0">
         <Navbar />
         <main className="flex-grow">{children}</main>
         <Footer />
+        <MobileBottomBar />
       </body>
     </html>
   );

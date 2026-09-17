@@ -1,6 +1,5 @@
 import { DbOrder, DbTicket } from "./data-service";
 import { generateQrDataUrl } from "./qrcode";
-import { dbQueryOne } from "./db";
 
 interface SendTicketEmailParams {
   order: DbOrder;
@@ -20,15 +19,8 @@ const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
 
 export function getPostmarkConfig() {
   const token = process.env.POSTMARK_SERVER_TOKEN || DEFAULT_POSTMARK_TOKEN;
-  let fromEmail = process.env.POSTMARK_FROM_EMAIL || "tickets@nolimitfest.com";
-
-  try {
-    const siteConfig = dbQueryOne<any>("SELECT email FROM site_config LIMIT 1");
-    if (siteConfig?.email && !process.env.POSTMARK_FROM_EMAIL) {
-      fromEmail = siteConfig.email;
-    }
-  } catch {}
-
+  const fromEmail =
+    process.env.POSTMARK_FROM_EMAIL || "tickets@nolimitfest.com";
   const messageStream = process.env.POSTMARK_MESSAGE_STREAM || "outbound";
   return { token, fromEmail, messageStream };
 }

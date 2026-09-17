@@ -15,7 +15,35 @@ export async function GET(req: NextRequest) {
   const eventId = req.nextUrl.searchParams.get("eventId");
   const assignedEvents = getUserAssignedEvents(user);
 
-  let tiers;
+  const BASE_SELECT = `
+    SELECT
+      id,
+      event_id             AS "eventId",
+      name,
+      category,
+      price,
+      currency,
+      capacity,
+      sold_count           AS "soldCount",
+      pax_per_unit         AS "paxPerUnit",
+      badge,
+      description,
+      perks,
+      status,
+      popular,
+      is_vvip              AS "isVVIP",
+      sort_order           AS "sortOrder",
+      color,
+      wristband_color      AS "wristbandColor",
+      COALESCE(allow_deposit, true) AS "allowDeposit",
+      COALESCE(deposit_percentage, 20) AS "depositPercentage",
+      created_at           AS "createdAt",
+      updated_at           AS "updatedAt"
+    FROM ticket_tiers
+  `;
+
+  let tiers: any[];
+
   if (eventId) {
     if (!canAccessEvent(user, eventId)) {
       return NextResponse.json(
@@ -23,26 +51,27 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    tiers = dbQuery(
-      "SELECT * FROM ticket_tiers WHERE eventId = ? ORDER BY sortOrder ASC, price ASC",
+    tiers = await dbQuery(
+      `${BASE_SELECT} WHERE event_id = $1 ORDER BY sort_order ASC, price ASC`,
       [eventId],
     );
   } else if (!assignedEvents.includes("ALL")) {
-    tiers = dbQuery(
-      `SELECT * FROM ticket_tiers WHERE eventId IN (${assignedEvents.map(() => "?").join(",")}) ORDER BY sortOrder ASC, price ASC`,
+    const placeholders = assignedEvents.map((_, i) => `$${i + 1}`).join(",");
+    tiers = await dbQuery(
+      `${BASE_SELECT} WHERE event_id IN (${placeholders}) ORDER BY sort_order ASC, price ASC`,
       assignedEvents,
     );
   } else {
-    tiers = dbQuery(
-      "SELECT * FROM ticket_tiers ORDER BY sortOrder ASC, price ASC",
-    );
+    tiers = await dbQuery(`${BASE_SELECT} ORDER BY sort_order ASC, price ASC`);
   }
 
   const parsed = tiers.map((t: any) => ({
     ...t,
-    perks: typeof t.perks === "string" ? JSON.parse(t.perks) : t.perks || [],
+    perks: Array.isArray(t.perks) ? t.perks : [],
     popular: Boolean(t.popular),
     isVVIP: Boolean(t.isVVIP),
+    allowDeposit: Boolean(t.allowDeposit),
+    depositPercentage: Number(t.depositPercentage) || 20,
   }));
 
   return NextResponse.json({ tiers: parsed });
@@ -70,35 +99,78 @@ export async function PUT(req: NextRequest) {
       paxPerUnit,
       color,
       wristbandColor,
+      allowDeposit,
+      depositPercentage,
     } = body;
 
     if (!id)
       return NextResponse.json({ error: "Tier ID required" }, { status: 400 });
 
-    dbExecute(
-      `UPDATE ticket_tiers SET 
-        name = ?, price = ?, capacity = ?, badge = ?, description = ?, 
-        perks = ?, status = ?, popular = ?, isVVIP = ?, paxPerUnit = ?,
-        color = ?, wristbandColor = ?, updatedAt = datetime('now')
-       WHERE id = ?`,
+    await dbExecute(
+      `UPDATE ticket_tiers SET
+         name               = $1,
+         price              = $2,
+         capacity           = $3,
+         badge              = $4,
+         description        = $5,
+         perks              = $6,
+         status             = $7,
+         popular            = $8,
+         is_vvip            = $9,
+         pax_per_unit       = $10,
+         color              = $11,
+         wristband_color    = $12,
+         allow_deposit      = $13,
+         deposit_percentage = $14,
+         updated_at         = NOW()
+       WHERE id = $15`,
       [
         name,
         parseFloat(price),
         parseInt(capacity, 10),
         badge || "",
         description || "",
-        JSON.stringify(perks || []),
+        perks || [],
         status || "active",
-        popular ? 1 : 0,
-        isVVIP ? 1 : 0,
+        Boolean(popular),
+        Boolean(isVVIP),
         parseInt(paxPerUnit || 1, 10),
         color || "#00E676",
         wristbandColor || "NEON GREEN",
+        allowDeposit !== undefined ? Boolean(allowDeposit) : true,
+        depositPercentage !== undefined ? parseFloat(depositPercentage) : 20,
         id,
       ],
     );
 
-    const updated = dbQueryOne("SELECT * FROM ticket_tiers WHERE id = ?", [id]);
+    const updated = await dbQueryOne(
+      `SELECT
+         id,
+         event_id             AS "eventId",
+         name,
+         category,
+         price,
+         currency,
+         capacity,
+         sold_count           AS "soldCount",
+         pax_per_unit         AS "paxPerUnit",
+         badge,
+         description,
+         perks,
+         status,
+         popular,
+         is_vvip              AS "isVVIP",
+         sort_order           AS "sortOrder",
+         color,
+         wristband_color      AS "wristbandColor",
+         COALESCE(allow_deposit, true) AS "allowDeposit",
+         COALESCE(deposit_percentage, 20) AS "depositPercentage",
+         created_at           AS "createdAt",
+         updated_at           AS "updatedAt"
+       FROM ticket_tiers
+       WHERE id = $1`,
+      [id],
+    );
     return NextResponse.json({ success: true, tier: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -128,12 +200,21 @@ export async function POST(req: NextRequest) {
       popular,
       color,
       wristbandColor,
+      allowDeposit,
+      depositPercentage,
     } = body;
 
     const id = `tier-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-    dbExecute(
-      `INSERT INTO ticket_tiers (id, eventId, name, category, price, currency, capacity, soldCount, paxPerUnit, badge, description, perks, status, popular, isVVIP, sortOrder, color, wristbandColor)
-       VALUES (?, ?, ?, ?, ?, 'AED', ?, 0, ?, ?, ?, ?, ?, ?, ?, 99, ?, ?)`,
+
+    await dbExecute(
+      `INSERT INTO ticket_tiers
+         (id, event_id, name, category, price, currency, capacity, sold_count,
+          pax_per_unit, badge, description, perks, status, popular, is_vvip,
+          sort_order, color, wristband_color, allow_deposit, deposit_percentage)
+       VALUES
+         ($1, $2, $3, $4, $5, 'AED', $6, 0,
+          $7, $8, $9, $10, $11, $12, $13,
+          99, $14, $15, $16, $17)`,
       [
         id,
         eventId,
@@ -144,16 +225,45 @@ export async function POST(req: NextRequest) {
         parseInt(paxPerUnit, 10) || 1,
         badge || "",
         description || "",
-        JSON.stringify(perks || []),
+        perks || [],
         status || "active",
-        popular ? 1 : 0,
-        isVVIP ? 1 : 0,
+        Boolean(popular),
+        Boolean(isVVIP),
         color || "#00E676",
         wristbandColor || "NEON GREEN",
+        allowDeposit !== undefined ? Boolean(allowDeposit) : true,
+        depositPercentage !== undefined ? parseFloat(depositPercentage) : 20,
       ],
     );
 
-    const created = dbQueryOne("SELECT * FROM ticket_tiers WHERE id = ?", [id]);
+    const created = await dbQueryOne(
+      `SELECT
+         id,
+         event_id             AS "eventId",
+         name,
+         category,
+         price,
+         currency,
+         capacity,
+         sold_count           AS "soldCount",
+         pax_per_unit         AS "paxPerUnit",
+         badge,
+         description,
+         perks,
+         status,
+         popular,
+         is_vvip              AS "isVVIP",
+         sort_order           AS "sortOrder",
+         color,
+         wristband_color      AS "wristbandColor",
+         COALESCE(allow_deposit, true) AS "allowDeposit",
+         COALESCE(deposit_percentage, 20) AS "depositPercentage",
+         created_at           AS "createdAt",
+         updated_at           AS "updatedAt"
+       FROM ticket_tiers
+       WHERE id = $1`,
+      [id],
+    );
     return NextResponse.json({ success: true, tier: created });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

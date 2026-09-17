@@ -7,25 +7,23 @@ export async function GET() {
   if (!user || !hasPermission(user, "settings"))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const config = dbQueryOne<any>(
-    "SELECT * FROM site_config WHERE id = 'global'",
+  const config = await dbQueryOne<any>(
+    `SELECT id, name, short_name AS "shortName", tagline, description,
+            default_whatsapp AS "defaultWhatsApp", email,
+            marquee_text AS "marqueeText", age_limit AS "ageLimit",
+            socials, organizers
+     FROM site_config
+     WHERE id = 'global'`,
   );
-  const faqs = dbQuery("SELECT * FROM faqs ORDER BY sortOrder ASC");
+
+  const faqs = await dbQuery(
+    `SELECT id, category, question, answer, sort_order AS "sortOrder"
+     FROM faqs
+     ORDER BY sort_order ASC`,
+  );
 
   return NextResponse.json({
-    config: config
-      ? {
-          ...config,
-          socials:
-            typeof config.socials === "string"
-              ? JSON.parse(config.socials)
-              : config.socials,
-          organizers:
-            typeof config.organizers === "string"
-              ? JSON.parse(config.organizers)
-              : config.organizers,
-        }
-      : null,
+    config: config ?? null,
     faqs,
   });
 }
@@ -40,11 +38,19 @@ export async function PUT(req: NextRequest) {
     const { config, faqs } = body;
 
     if (config) {
-      dbExecute(
-        `UPDATE site_config SET 
-          name = ?, shortName = ?, tagline = ?, description = ?, 
-          defaultWhatsApp = ?, email = ?, marqueeText = ?, ageLimit = ?, 
-          socials = ?, organizers = ?, updatedAt = datetime('now')
+      await dbExecute(
+        `UPDATE site_config SET
+          name           = $1,
+          short_name     = $2,
+          tagline        = $3,
+          description    = $4,
+          default_whatsapp = $5,
+          email          = $6,
+          marquee_text   = $7,
+          age_limit      = $8,
+          socials        = $9,
+          organizers     = $10,
+          updated_at     = NOW()
          WHERE id = 'global'`,
         [
           config.name,
@@ -55,8 +61,8 @@ export async function PUT(req: NextRequest) {
           config.email,
           config.marqueeText,
           config.ageLimit,
-          JSON.stringify(config.socials || {}),
-          JSON.stringify(config.organizers || []),
+          config.socials || {},
+          config.organizers || [],
         ],
       );
     }
@@ -64,8 +70,14 @@ export async function PUT(req: NextRequest) {
     if (Array.isArray(faqs)) {
       for (const faq of faqs) {
         if (faq.id) {
-          dbExecute(
-            `UPDATE faqs SET category = ?, question = ?, answer = ?, sortOrder = ?, updatedAt = datetime('now') WHERE id = ?`,
+          await dbExecute(
+            `UPDATE faqs SET
+              category   = $1,
+              question   = $2,
+              answer     = $3,
+              sort_order = $4,
+              updated_at = NOW()
+             WHERE id = $5`,
             [
               faq.category,
               faq.question,

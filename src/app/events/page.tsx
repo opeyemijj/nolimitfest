@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EventsPage() {
-  const events = getAllEvents();
+export default async function EventsPage() {
+  const events = await getAllEvents();
   const currentFlagshipEvent =
     events.find((e) => e.isCurrentEdition) || events[0];
-  const flagshipTiers = getTicketTiers(currentFlagshipEvent.id);
+  const flagshipTiers = await getTicketTiers(currentFlagshipEvent.id);
   const internationalTourStops = events.filter(
     (e) => e.id !== currentFlagshipEvent.id,
   );

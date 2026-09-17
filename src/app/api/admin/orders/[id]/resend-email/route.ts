@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, canManageContent } from "@/lib/auth";
-import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
+import { dbQueryOne, dbQuery, dbExecute } from "@/lib/db";
 import { sendTicketConfirmationEmail } from "@/lib/email";
 
 export async function POST(
@@ -20,7 +20,26 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     const targetEmail = body.email?.trim();
 
-    const order = dbQueryOne<any>("SELECT * FROM orders WHERE id = ?", [id]);
+    const order = await dbQueryOne<any>(
+      `SELECT
+         id,
+         order_number      AS "orderNumber",
+         event_id          AS "eventId",
+         customer_name     AS "customerName",
+         customer_email    AS "customerEmail",
+         customer_phone    AS "customerPhone",
+         customer_location AS "customerLocation",
+         total_amount      AS "totalAmount",
+         currency,
+         status,
+         notes,
+         stripe_session_id AS "stripeSessionId",
+         created_at        AS "createdAt"
+       FROM orders
+       WHERE id = $1`,
+      [id],
+    );
+
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -35,19 +54,32 @@ export async function POST(
 
     // Update recipient email in DB if changed
     if (targetEmail && targetEmail !== order.customerEmail) {
-      dbExecute("UPDATE orders SET customerEmail = ? WHERE id = ?", [
-        targetEmail,
-        order.id,
-      ]);
+      await dbExecute(
+        "UPDATE orders SET customer_email = $1 WHERE id = $2",
+        [targetEmail, order.id],
+      );
       order.customerEmail = targetEmail;
     }
 
     // Fetch tickets for this order
-    const tickets = dbQuery<any>(
-      `SELECT t.*, tt.name as tierName, tt.paxPerUnit 
-       FROM tickets t 
-       JOIN ticket_tiers tt ON t.tierId = tt.id 
-       WHERE t.orderId = ?`,
+    const tickets = await dbQuery<any>(
+      `SELECT
+         t.id,
+         t.order_id        AS "orderId",
+         t.tier_id         AS "tierId",
+         t.ticket_code     AS "ticketCode",
+         t.qr_hash         AS "qrHash",
+         t.attendee_name   AS "attendeeName",
+         t.attendee_email  AS "attendeeEmail",
+         t.status,
+         t.checked_in_at   AS "checkedInAt",
+         t.checked_in_by   AS "checkedInBy",
+         t.created_at      AS "createdAt",
+         tt.name           AS "tierName",
+         tt.pax_per_unit   AS "paxPerUnit"
+       FROM tickets t
+       JOIN ticket_tiers tt ON t.tier_id = tt.id
+       WHERE t.order_id = $1`,
       [order.id],
     );
 

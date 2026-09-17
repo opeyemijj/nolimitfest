@@ -46,8 +46,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function VIPPage() {
-  const currentEvent = getActiveEvent();
+export default async function VIPPage() {
+  const currentEvent = await getActiveEvent();
+  const vipTiers_data = await getTicketTiers(currentEvent.id);
 
   const vipTiers = [
     {
@@ -277,10 +278,7 @@ export default function VIPPage() {
 
         {/* Direct VIP Ticket Store Widget */}
         <div id="tickets" className="pt-8">
-          <TicketPurchaseWidget
-            event={currentEvent}
-            tiers={getTicketTiers(currentEvent.id)}
-          />
+          <TicketPurchaseWidget event={currentEvent} tiers={vipTiers_data} />
         </div>
       </div>
     </div>

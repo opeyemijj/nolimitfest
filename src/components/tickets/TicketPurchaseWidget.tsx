@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Check,
@@ -20,6 +20,7 @@ import {
   Plus,
   Info,
   X,
+  Percent,
 } from "lucide-react";
 import { DbEvent, DbTicketTier } from "@/lib/data-service";
 
@@ -36,6 +37,9 @@ export default function TicketPurchaseWidget({
     "all" | "phase" | "group" | "table"
   >("all");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [isDepositMode, setIsDepositMode] = useState<Record<string, boolean>>(
+    {},
+  );
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showPhaseModal, setShowPhaseModal] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -46,6 +50,29 @@ export default function TicketPurchaseWidget({
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Lock background scroll when any modal is open & handle Escape key
+  useEffect(() => {
+    const isAnyModalOpen = showCheckoutModal || showPhaseModal;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowCheckoutModal(false);
+        setShowPhaseModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showCheckoutModal, showPhaseModal]);
 
   // 1. Identify all GA phase tiers
   const phaseTiers = tiers
@@ -90,21 +117,50 @@ export default function TicketPurchaseWidget({
     });
   };
 
-  const handleDirectBuy = (tierId: string) => {
+  const handleDirectBuy = (tierId: string, withDeposit: boolean = false) => {
     const qty = quantities[tierId] !== undefined ? quantities[tierId] : 1;
     setQuantities({ [tierId]: qty });
+    setIsDepositMode({ [tierId]: withDeposit });
     setShowCheckoutModal(true);
   };
 
+  // Has at least one table pass with deposit selected
+  const hasDepositSelected = Object.entries(quantities).some(
+    ([tierId, qty]) => {
+      if (qty <= 0) return false;
+      const t = tiers.find((tier) => tier.id === tierId);
+      return isDepositMode[tierId] && (t?.category === "table" || t?.isVVIP);
+    },
+  );
+
   // Calculate order totals
   const totalItemsCount = Object.values(quantities).reduce((a, b) => a + b, 0);
-  const totalAmount = Object.entries(quantities).reduce(
+
+  // Full price of all items selected
+  const fullTotalAmount = Object.entries(quantities).reduce(
     (sum, [tierId, qty]) => {
       const tier = tiers.find((t) => t.id === tierId);
       return sum + (tier ? tier.price * qty : 0);
     },
     0,
   );
+
+  // Charge amount (accounting for 20% deposit on tables when enabled)
+  const payableAmount = Object.entries(quantities).reduce(
+    (sum, [tierId, qty]) => {
+      const tier = tiers.find((t) => t.id === tierId);
+      if (!tier) return sum;
+      const isTable = tier.category === "table" || tier.isVVIP;
+      if (isTable && isDepositMode[tierId] && (tier.allowDeposit ?? true)) {
+        const pct = tier.depositPercentage ?? 20;
+        return sum + Math.round((tier.price * qty * pct) / 100);
+      }
+      return sum + tier.price * qty;
+    },
+    0,
+  );
+
+  const remainingBalance = Math.max(0, fullTotalAmount - payableAmount);
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,6 +198,7 @@ export default function TicketPurchaseWidget({
           customerPhone: phone,
           customerLocation: location,
           notes,
+          isDeposit: hasDepositSelected,
         }),
       });
 
@@ -165,9 +222,9 @@ export default function TicketPurchaseWidget({
   };
 
   return (
-    <div className="rounded-3xl bg-[#0E111C] border border-white/10 overflow-hidden shadow-2xl">
-      {/* Event Header Banner */}
-      <div className="relative h-48 sm:h-64 w-full bg-gradient-to-r from-orange-950/40 via-purple-950/30 to-blue-950/40 border-b border-white/10">
+    <div className="rounded-2xl sm:rounded-3xl bg-[#0E111C] border border-white/10 overflow-hidden shadow-2xl">
+      {/* Event Header Banner - Mobile Responsive */}
+      <div className="relative h-40 xs:h-48 sm:h-64 w-full bg-gradient-to-r from-orange-950/40 via-purple-950/30 to-blue-950/40 border-b border-white/10">
         <Image
           src={event.heroImage || "/images/banner.png"}
           alt={event.name}
@@ -177,86 +234,96 @@ export default function TicketPurchaseWidget({
         <div className="absolute inset-0 bg-gradient-to-t from-[#0E111C] via-[#0E111C]/60 to-transparent" />
 
         {/* Top Badges */}
-        <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl sm:text-4xl drop-shadow-lg">
+        <div className="absolute top-3 xs:top-4 sm:top-6 left-3 xs:left-4 sm:left-6 right-3 xs:right-4 sm:right-6 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 xs:gap-2">
+            <span className="text-2xl xs:text-3xl sm:text-4xl drop-shadow-lg">
               {event.flag}
             </span>
-            <span className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-xs font-black uppercase text-white">
+            <span className="px-2.5 xs:px-3.5 py-1 xs:py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[10px] xs:text-xs font-black uppercase text-white truncate max-w-[150px] xs:max-w-none">
               {event.city}, {event.country}
             </span>
           </div>
 
-          <span className="px-4 py-1.5 rounded-full bg-[#FF5722] text-white text-xs font-black uppercase tracking-wider shadow-lg animate-pulse">
-            Official Ticket Store
+          <span className="px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[#FF5722] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-lg animate-pulse shrink-0">
+            Official Tickets
           </span>
         </div>
 
         {/* Bottom Banner Title */}
-        <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6">
-          <span className="text-xs font-black uppercase tracking-widest text-[#00E5FF]">
+        <div className="absolute bottom-3 xs:bottom-4 sm:bottom-6 left-3 xs:left-4 sm:left-6 right-3 xs:right-4 sm:right-6">
+          <span className="text-[10px] xs:text-xs font-black uppercase tracking-widest text-[#00E5FF]">
             {event.edition}
           </span>
-          <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
+          <h2 className="text-xl xs:text-2xl sm:text-4xl font-black text-white uppercase tracking-tight truncate">
             {event.name}
           </h2>
-          <p className="text-xs sm:text-sm text-[#FFD600] font-semibold mt-0.5">
+          <p className="text-[11px] xs:text-xs sm:text-sm text-[#FFD600] font-semibold mt-0.5 truncate">
             {event.tagline}
           </p>
         </div>
       </div>
 
       {/* Main Section */}
-      <div className="p-6 sm:p-8 space-y-6">
+      <div className="p-3.5 xs:p-5 sm:p-8 space-y-5 sm:space-y-6">
         {/* Quick Meta */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-            <Calendar className="w-4 h-4 text-[#FF5722] shrink-0" />
-            <div>
-              <p className="text-gray-400 text-[10px]">Date</p>
-              <p className="font-bold text-white">{event.dates}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 xs:gap-3 text-xs">
+          <div className="p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#FF5722] shrink-0" />
+            <div className="min-w-0">
+              <p className="text-gray-400 text-[9px] xs:text-[10px]">Date</p>
+              <p className="font-bold text-white text-[11px] xs:text-xs truncate">
+                {event.dates}
+              </p>
             </div>
           </div>
-          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-            <MapPin className="w-4 h-4 text-[#00E5FF] shrink-0" />
-            <div>
-              <p className="text-gray-400 text-[10px]">Venue</p>
-              <p className="font-bold text-white truncate max-w-[140px]">
+          <div className="p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#00E5FF] shrink-0" />
+            <div className="min-w-0">
+              <p className="text-gray-400 text-[9px] xs:text-[10px]">Venue</p>
+              <p className="font-bold text-white text-[11px] xs:text-xs truncate">
                 {event.venue}
               </p>
             </div>
           </div>
-          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-[#FFD600] shrink-0" />
-            <div>
-              <p className="text-gray-400 text-[10px]">Headliner</p>
-              <p className="font-bold text-white">RUGER Live</p>
+          <div className="p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-[#FFD600] shrink-0" />
+            <div className="min-w-0">
+              <p className="text-gray-400 text-[9px] xs:text-[10px]">
+                Headliner
+              </p>
+              <p className="font-bold text-white text-[11px] xs:text-xs truncate">
+                RUGER Live
+              </p>
             </div>
           </div>
-          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <div>
-              <p className="text-gray-400 text-[10px]">Security</p>
-              <p className="font-bold text-white">Stripe Verified</p>
+          <div className="p-2.5 xs:p-3.5 rounded-xl xs:rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-emerald-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-gray-400 text-[9px] xs:text-[10px]">
+                Security
+              </p>
+              <p className="font-bold text-white text-[11px] xs:text-xs truncate">
+                Stripe Verified
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-white/10 pt-2">
+        {/* Category Filter Pills (Mobile friendly swipeable bar) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-white/10 pt-1 -mx-2 px-2 no-scrollbar">
           {[
-            { id: "all", label: "All Passes & Tables" },
-            { id: "phase", label: "Individual GA Pass" },
-            { id: "group", label: "Squad / Group Passes" },
+            { id: "all", label: "All Passes" },
+            { id: "phase", label: "General Admission" },
+            { id: "group", label: "Squad Packs" },
             { id: "table", label: "VIP Tables & Cabanas" },
           ].map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+              className={`px-3.5 xs:px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap shrink-0 ${
                 selectedCategory === cat.id
-                  ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white shadow-lg shadow-orange-500/20"
-                  : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white"
+                  ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white shadow-lg shadow-orange-500/20 scale-105"
+                  : "bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10"
               }`}
             >
               {cat.label}
@@ -265,18 +332,25 @@ export default function TicketPurchaseWidget({
         </div>
 
         {/* TIERS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {filteredTiers.map((tier) => {
             const cardQty = quantities[tier.id] || 1;
             const isSoldOut =
               tier.status === "sold_out" || tier.capacity - tier.soldCount <= 0;
             const isUpcoming = tier.status === "upcoming";
             const isPhase = tier.category === "phase";
+            const isTable = tier.category === "table" || tier.isVVIP;
+            const allowsDeposit = isTable && (tier.allowDeposit ?? true);
+            const depositPct = tier.depositPercentage ?? 20;
+            const depositUnitAmount = Math.round(
+              (tier.price * depositPct) / 100,
+            );
+            const cardIsDeposit = isDepositMode[tier.id] ?? false;
 
             return (
               <div
                 key={tier.id}
-                className={`rounded-3xl p-6 border flex flex-col justify-between transition-all relative ${
+                className={`rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 border flex flex-col justify-between transition-all relative ${
                   tier.popular || tier.badge?.includes("POPULAR")
                     ? "bg-[#181D33] border-[#FF5722] shadow-2xl shadow-orange-500/15 ring-1 ring-[#FF5722]/40"
                     : "bg-[#131626] border-white/10 hover:border-white/20"
@@ -301,7 +375,7 @@ export default function TicketPurchaseWidget({
                     )}
                   </div>
 
-                  <h4 className="text-xl font-black text-white flex items-center gap-2">
+                  <h4 className="text-lg xs:text-xl font-black text-white flex items-center gap-2">
                     {tier.category === "table" || tier.isVVIP ? (
                       <Crown className="w-4 h-4 text-[#FFD600] shrink-0" />
                     ) : tier.category === "group" ? (
@@ -309,11 +383,12 @@ export default function TicketPurchaseWidget({
                     ) : (
                       <User className="w-4 h-4 text-[#FF5722] shrink-0" />
                     )}
-                    <span>{tier.name}</span>
+                    <span className="truncate">{tier.name}</span>
                   </h4>
 
-                  <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-[#FFD600] font-mono">
+                  {/* Price Section */}
+                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                    <span className="text-2xl xs:text-3xl font-black text-[#FFD600] font-mono">
                       {tier.currency} {tier.price.toLocaleString()}
                     </span>
                     {tier.paxPerUnit > 1 && (
@@ -324,10 +399,58 @@ export default function TicketPurchaseWidget({
                     )}
                   </div>
 
+                  {/* Table 20% Deposit Option Banner */}
+                  {allowsDeposit && (
+                    <div className="mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <Percent className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                            {depositPct}% Reservation Deposit Available
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="text-gray-300">
+                          Hold this table for only{" "}
+                          <strong className="text-white font-mono">
+                            {tier.currency} {depositUnitAmount.toLocaleString()}
+                          </strong>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIsDepositMode((prev) => ({
+                              ...prev,
+                              [tier.id]: !prev[tier.id],
+                            }))
+                          }
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
+                            cardIsDeposit
+                              ? "bg-[#FFD600] text-black border-[#FFD600] shadow-md"
+                              : "bg-white/10 text-gray-300 border-white/20 hover:bg-white/20"
+                          }`}
+                        >
+                          {cardIsDeposit ? "✓ 20% Deposit" : "Select 20%"}
+                        </button>
+                      </div>
+
+                      {cardIsDeposit && (
+                        <p className="text-[10px] text-amber-200/80 italic pt-1 border-t border-amber-500/20">
+                          Balance of {tier.currency}{" "}
+                          {(tier.price - depositUnitAmount).toLocaleString()}{" "}
+                          payable upon concierge gate check-in.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Wristband Color Indicator */}
                   {tier.wristbandColor && (
-                    <div className="mt-1 flex items-center gap-1.5">
+                    <div className="mt-2 flex items-center gap-1.5">
                       <span
-                        className="text-[10px] font-black uppercase tracking-wider font-mono opacity-85"
+                        className="text-[10px] font-black uppercase tracking-wider font-mono opacity-90"
                         style={{ color: tier.color || "#00E676" }}
                       >
                         ● {tier.wristbandColor} Wristband Entry
@@ -349,10 +472,10 @@ export default function TicketPurchaseWidget({
                         <button
                           type="button"
                           onClick={() => setShowPhaseModal(true)}
-                          className="text-[10px] text-[#00E5FF] hover:underline font-bold flex items-center gap-0.5 ml-2"
+                          className="text-[10px] text-[#00E5FF] hover:underline font-bold flex items-center gap-0.5 ml-2 shrink-0"
                         >
                           <Info className="w-3 h-3" />
-                          <span>Phase Schedule</span>
+                          <span>Roadmap</span>
                         </button>
                       )}
                     </div>
@@ -424,13 +547,14 @@ export default function TicketPurchaseWidget({
                       {/* Prominent Direct Buy Now Button Under Each Ticket */}
                       <button
                         type="button"
-                        onClick={() => handleDirectBuy(tier.id)}
+                        onClick={() => handleDirectBuy(tier.id, cardIsDeposit)}
                         className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
                       >
                         <CreditCard className="w-4 h-4 text-black shrink-0" />
-                        <span>
-                          Buy Now • {tier.currency}{" "}
-                          {(tier.price * cardQty).toLocaleString()}
+                        <span className="truncate">
+                          {cardIsDeposit
+                            ? `Reserve with 20% Deposit • ${tier.currency} ${(depositUnitAmount * cardQty).toLocaleString()}`
+                            : `Buy Now • ${tier.currency} ${(tier.price * cardQty).toLocaleString()}`}
                         </span>
                         <ArrowRight className="w-4 h-4 text-black shrink-0" />
                       </button>
@@ -442,25 +566,31 @@ export default function TicketPurchaseWidget({
           })}
         </div>
 
-        {/* ORDER BAR (Visible when passes selected) */}
+        {/* STICKY ORDER BAR (Visible when passes selected) */}
         {totalItemsCount > 0 && !showCheckoutModal && (
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-[#181D33] via-[#1F2540] to-[#181D33] border border-[#FF5722]/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-30">
-            <div>
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#181D33] via-[#1F2540] to-[#181D33] border border-[#FF5722]/50 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 sticky bottom-16 lg:bottom-4 z-30">
+            <div className="text-center sm:text-left">
               <span className="text-[10px] uppercase tracking-widest text-[#00E5FF] font-black">
                 Order Summary ({totalItemsCount} Passes Selected)
               </span>
-              <p className="text-2xl font-black text-white font-mono">
-                Total:{" "}
+              <p className="text-xl sm:text-2xl font-black text-white font-mono">
+                {hasDepositSelected ? "Pay Deposit: " : "Total: "}
                 <span className="text-[#FFD600]">
-                  {event.currency || "AED"} {totalAmount.toLocaleString()}
+                  {event.currency || "AED"} {payableAmount.toLocaleString()}
                 </span>
+                {remainingBalance > 0 && (
+                  <span className="text-xs text-gray-400 font-normal ml-2">
+                    (Remaining: {event.currency || "AED"}{" "}
+                    {remainingBalance.toLocaleString()})
+                  </span>
+                )}
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setShowCheckoutModal(true)}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"
             >
               <CreditCard className="w-4 h-4" />
               <span>Continue to Secure Checkout</span>
@@ -472,8 +602,14 @@ export default function TicketPurchaseWidget({
 
       {/* PHASE ROADMAP POPUP MODAL */}
       {showPhaseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-[#121524] border border-white/15 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+          onClick={() => setShowPhaseModal(false)}
+        >
+          <div
+            className="bg-[#121524] border border-white/20 rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-[0_20px_60px_rgba(0,0,0,0.9)] relative"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#00E5FF]">
@@ -486,9 +622,10 @@ export default function TicketPurchaseWidget({
               <button
                 type="button"
                 onClick={() => setShowPhaseModal(false)}
-                className="text-gray-400 hover:text-white p-1"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors font-bold text-sm"
+                aria-label="Close modal"
               >
-                <X className="w-5 h-5" />
+                ✕
               </button>
             </div>
 
@@ -547,21 +684,28 @@ export default function TicketPurchaseWidget({
 
       {/* CHECKOUT & ATTENDEE DATA MODAL */}
       {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-[#121524] border border-white/15 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+          onClick={() => setShowCheckoutModal(false)}
+        >
+          <div
+            className="bg-[#121524] border border-white/20 rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 xs:p-5 sm:p-8 space-y-4 sm:space-y-5 shadow-[0_20px_60px_rgba(0,0,0,0.9)] my-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-[#FF5722]">
                   Direct Stripe Checkout
                 </span>
-                <h3 className="text-xl font-black text-white">
+                <h3 className="text-lg sm:text-xl font-black text-white">
                   Attendee Details
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCheckoutModal(false)}
-                className="text-gray-400 hover:text-white text-xl font-bold p-1"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors font-bold text-sm"
+                aria-label="Close modal"
               >
                 ✕
               </button>
@@ -572,34 +716,66 @@ export default function TicketPurchaseWidget({
               className="space-y-4 text-left"
             >
               {/* Order Recap */}
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs space-y-2">
+              <div className="p-3 sm:p-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs space-y-2">
                 <div className="flex justify-between items-center font-bold text-gray-300">
                   <span>Selected Passes ({totalItemsCount})</span>
-                  <span className="font-mono font-black text-[#FFD600] text-sm">
-                    {event.currency || "AED"} {totalAmount.toLocaleString()}
-                  </span>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-[#FFD600] text-sm sm:text-base">
+                      {event.currency || "AED"} {payableAmount.toLocaleString()}
+                    </span>
+                    {hasDepositSelected && (
+                      <span className="block text-[10px] text-amber-300 font-semibold">
+                        (20% Table Deposit)
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="border-t border-white/10 pt-2 space-y-1">
+
+                <div className="border-t border-white/10 pt-2 space-y-1 max-h-36 overflow-y-auto">
                   {Object.entries(quantities)
                     .filter(([_, q]) => q > 0)
                     .map(([tId, q]) => {
                       const t = tiers.find((tier) => tier.id === tId);
                       if (!t) return null;
+                      const isTierDeposit =
+                        isDepositMode[tId] &&
+                        (t.category === "table" || t.isVVIP);
+                      const cost = isTierDeposit
+                        ? Math.round(
+                            (t.price * q * (t.depositPercentage ?? 20)) / 100,
+                          )
+                        : t.price * q;
+
                       return (
                         <div
                           key={tId}
                           className="flex justify-between text-[11px] text-gray-400"
                         >
                           <span>
-                            {q}x {t.name}
+                            {q}x {t.name}{" "}
+                            {isTierDeposit && (
+                              <span className="text-amber-400 font-bold">
+                                (20% Deposit)
+                              </span>
+                            )}
                           </span>
                           <span className="font-mono text-white">
-                            {t.currency} {(t.price * q).toLocaleString()}
+                            {t.currency} {cost.toLocaleString()}
                           </span>
                         </div>
                       );
                     })}
                 </div>
+
+                {remainingBalance > 0 && (
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex justify-between">
+                    <span>Remaining Balance at Entrance:</span>
+                    <span className="font-mono font-bold">
+                      {event.currency || "AED"}{" "}
+                      {remainingBalance.toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Full Name & Email */}
@@ -700,18 +876,28 @@ export default function TicketPurchaseWidget({
               )}
 
               {/* Pay with Stripe CTA */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
-              >
-                <Lock className="w-4 h-4 text-black" />
-                <span>
-                  {isSubmitting
-                    ? "Initiating Stripe Payment..."
-                    : `Pay ${event.currency || "AED"} ${totalAmount.toLocaleString()} with Stripe`}
-                </span>
-              </button>
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
+                >
+                  <Lock className="w-4 h-4 text-black" />
+                  <span>
+                    {isSubmitting
+                      ? "Initiating Stripe Payment..."
+                      : `Pay ${event.currency || "AED"} ${payableAmount.toLocaleString()} with Stripe`}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCheckoutModal(false)}
+                  className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors text-center"
+                >
+                  Cancel &amp; Return
+                </button>
+              </div>
 
               <p className="text-[10px] text-gray-400 text-center flex items-center justify-center gap-1.5 pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />

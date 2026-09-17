@@ -28,38 +28,41 @@ export default async function AdminDashboardPage() {
   }
 
   // Metrics calculation
-  const revenueStats = dbQueryOne<{
+  const revenueStats = (await dbQueryOne<{
     totalRevenue: number;
     paidOrdersCount: number;
   }>(
-    `SELECT COALESCE(SUM(totalAmount), 0) as totalRevenue, COUNT(id) as paidOrdersCount 
+    `SELECT COALESCE(SUM(total_amount), 0) AS "totalRevenue", COUNT(id) AS "paidOrdersCount"
      FROM orders WHERE status = 'PAID'`,
-  ) || { totalRevenue: 0, paidOrdersCount: 0 };
+  )) || { totalRevenue: 0, paidOrdersCount: 0 };
 
-  const ticketStats = dbQueryOne<{
+  const ticketStats = (await dbQueryOne<{
     totalSold: number;
     totalCapacity: number;
     totalCheckedIn: number;
   }>(
-    `SELECT 
-      COALESCE(SUM(soldCount), 0) as totalSold, 
-      COALESCE(SUM(capacity), 0) as totalCapacity,
-      (SELECT COUNT(*) FROM tickets WHERE status = 'CHECKED_IN') as totalCheckedIn
+    `SELECT
+      COALESCE(SUM(sold_count), 0) AS "totalSold",
+      COALESCE(SUM(capacity), 0) AS "totalCapacity",
+      (SELECT COUNT(*) FROM tickets WHERE status = 'CHECKED_IN') AS "totalCheckedIn"
      FROM ticket_tiers`,
-  ) || { totalSold: 0, totalCapacity: 0, totalCheckedIn: 0 };
+  )) || { totalSold: 0, totalCapacity: 0, totalCheckedIn: 0 };
 
   const checkInRate =
     ticketStats.totalSold > 0
       ? Math.round((ticketStats.totalCheckedIn / ticketStats.totalSold) * 100)
       : 0;
 
-  const recentOrders = dbQuery<any>(
-    `SELECT o.*, e.city, COUNT(t.id) as ticketsCount 
-     FROM orders o 
-     LEFT JOIN events e ON o.eventId = e.id 
-     LEFT JOIN tickets t ON o.id = t.orderId 
-     GROUP BY o.id 
-     ORDER BY o.createdAt DESC LIMIT 8`,
+  const recentOrders = await dbQuery<any>(
+    `SELECT o.id, o.order_number AS "orderNumber", o.customer_name AS "customerName",
+            o.total_amount AS "totalAmount", o.currency, o.status,
+            o.created_at AS "createdAt",
+            e.city, COUNT(t.id) AS "ticketsCount"
+     FROM orders o
+     LEFT JOIN events e ON o.event_id = e.id
+     LEFT JOIN tickets t ON o.id = t.order_id
+     GROUP BY o.id, e.city
+     ORDER BY o.created_at DESC LIMIT 8`,
   );
 
   return (

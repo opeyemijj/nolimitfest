@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb, dbQueryOne, dbExecute, dbQuery } from "@/lib/db";
+import { dbQueryOne, dbExecute, dbQuery } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
 import { sendTicketConfirmationEmail } from "@/lib/email";
 import crypto from "node:crypto";
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (webhookSecret && signature) {
-      // Verify signature manually or via Stripe
+      // Verify signature manually
       // Parse header: t=...,v1=...
       const elements = signature.split(",").reduce((acc: any, part) => {
         const [k, v] = part.split("=");
@@ -52,44 +52,88 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const order = dbQueryOne<any>(
-        "SELECT * FROM orders WHERE stripeSessionId = ?",
+      const order = await dbQueryOne<any>(
+        `SELECT
+           id,
+           order_number        AS "orderNumber",
+           event_id            AS "eventId",
+           customer_name       AS "customerName",
+           customer_email      AS "customerEmail",
+           customer_phone      AS "customerPhone",
+           customer_location   AS "customerLocation",
+           notes,
+           total_amount        AS "totalAmount",
+           currency,
+           status,
+           stripe_session_id   AS "stripeSessionId",
+           created_at          AS "createdAt"
+         FROM orders
+         WHERE stripe_session_id = $1`,
         [sessionId],
       );
+
       if (order && order.status !== "PAID") {
         // Mark order as PAID
-        dbExecute(
-          `UPDATE orders SET status = 'PAID', stripePaymentIntent = ?, updatedAt = datetime('now') WHERE id = ?`,
+        await dbExecute(
+          `UPDATE orders
+           SET status = 'PAID',
+               stripe_payment_intent = $1,
+               updated_at = NOW()
+           WHERE id = $2`,
           [session.payment_intent || "", order.id],
         );
 
         // Fetch order's event
-        const festivalEvent = dbQueryOne<any>(
-          "SELECT * FROM events WHERE id = ?",
+        const festivalEvent = await dbQueryOne<any>(
+          "SELECT * FROM events WHERE id = $1",
           [order.eventId],
         );
 
         // Activate existing pending tickets or generate new if none
-        const existingTickets = dbQuery<any>(
-          "SELECT * FROM tickets WHERE orderId = ?",
+        const existingTickets = await dbQuery<any>(
+          `SELECT
+             id,
+             order_id      AS "orderId",
+             tier_id       AS "tierId",
+             ticket_code   AS "ticketCode",
+             qr_hash       AS "qrHash",
+             attendee_name AS "attendeeName",
+             attendee_email AS "attendeeEmail",
+             status,
+             created_at    AS "createdAt"
+           FROM tickets
+           WHERE order_id = $1`,
           [order.id],
         );
+
         if (existingTickets.length > 0) {
-          dbExecute(`UPDATE tickets SET status = 'VALID' WHERE orderId = ?`, [
-            order.id,
-          ]);
+          await dbExecute(
+            `UPDATE tickets SET status = 'VALID' WHERE order_id = $1`,
+            [order.id],
+          );
+
           for (const t of existingTickets) {
-            dbExecute(
-              `UPDATE ticket_tiers SET soldCount = soldCount + 1 WHERE id = ?`,
+            await dbExecute(
+              `UPDATE ticket_tiers SET sold_count = sold_count + 1 WHERE id = $1`,
               [t.tierId],
             );
           }
 
-          const activatedTickets = dbQuery<any>(
-            `SELECT t.*, tt.name as tierName, tt.paxPerUnit 
-             FROM tickets t 
-             JOIN ticket_tiers tt ON t.tierId = tt.id 
-             WHERE t.orderId = ?`,
+          const activatedTickets = await dbQuery<any>(
+            `SELECT
+               t.id,
+               t.order_id      AS "orderId",
+               t.tier_id       AS "tierId",
+               t.ticket_code   AS "ticketCode",
+               t.qr_hash       AS "qrHash",
+               t.attendee_name AS "attendeeName",
+               t.attendee_email AS "attendeeEmail",
+               t.status,
+               tt.name         AS "tierName",
+               tt.pax_per_unit AS "paxPerUnit"
+             FROM tickets t
+             JOIN ticket_tiers tt ON t.tier_id = tt.id
+             WHERE t.order_id = $1`,
             [order.id],
           );
 
@@ -99,18 +143,33 @@ export async function POST(req: NextRequest) {
           });
         } else {
           // If no tickets were pre-created, generate a pass from the active tier
-          const tier = dbQueryOne<any>(
-            "SELECT * FROM ticket_tiers WHERE eventId = ? AND status = 'active' LIMIT 1",
+          const tier = await dbQueryOne<any>(
+            `SELECT
+               id,
+               event_id        AS "eventId",
+               name,
+               category,
+               price,
+               currency,
+               capacity,
+               sold_count      AS "soldCount",
+               pax_per_unit    AS "paxPerUnit",
+               wristband_color AS "wristbandColor",
+               status
+             FROM ticket_tiers
+             WHERE event_id = $1 AND status = 'active'
+             LIMIT 1`,
             [order.eventId],
           );
+
           if (tier) {
             const ticketId = `tkt-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
             const ticketCode = `NLF-${festivalEvent?.slug.toUpperCase() || "DXB"}-${Math.floor(10000 + Math.random() * 90000)}`;
             const qrHash = `${ticketCode}:${generateTicketSignature(ticketCode)}`;
 
-            dbExecute(
-              `INSERT INTO tickets (id, orderId, tierId, ticketCode, qrHash, attendeeName, attendeeEmail, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?, 'VALID')`,
+            await dbExecute(
+              `INSERT INTO tickets (id, order_id, tier_id, ticket_code, qr_hash, attendee_name, attendee_email, status)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, 'VALID')`,
               [
                 ticketId,
                 order.id,
@@ -123,8 +182,8 @@ export async function POST(req: NextRequest) {
             );
 
             // Increment sold count
-            dbExecute(
-              `UPDATE ticket_tiers SET soldCount = soldCount + 1 WHERE id = ?`,
+            await dbExecute(
+              `UPDATE ticket_tiers SET sold_count = sold_count + 1 WHERE id = $1`,
               [tier.id],
             );
 
