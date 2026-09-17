@@ -1,23 +1,29 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
-import { ArrowLeft, Sparkles } from "lucide-react";
-import { festivalEvents, getEventBySlug } from "@/data/events";
-import EventCardWithEOI from "@/components/events/EventCardWithEOI";
+import { ArrowLeft } from "lucide-react";
+import {
+  getEventBySlug,
+  getAllEvents,
+  getTicketTiers,
+} from "@/lib/data-service";
+import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
+import { siteConfig } from "@/config/site";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  return festivalEvents.map((evt) => ({
+  const events = getAllEvents();
+  return events.map((evt) => ({
     slug: evt.slug,
   }));
 }
 
-import { siteConfig } from "@/config/site";
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const event = getEventBySlug(slug);
 
@@ -27,25 +33,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const isDubai = event.isCurrentEdition;
   const title = isDubai
-    ? `${event.name} Dubai 2026 | Ruger Live | Tickets & VIP Tables`
-    : `${event.name} (${event.city}) | Waitlist, Passes & EOI Registration`;
+    ? `${event.name} Dubai 2026 | Ruger Live | Buy Tickets & VIP Tables`
+    : `${event.name} (${event.city}) | Tickets & Waitlist`;
 
   const desc = isDubai
-    ? `Saturday 24th October 2026 at Helipad by Frozen Cherry, Dubai. Starring Headliner Ruger. Individual Passes, Table for 6, Table for 8, Table for 10. Register Expression of Interest.`
-    : `Official ${event.name} in ${event.city}, ${event.country}. ${event.tagline} Register Expression of Interest for Individual Passes and VIP Table allocations on WhatsApp.`;
+    ? `Saturday 24th October 2026 at Helipad by Frozen Cherry, Dubai. Starring Headliner Ruger. Individual Passes, Squad Passes, and VIP Tables. Instant digital QR pass via Stripe.`
+    : `Official ${event.name} in ${event.city}, ${event.country}. ${event.tagline} Direct passes and VIP Table allocations.`;
 
   return {
     title,
     description: desc,
-    keywords: [
-      `${event.name}`,
-      `${event.city} music festival`,
-      `${event.city} concerts 2026`,
-      `${event.venue}`,
-      `VIP table ${event.city}`,
-      `Afrobeats ${event.city}`,
-      "No Limit Fest",
-    ],
     alternates: {
       canonical: `${siteConfig.url}/events/${event.slug}`,
     },
@@ -55,7 +52,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: `${siteConfig.url}/events/${event.slug}`,
       images: [
         {
-          url: event.heroImage.startsWith("http") ? event.heroImage : `${siteConfig.url}${event.heroImage}`,
+          url: event.heroImage.startsWith("http")
+            ? event.heroImage
+            : `${siteConfig.url}${event.heroImage}`,
           alt: `${event.name} ${event.city}`,
         },
       ],
@@ -71,6 +70,8 @@ export default async function SingleEventPage({ params }: PageProps) {
     notFound();
   }
 
+  const tiers = getTicketTiers(event.id);
+
   return (
     <div className="pt-28 pb-20 bg-[#08090E] min-h-screen text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -82,8 +83,8 @@ export default async function SingleEventPage({ params }: PageProps) {
           <span>Back to All Festival Cities</span>
         </Link>
 
-        {/* Dedicated Event with 4 pass types and embedded EOI under it */}
-        <EventCardWithEOI event={event} isInitialExpanded={true} />
+        {/* Dedicated Event Ticket Purchase Storefront */}
+        <TicketPurchaseWidget event={event} tiers={tiers} />
       </div>
     </div>
   );

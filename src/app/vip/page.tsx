@@ -1,24 +1,25 @@
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Crown, 
-  Check, 
-  Sparkles, 
-  MessageCircle, 
-  ShieldCheck, 
-  Wine, 
-  Anchor, 
+import {
+  Crown,
+  Check,
+  Sparkles,
+  MessageCircle,
+  ShieldCheck,
+  Wine,
+  Anchor,
   User,
   Users,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
-import { getActiveEvent } from "@/data/events";
-import EventCardWithEOI from "@/components/events/EventCardWithEOI";
+import { getActiveEvent, getTicketTiers } from "@/lib/data-service";
+import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
 
 export const metadata: Metadata = {
-  title: "VIP Tables & Cabanas (From AED 2,000 to VVIP DJ Deck) | No Limit Fest Dubai 2026",
+  title:
+    "VIP Tables & Cabanas (From AED 2,000 to VVIP DJ Deck) | No Limit Fest Dubai 2026",
   description:
     "Official tickets & ultra-luxury VIP table bookings at Helipad by Frozen Cherry for No Limit Fest Dubai 2026. 4 Pax Standing Table (AED 2,000), 5 Pax (AED 4,000), 8 Pax (AED 6,000), 10 Pax (AED 8,000), and VVIP Zone Back of DJ (AED 10,000).",
   keywords: [
@@ -38,7 +39,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "VIP Tables & Cabanas | No Limit Fest Dubai 2026",
-    description: "Reserve your 4 Pax Standing Table (AED 2,000), VIP Table for 5, 8, 10, or VVIP Zone Back of DJ (AED 10,000) at Helipad by Frozen Cherry.",
+    description:
+      "Reserve your 4 Pax Standing Table (AED 2,000), VIP Table for 5, 8, 10, or VVIP Zone Back of DJ (AED 10,000) at Helipad by Frozen Cherry.",
     url: `${siteConfig.url}/vip`,
     images: ["/images/logo.png"],
   },
@@ -164,11 +166,16 @@ export default function VIPPage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight uppercase">
-            INDIVIDUAL PASSES &amp; <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#FF007F]">TABLE CABANAS</span>
+            INDIVIDUAL PASSES &amp;{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#FF007F]">
+              TABLE CABANAS
+            </span>
           </h1>
 
           <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            Redefining festival hospitality on the Dubai waterfront. Select from Individual Passes, Squad Bundles, or private VIP tables from 4 to 10 guests and the exclusive VVIP Zone behind the DJ booth.
+            Redefining festival hospitality on the Dubai waterfront. Select from
+            Individual Passes, Squad Bundles, or private VIP tables from 4 to 10
+            guests and the exclusive VVIP Zone behind the DJ booth.
           </p>
 
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-gray-300">
@@ -176,10 +183,12 @@ export default function VIPPage() {
               <Wine className="w-4 h-4 text-[#FFD600]" /> Premium Bottle Service
             </span>
             <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10">
-              <Anchor className="w-4 h-4 text-[#00E5FF]" /> Private Yacht Marina Docking
+              <Anchor className="w-4 h-4 text-[#00E5FF]" /> Private Yacht Marina
+              Docking
             </span>
             <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Dedicated 24/7 Concierge
+              <ShieldCheck className="w-4 h-4 text-emerald-400" /> Dedicated
+              24/7 Concierge
             </span>
           </div>
         </div>
@@ -214,14 +223,19 @@ export default function VIPPage() {
                   <p className="text-xl sm:text-2xl font-black text-[#FFD600] font-mono mt-2">
                     {pkg.price}
                   </p>
-                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">{pkg.desc}</p>
+                  <p className="text-xs text-gray-400 mt-2 leading-relaxed">
+                    {pkg.desc}
+                  </p>
 
                   <div className="space-y-2 pt-4 border-t border-white/10 mt-4">
                     <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider block">
                       Privileges:
                     </span>
                     {pkg.features.map((feat, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-gray-300">
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2 text-xs text-gray-300"
+                      >
                         <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                           <Check className="w-2.5 h-2.5" />
                         </div>
@@ -246,7 +260,7 @@ export default function VIPPage() {
 
                   <a
                     href={`https://wa.me/${siteConfig.defaultWhatsApp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-                      `Hello! I would like to inquire about reserving ${pkg.title} for No Limit Fest Dubai.`
+                      `Hello! I would like to inquire about reserving ${pkg.title} for No Limit Fest Dubai.`,
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -261,9 +275,12 @@ export default function VIPPage() {
           })}
         </div>
 
-        {/* Dedicated Event with EOI under it */}
-        <div id="eoi-section" className="pt-8">
-          <EventCardWithEOI event={currentEvent} isInitialExpanded={true} />
+        {/* Direct VIP Ticket Store Widget */}
+        <div id="tickets" className="pt-8">
+          <TicketPurchaseWidget
+            event={currentEvent}
+            tiers={getTicketTiers(currentEvent.id)}
+          />
         </div>
       </div>
     </div>

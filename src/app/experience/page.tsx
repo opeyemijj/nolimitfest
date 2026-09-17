@@ -1,20 +1,18 @@
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Sparkles, 
-  Utensils, 
-  Palette, 
-  Shirt, 
-  Sunset, 
-  Zap, 
-  Flame, 
-  Heart, 
+import {
+  Sparkles,
+  Utensils,
+  Palette,
+  Shirt,
+  Sunset,
+  Zap,
+  Flame,
+  Heart,
   Compass,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
-import EOISection from "@/components/eoi/EOISection";
-
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -33,7 +31,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "The Festival Experience | No Limit Fest Dubai 2026",
-    description: "Helipad sunset views, world-class sound matrix, luxury VIP tables, and live headline performance by Ruger.",
+    description:
+      "Helipad sunset views, world-class sound matrix, luxury VIP tables, and live headline performance by Ruger.",
     url: `${siteConfig.url}/experience`,
     images: ["/images/logo.png"],
   },
@@ -44,43 +43,55 @@ export default function ExperiencePage() {
     {
       title: "Sound & Holographic Production",
       subtitle: "Sensory Overdrive",
-      description: "Engineered in partnership with world-renowned stage designers, each stage incorporates 360° transparent microLED rings, 40-watt geometric lasers, and custom L-Acoustics arrays engineered to rattle your chest while maintaining crystalline vocal clarity.",
-      image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Engineered in partnership with world-renowned stage designers, each stage incorporates 360° transparent microLED rings, 40-watt geometric lasers, and custom L-Acoustics arrays engineered to rattle your chest while maintaining crystalline vocal clarity.",
+      image:
+        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80",
       icon: Zap,
     },
     {
       title: "The Global Culinary Boulevard",
       subtitle: "Michelin & Street Food Fusion",
-      description: "Tantalize your palate with 40+ curated culinary outposts representing the flavor capitals of the world. From smoking Texas BBQ briskets and crispy Lagos Suya skewers to artisanal Neapolitan pizzas, plant-based gastronomy, and decadent Dubai dessert creations.",
-      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Tantalize your palate with 40+ curated culinary outposts representing the flavor capitals of the world. From smoking Texas BBQ briskets and crispy Lagos Suya skewers to artisanal Neapolitan pizzas, plant-based gastronomy, and decadent Dubai dessert creations.",
+      image:
+        "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
       icon: Utensils,
     },
     {
       title: "Live Street Art & Mural Battles",
       subtitle: "Urban Expression",
-      description: "Curated by leading international graffiti legends and digital artists. Watch giant 30-foot shipping container installations transform into vibrant masterpieces before your eyes throughout the weekend, complemented by AR visual mirrors and projection mapping.",
-      image: "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Curated by leading international graffiti legends and digital artists. Watch giant 30-foot shipping container installations transform into vibrant masterpieces before your eyes throughout the weekend, complemented by AR visual mirrors and projection mapping.",
+      image:
+        "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?auto=format&fit=crop&w=1200&q=80",
       icon: Palette,
     },
     {
       title: "Streetwear Arcade & Merch Drops",
       subtitle: "Exclusive Festival Fashion",
-      description: "Step into our climate-controlled retail village featuring capsule collaborations with global streetwear designers, customized sneaker restoration bars, commemorative vinyl popups, and custom screen-printing stations to personalize your festival gear.",
-      image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Step into our climate-controlled retail village featuring capsule collaborations with global streetwear designers, customized sneaker restoration bars, commemorative vinyl popups, and custom screen-printing stations to personalize your festival gear.",
+      image:
+        "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1200&q=80",
       icon: Shirt,
     },
     {
       title: "Sunset Drone & Pyro Choreography",
       subtitle: "The Dubai Skyline Illuminated",
-      description: "Each dusk, 1,000 synchronized illuminated drones take flight over Dubai Creek in tandem with stadium-scale pyrotechnics and aquatic laser projectors, telling the story of global music connectivity in the desert sky.",
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Each dusk, 1,000 synchronized illuminated drones take flight over Dubai Creek in tandem with stadium-scale pyrotechnics and aquatic laser projectors, telling the story of global music connectivity in the desert sky.",
+      image:
+        "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
       icon: Sunset,
     },
     {
       title: "Sensory Chillout Havens & Oasis Pods",
       subtitle: "Rest, Recharge & Connect",
-      description: "Need a moment between headliner sets? Enjoy shaded botanical chillout zones equipped with high-speed charging bars, holistic sound baths, hydration bars with zero-proof elixirs, and misting fans.",
-      image: "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80",
+      description:
+        "Need a moment between headliner sets? Enjoy shaded botanical chillout zones equipped with high-speed charging bars, holistic sound baths, hydration bars with zero-proof elixirs, and misting fans.",
+      image:
+        "https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80",
       icon: Heart,
     },
   ];
@@ -96,11 +107,16 @@ export default function ExperiencePage() {
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight uppercase">
-            THE NO LIMIT <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#00E5FF]">EXPERIENCE</span>
+            THE NO LIMIT{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD600] via-[#FF5722] to-[#00E5FF]">
+              EXPERIENCE
+            </span>
           </h1>
 
           <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            More than a festival — an epic gathering of music, culinary excellence, visionary street art, and global festival culture under the Dubai skies.
+            More than a festival — an epic gathering of music, culinary
+            excellence, visionary street art, and global festival culture under
+            the Dubai skies.
           </p>
         </div>
       </div>
@@ -149,11 +165,29 @@ export default function ExperiencePage() {
         </div>
       </div>
 
-      {/* EOI Banner */}
-      <EOISection
-        title="EXPERIENCE IT FIRST-HAND"
-        subtitle="Secure your place in festival history. Register your Expression of Interest for the Dubai premiere."
-      />
+      {/* Ticket Sales CTA Banner */}
+      <div className="py-20 px-4 sm:px-6 lg:px-8 bg-[#0D0F1A] border-t border-white/10 text-center relative overflow-hidden">
+        <div className="max-w-3xl mx-auto space-y-6 relative z-10">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF5722]/15 border border-[#FF5722]/30 text-[#FF6E40] text-xs font-black uppercase tracking-widest">
+            Phase 0 Live • Now Selling
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black uppercase text-white tracking-tight">
+            EXPERIENCE IT FIRST-HAND
+          </h2>
+          <p className="text-sm sm:text-base text-gray-300 max-w-xl mx-auto">
+            Secure your place in festival history. Instant digital passes with
+            verified QR codes delivered via email through Stripe.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/#tickets"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-sm uppercase tracking-wider shadow-2xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"
+            >
+              <span>Buy Tickets &amp; VIP Tables</span>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -20,7 +20,10 @@ export default function LineupTeaser() {
   ];
 
   return (
-    <section id="lineup" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0B0D15] relative overflow-hidden">
+    <section
+      id="lineup"
+      className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0B0D15] relative overflow-hidden"
+    >
       {/* Glow Effects */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-[#FF5722]/15 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-[#00E5FF]/15 rounded-full blur-[140px] pointer-events-none" />
@@ -34,11 +37,17 @@ export default function LineupTeaser() {
           </div>
 
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight">
-            THE WORLD&apos;S <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">GREATEST LINEUP</span>
+            THE WORLD&apos;S{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
+              GREATEST LINEUP
+            </span>
           </h2>
 
           <p className="text-gray-300 max-w-2xl mx-auto text-base sm:text-lg">
-            Headlined by Afrobeats superstar <strong className="text-white">RUGER</strong> live on the Dubai waterfront. Saturday 24th October 2026. More artists to be announced in Phase 2.
+            Headlined by Afrobeats superstar{" "}
+            <strong className="text-white">RUGER</strong> live on the Dubai
+            waterfront. Saturday 24th October 2026. More artists to be announced
+            in Phase 2.
           </p>
         </div>
 
@@ -64,12 +73,16 @@ export default function LineupTeaser() {
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131624] via-[#131624]/30 to-transparent" />
 
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <span className={`px-3 py-1 rounded-full backdrop-blur-md text-xs font-black uppercase ${
-                    artist.role === "Headliner"
-                      ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-black shadow-lg shadow-orange-500/20"
-                      : "bg-black/70 border border-[#00E5FF]/40 text-[#00E5FF]"
-                  }`}>
-                    {artist.role === "Headliner" ? "★ HEADLINER ★" : "★ UNDERCARD ★"}
+                  <span
+                    className={`px-3 py-1 rounded-full backdrop-blur-md text-xs font-black uppercase ${
+                      artist.role === "Headliner"
+                        ? "bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-black shadow-lg shadow-orange-500/20"
+                        : "bg-black/70 border border-[#00E5FF]/40 text-[#00E5FF]"
+                    }`}
+                  >
+                    {artist.role === "Headliner"
+                      ? "★ HEADLINER ★"
+                      : "★ UNDERCARD ★"}
                   </span>
                   <span className="px-3 py-1 rounded-full bg-[#FF5722] text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
                     Oct 24 • Dubai
@@ -146,20 +159,21 @@ export default function LineupTeaser() {
               </div>
 
               <p className="text-xs sm:text-sm text-gray-400 max-w-xs mx-auto leading-relaxed">
-                Additional international guest performers, supporting Afrobeats stars, and Dubai&apos;s top DJs will be unveiled shortly.
+                Additional international guest performers, supporting Afrobeats
+                stars, and Dubai&apos;s top DJs will be unveiled shortly.
               </p>
             </div>
 
             <div className="pt-6 border-t border-white/10 space-y-3">
               <a
-                href="#events"
+                href="#tickets"
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 hover:scale-[1.02] transition-all"
               >
-                <span>Register EOI for Dubai</span>
+                <span>Buy Tickets for Dubai</span>
                 <ArrowRight className="w-4 h-4" />
               </a>
               <p className="text-[10px] text-gray-500">
-                Lock in early bird allocation before phase 2 release
+                Early bird phase 0 allocation selling fast
               </p>
             </div>
           </div>

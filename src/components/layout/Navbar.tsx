@@ -4,15 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { 
-  Menu, 
-  X, 
-  Sparkles, 
-  Flame, 
-  Globe, 
-  ChevronDown, 
+import {
+  Menu,
+  X,
+  Sparkles,
+  Flame,
+  Globe,
+  ChevronDown,
   MessageCircle,
-  Database
+  Database,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { festivalEvents, getActiveEvent } from "@/data/events";
@@ -66,6 +66,11 @@ export default function Navbar() {
     { name: "Contact", href: "/contact" },
   ];
 
+  // Do not render storefront navbar on admin backoffice routes or standalone ticket verification passes
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/tickets/")) {
+    return null;
+  }
+
   return (
     <>
       <header
@@ -78,7 +83,11 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo & City Badge */}
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center group py-1" aria-label="No Limit Fest">
+            <Link
+              href="/"
+              className="flex items-center group py-1"
+              aria-label="No Limit Fest"
+            >
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/images/logo.png"
@@ -99,13 +108,17 @@ export default function Navbar() {
               >
                 <span className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse"></span>
                 <span className="hidden xs:inline">{currentEvent.flag}</span>
-                <span className="font-bold text-white uppercase">{currentEvent.city}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${cityDropdown ? "rotate-180" : ""}`} />
+                <span className="font-bold text-white uppercase">
+                  {currentEvent.city}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform ${cityDropdown ? "rotate-180" : ""}`}
+                />
               </button>
 
               {/* Dropdown Menu */}
               {cityDropdown && (
-                <div 
+                <div
                   className="absolute left-0 mt-2 w-56 rounded-2xl bg-[#121420] border border-white/15 p-2 shadow-2xl z-50 backdrop-blur-xl"
                   onMouseLeave={() => setCityDropdown(false)}
                 >
@@ -127,7 +140,9 @@ export default function Navbar() {
                         <span className="text-base">{evt.flag}</span>
                         <div>
                           <p className="font-bold text-white">{evt.city}</p>
-                          <p className="text-[10px] text-gray-400">{evt.dates}</p>
+                          <p className="text-[10px] text-gray-400">
+                            {evt.dates}
+                          </p>
                         </div>
                       </div>
                       {evt.isCurrentEdition ? (
@@ -159,9 +174,7 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={`text-sm font-semibold tracking-wide transition-all duration-200 relative py-1 ${
-                    active
-                      ? "text-white"
-                      : "text-gray-300 hover:text-white"
+                    active ? "text-white" : "text-gray-300 hover:text-white"
                   }`}
                 >
                   {link.name}
@@ -176,23 +189,19 @@ export default function Navbar() {
           {/* Actions: Leads Manager & Register Interest */}
           <div className="flex items-center gap-2.5">
             {/* Organizer Leads Trigger */}
-            <button
-              onClick={() => setShowLeads(true)}
+            {/* Backoffice Administration Portal Link */}
+            <Link
+              href="/admin"
               className="relative p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-[#00E5FF] transition-colors"
-              title="View Inquiries & Export CSV"
+              title="Staff Backoffice & Entrance Gate Scanner"
             >
               <Database className="w-4 h-4" />
-              {leadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#FF007F] text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
-                  {leadCount}
-                </span>
-              )}
-            </button>
+            </Link>
 
             {/* Direct WhatsApp Quick Chat */}
             <a
               href={`https://wa.me/${siteConfig.defaultWhatsApp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-                "Hello No Limit Fest Concierge! I have a question about the Dubai edition."
+                "Hello No Limit Fest Concierge! I have a question about the Dubai edition.",
               )}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -202,15 +211,17 @@ export default function Navbar() {
               <span>WhatsApp</span>
             </a>
 
-            {/* Main EOI Button */}
+            {/* Main Buy Tickets Button */}
             <a
-              href="#eoi"
+              href="/#tickets"
               className="relative group overflow-hidden rounded-full p-[1px] font-bold text-xs sm:text-sm"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#FF007F] animate-pulse"></span>
               <span className="relative flex items-center gap-1.5 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#08090E] transition-all duration-300 group-hover:bg-transparent group-hover:text-white text-white">
                 <Flame className="w-4 h-4 text-[#FF5722] group-hover:text-white transition-colors" />
-                <span className="uppercase tracking-wider font-extrabold">Register EOI</span>
+                <span className="uppercase tracking-wider font-extrabold">
+                  Buy Tickets
+                </span>
               </span>
             </a>
 
@@ -220,7 +231,11 @@ export default function Navbar() {
               className="lg:hidden p-2 rounded-xl bg-white/5 text-gray-300 hover:text-white border border-white/10"
               aria-label="Toggle navigation menu"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -244,11 +259,11 @@ export default function Navbar() {
 
             <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
               <a
-                href="#eoi"
+                href="/#tickets"
                 onClick={() => setIsOpen(false)}
                 className="w-full text-center py-3 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white font-extrabold text-sm uppercase tracking-wider shadow-lg shadow-orange-500/20"
               >
-                Register Interest (EOI)
+                Buy Tickets (Phase 0 Live)
               </a>
               <a
                 href={`https://wa.me/${siteConfig.defaultWhatsApp.replace(/[^0-9]/g, "")}`}

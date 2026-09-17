@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Flame, 
-  MapPin, 
-  Calendar, 
-  Sparkles, 
-  ArrowRight, 
+import {
+  Flame,
+  MapPin,
+  Calendar,
+  Sparkles,
+  ArrowRight,
   Clock,
   Ticket,
   Crown,
-  CheckCircle2
+  CheckCircle2,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { getActiveEvent } from "@/data/events";
@@ -38,7 +38,9 @@ export default function Hero() {
       if (distance > 0) {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          hours: Math.floor(
+            (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+          ),
           minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((distance % (1000 * 60)) / 1000),
         });
@@ -108,7 +110,10 @@ export default function Hero() {
         {/* Headline Starring Ruger */}
         <div className="space-y-2">
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-tight uppercase leading-[0.95]">
-            RUGER <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">LIVE</span>
+            RUGER{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
+              LIVE
+            </span>
           </h1>
           <p className="text-xl sm:text-2xl font-black uppercase text-[#FFD600] tracking-widest">
             OFFICIAL HEADLINER • DUBAI
@@ -116,14 +121,19 @@ export default function Hero() {
         </div>
 
         <p className="mt-4 text-base sm:text-lg text-gray-300 max-w-2xl font-medium leading-relaxed">
-          The global debut of No Limit Fest takes over the breathtaking <strong className="text-white">Helipad by Frozen Cherry</strong>. An unforgettable sunset-to-night spectacle with Afrobeats, Amapiano, and Dubai’s finest party crowd.
+          The global debut of No Limit Fest takes over the breathtaking{" "}
+          <strong className="text-white">Helipad by Frozen Cherry</strong>. An
+          unforgettable sunset-to-night spectacle with Afrobeats, Amapiano, and
+          Dubai’s finest party crowd.
         </p>
 
         {/* Venue, Date, Time & Partners Details */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm text-gray-300">
           <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/5 border border-white/10">
             <Calendar className="w-4 h-4 text-[#FF5722]" />
-            <span className="font-bold text-white">Saturday 24th October 2026</span>
+            <span className="font-bold text-white">
+              Saturday 24th October 2026
+            </span>
           </div>
           <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/5 border border-white/10">
             <Clock className="w-4 h-4 text-[#FFD600]" />
@@ -131,13 +141,18 @@ export default function Hero() {
           </div>
           <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/5 border border-white/10">
             <MapPin className="w-4 h-4 text-[#00E5FF]" />
-            <span className="font-bold text-white">Helipad by Frozen Cherry, Dubai</span>
+            <span className="font-bold text-white">
+              Helipad by Frozen Cherry, Dubai
+            </span>
           </div>
         </div>
 
         {/* Official Headliner & Phase 2 Teaser Preview */}
         <div className="mt-8 grid grid-cols-2 gap-4 max-w-md w-full">
-          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-amber-500/40 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1">
+          <Link
+            href="/lineup"
+            className="group relative rounded-2xl overflow-hidden border border-amber-500/40 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1"
+          >
             <div className="relative aspect-[9/16] w-full">
               <Image
                 src="/images/artists/ruger.jpg"
@@ -147,12 +162,19 @@ export default function Hero() {
               />
             </div>
             <div className="p-2.5 bg-[#121422] text-center">
-              <span className="text-xs font-black uppercase text-[#FF5722] block">★ RUGER ★</span>
-              <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider">Official Headliner</span>
+              <span className="text-xs font-black uppercase text-[#FF5722] block">
+                ★ RUGER ★
+              </span>
+              <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider">
+                Official Headliner
+              </span>
             </div>
           </Link>
 
-          <Link href="/lineup" className="group relative rounded-2xl overflow-hidden border border-dashed border-white/20 hover:border-[#00E5FF] transition-all shadow-xl hover:-translate-y-1 bg-[#121422] flex flex-col justify-between">
+          <Link
+            href="/lineup"
+            className="group relative rounded-2xl overflow-hidden border border-dashed border-white/20 hover:border-[#00E5FF] transition-all shadow-xl hover:-translate-y-1 bg-[#121422] flex flex-col justify-between"
+          >
             <div className="relative aspect-[9/16] w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#121422] via-[#1a1e35] to-[#121422]">
               <div className="w-12 h-12 rounded-full bg-white/5 border border-white/15 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
                 <Sparkles className="w-6 h-6 text-[#00E5FF] animate-pulse" />
@@ -168,8 +190,12 @@ export default function Hero() {
               </span>
             </div>
             <div className="p-2.5 bg-[#0C0E17] text-center border-t border-white/10">
-              <span className="text-xs font-black uppercase text-[#00E5FF] block">★ LINEUP ★</span>
-              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">Supporting Acts</span>
+              <span className="text-xs font-black uppercase text-[#00E5FF] block">
+                ★ LINEUP ★
+              </span>
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                Supporting Acts
+              </span>
             </div>
           </Link>
         </div>
@@ -181,20 +207,36 @@ export default function Hero() {
           </div>
           <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
             <div className="p-2 sm:p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="block text-2xl sm:text-4xl font-black text-white font-mono">{timeLeft.days}</span>
-              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">Days</span>
+              <span className="block text-2xl sm:text-4xl font-black text-white font-mono">
+                {timeLeft.days}
+              </span>
+              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">
+                Days
+              </span>
             </div>
             <div className="p-2 sm:p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="block text-2xl sm:text-4xl font-black text-[#FF5722] font-mono">{timeLeft.hours}</span>
-              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">Hours</span>
+              <span className="block text-2xl sm:text-4xl font-black text-[#FF5722] font-mono">
+                {timeLeft.hours}
+              </span>
+              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">
+                Hours
+              </span>
             </div>
             <div className="p-2 sm:p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="block text-2xl sm:text-4xl font-black text-[#FFD600] font-mono">{timeLeft.minutes}</span>
-              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">Mins</span>
+              <span className="block text-2xl sm:text-4xl font-black text-[#FFD600] font-mono">
+                {timeLeft.minutes}
+              </span>
+              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">
+                Mins
+              </span>
             </div>
             <div className="p-2 sm:p-3 rounded-2xl bg-white/5 border border-white/10">
-              <span className="block text-2xl sm:text-4xl font-black text-[#00E5FF] font-mono">{timeLeft.seconds}</span>
-              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">Secs</span>
+              <span className="block text-2xl sm:text-4xl font-black text-[#00E5FF] font-mono">
+                {timeLeft.seconds}
+              </span>
+              <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider">
+                Secs
+              </span>
             </div>
           </div>
         </div>
@@ -206,7 +248,7 @@ export default function Hero() {
             className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-base uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-2xl shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"
           >
             <Flame className="w-5 h-5 text-white animate-bounce" />
-            <span>Get Tickets / Register EOI</span>
+            <span>Buy Tickets (Phase 0 Live)</span>
           </a>
 
           <Link
@@ -224,7 +266,10 @@ export default function Hero() {
             Presented &amp; Hosted By:
           </span>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <div className="relative h-7 sm:h-8 w-24 sm:w-28 flex items-center justify-center" title="Shurlaybor Empire - Organizer">
+            <div
+              className="relative h-7 sm:h-8 w-24 sm:w-28 flex items-center justify-center"
+              title="Shurlaybor Empire - Organizer"
+            >
               <Image
                 src="/images/organizers/shurlaybor.png"
                 alt="Shurlaybor Empire - Official Festival Organizer"
@@ -233,7 +278,10 @@ export default function Hero() {
               />
             </div>
             <span className="text-gray-600 text-sm">•</span>
-            <div className="relative h-6 sm:h-7 w-28 sm:w-32 flex items-center justify-center" title="Typical Naija - Organizer">
+            <div
+              className="relative h-6 sm:h-7 w-28 sm:w-32 flex items-center justify-center"
+              title="Typical Naija - Organizer"
+            >
               <Image
                 src="/images/organizers/typical-naija.png"
                 alt="Typical Naija - Official Festival Organizer"
@@ -242,7 +290,10 @@ export default function Hero() {
               />
             </div>
             <span className="text-gray-600 text-sm">•</span>
-            <div className="relative h-6 sm:h-7 w-28 sm:w-36 flex items-center justify-center" title="Helipad by Frozen Cherry - Venue">
+            <div
+              className="relative h-6 sm:h-7 w-28 sm:w-36 flex items-center justify-center"
+              title="Helipad by Frozen Cherry - Venue"
+            >
               <Image
                 src="/images/organizers/helipad.png"
                 alt="Helipad by Frozen Cherry - Official Host Venue"
@@ -259,17 +310,27 @@ export default function Hero() {
         <div className="flex animate-marquee whitespace-nowrap text-xs sm:text-sm font-black uppercase tracking-widest text-gray-300">
           <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
-          <span className="mx-4 text-[#00E5FF]">★ MORE ARTISTS DROPPING SOON</span>
+          <span className="mx-4 text-[#00E5FF]">
+            ★ MORE ARTISTS DROPPING SOON
+          </span>
           <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
-          <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
-          <span className="mx-4 text-[#00E5FF]">★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)</span>
+          <span className="mx-4 text-[#FF007F]">
+            ★ HELIPAD BY FROZEN CHERRY
+          </span>
+          <span className="mx-4 text-[#00E5FF]">
+            ★ INDIVIDUAL PASSES &amp; TABLES (6, 8, 10)
+          </span>
           <span className="mx-4 text-[#FFD600]">★ MUSIC, ENERGY, NO LIMIT</span>
           <span className="mx-4 text-[#FF5722]">★ HEADLINER: RUGER LIVE</span>
-          <span className="mx-4 text-[#00E5FF]">★ MORE ARTISTS DROPPING SOON</span>
+          <span className="mx-4 text-[#00E5FF]">
+            ★ MORE ARTISTS DROPPING SOON
+          </span>
           <span className="mx-4 text-white">★ SATURDAY 24TH OCTOBER 2026</span>
           <span className="mx-4 text-emerald-400">★ 6PM TILL LATE</span>
-          <span className="mx-4 text-[#FF007F]">★ HELIPAD BY FROZEN CHERRY</span>
+          <span className="mx-4 text-[#FF007F]">
+            ★ HELIPAD BY FROZEN CHERRY
+          </span>
         </div>
       </div>
     </div>

@@ -2,14 +2,29 @@
 
 import { useState } from "react";
 import { Globe, Sparkles } from "lucide-react";
-import { festivalEvents } from "@/data/events";
-import EventCardWithEOI from "@/components/events/EventCardWithEOI";
+import { DbEvent, DbTicketTier } from "@/lib/data-service";
+import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
 
-export default function EventsShowcase() {
+interface EventsShowcaseProps {
+  events: DbEvent[];
+  initialTiers: Record<string, DbTicketTier[]>;
+}
+
+export default function EventsShowcase({
+  events,
+  initialTiers,
+}: EventsShowcaseProps) {
   const [activeTab, setActiveTab] = useState<string>("dubai");
 
+  const currentSelectedEvent =
+    events.find((e) => e.slug === activeTab) || events[0];
+  const currentTiers = initialTiers[currentSelectedEvent.id] || [];
+
   return (
-    <section id="events" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#090B12] relative overflow-hidden">
+    <section
+      id="tickets"
+      className="py-24 px-4 sm:px-6 lg:px-8 bg-[#090B12] relative overflow-hidden"
+    >
       {/* Background Ambience */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#FF5722]/10 rounded-full blur-[160px] pointer-events-none" />
 
@@ -18,21 +33,26 @@ export default function EventsShowcase() {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00E5FF]/15 border border-[#00E5FF]/30 text-[#00E5FF] text-xs font-black uppercase tracking-widest">
             <Globe className="w-3.5 h-3.5" />
-            <span>Multi-City Global Editions</span>
+            <span>Multi-City Global Tour</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight">
-            FESTIVAL EDITIONS & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">EOI REGISTRATION</span>
+            FESTIVAL EDITIONS &amp;{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF]">
+              TICKET SALES
+            </span>
           </h2>
 
           <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
-            Select an event edition below to view its venue specs, lineup, and passes (Individual Pass, Table for 6, Table for 8, Table for 10), then submit your Expression of Interest directly via WhatsApp.
+            Select an edition below to view passes, squad packages, and VIP
+            table hospitality. Instant digital tickets with secure QR codes
+            delivered via email.
           </p>
         </div>
 
         {/* City Filter Navigation Pills */}
         <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2">
-          {festivalEvents.map((evt) => (
+          {events.map((evt) => (
             <button
               key={evt.id}
               onClick={() => setActiveTab(evt.slug)}
@@ -57,13 +77,12 @@ export default function EventsShowcase() {
           ))}
         </div>
 
-        {/* Selected Event Card with Full Passes and Embedded EOI */}
+        {/* Selected Event Ticket Store Widget */}
         <div className="space-y-8">
-          {festivalEvents
-            .filter((evt) => evt.slug === activeTab)
-            .map((evt) => (
-              <EventCardWithEOI key={evt.id} event={evt} isInitialExpanded={true} />
-            ))}
+          <TicketPurchaseWidget
+            event={currentSelectedEvent}
+            tiers={currentTiers}
+          />
         </div>
       </div>
     </section>
