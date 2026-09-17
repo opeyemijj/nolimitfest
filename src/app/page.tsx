@@ -20,8 +20,8 @@ export default async function HomePage() {
       <EventsShowcase events={events} initialTiers={initialTiers} />
       <LineupTeaser />
       <ExperienceGrid />
-      <CitySelector />
       <FAQSection />
+      <CitySelector />
     </>
   );
 }

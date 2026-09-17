@@ -510,7 +510,9 @@ export default function TicketPurchaseWidget({
                           <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                             <span>Payment Option:</span>
                             <span className="text-[#FFD600] font-mono text-[10px]">
-                              {cardIsDeposit ? `${depositPct}% Deposit Selected` : "Full Payment Selected"}
+                              {cardIsDeposit
+                                ? `${depositPct}% Deposit Selected`
+                                : "Full Payment Selected"}
                             </span>
                           </div>
 
@@ -610,8 +612,8 @@ export default function TicketPurchaseWidget({
 
                           {cardIsDeposit && (
                             <p className="text-[10px] text-amber-200/90 italic text-center px-1">
-                              ⚡ Pay {depositPct}% now to hold the booking. Remaining{" "}
-                              {tier.currency}{" "}
+                              ⚡ Pay {depositPct}% now to hold the booking.
+                              Remaining {tier.currency}{" "}
                               {(
                                 (tier.price - depositUnitAmount) *
                                 cardQty
@@ -623,7 +625,9 @@ export default function TicketPurchaseWidget({
                           {/* Primary CTA Button for Tables */}
                           <button
                             type="button"
-                            onClick={() => handleDirectBuy(tier.id, cardIsDeposit)}
+                            onClick={() =>
+                              handleDirectBuy(tier.id, cardIsDeposit)
+                            }
                             className={`w-full py-3.5 px-4 rounded-xl text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all ${
                               cardIsDeposit
                                 ? "bg-gradient-to-r from-amber-500 via-[#FFD600] to-yellow-400 shadow-amber-500/25"
@@ -826,9 +830,7 @@ export default function TicketPurchaseWidget({
                           (t.category === "table" || t.isVVIP);
                         const depositPct = t.depositPercentage ?? 20;
                         const cost = isTierDeposit
-                          ? Math.round(
-                              (t.price * q * depositPct) / 100,
-                            )
+                          ? Math.round((t.price * q * depositPct) / 100)
                           : t.price * q;
 
                         return (
