@@ -160,10 +160,10 @@ const ORDER_SELECT = `
 `;
 
 const TICKET_SELECT = `
-  id, order_id AS "orderId", tier_id AS "tierId", ticket_code AS "ticketCode",
-  qr_hash AS "qrHash", attendee_name AS "attendeeName", attendee_email AS "attendeeEmail",
-  status, checked_in_at AS "checkedInAt", checked_in_by AS "checkedInBy",
-  created_at AS "createdAt", updated_at AS "updatedAt"
+  t.id, t.order_id AS "orderId", t.tier_id AS "tierId", t.ticket_code AS "ticketCode",
+  t.qr_hash AS "qrHash", t.attendee_name AS "attendeeName", t.attendee_email AS "attendeeEmail",
+  t.status, t.checked_in_at AS "checkedInAt", t.checked_in_by AS "checkedInBy",
+  t.created_at AS "createdAt", t.updated_at AS "updatedAt"
 `;
 
 // ---------------------------------------------------------------------------
@@ -373,27 +373,30 @@ export async function getTicketByCode(
   ticketCode: string,
 ): Promise<DbTicket | null> {
   try {
+    const cleanCode = decodeURIComponent(ticketCode || "").trim();
+    if (!cleanCode) return null;
+
     const row = await dbQueryOne<any>(
       `
       SELECT
         ${TICKET_SELECT},
-        tt.name AS "tierName",
-        tt.pax_per_unit AS "paxPerUnit",
-        tt.category,
+        COALESCE(tt.name, 'Festival Pass') AS "tierName",
+        COALESCE(tt.pax_per_unit, 1) AS "paxPerUnit",
+        COALESCE(tt.category, 'phase') AS category,
         COALESCE(tt.color, '#00E676') AS "tierColor",
         COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor",
-        e.id AS "eventId",
-        e.name AS "eventName",
-        e.venue AS "eventVenue",
-        e.dates AS "eventDates",
-        e.time AS "eventTime"
+        COALESCE(e.id, 'dubai-2026') AS "eventId",
+        COALESCE(e.name, 'No Limit Fest Dubai') AS "eventName",
+        COALESCE(e.venue, 'Helipad by Frozen Cherry, Dubai') AS "eventVenue",
+        COALESCE(e.dates, 'Saturday 24th October 2026') AS "eventDates",
+        COALESCE(e.time, '6:00 PM Till Late') AS "eventTime"
       FROM tickets t
-      JOIN ticket_tiers tt ON t.tier_id = tt.id
-      JOIN orders o ON t.order_id = o.id
-      JOIN events e ON o.event_id = e.id
-      WHERE t.ticket_code = $1
+      LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+      LEFT JOIN orders o ON t.order_id = o.id
+      LEFT JOIN events e ON o.event_id = e.id
+      WHERE t.ticket_code = $1 OR t.ticket_code ILIKE $1 OR t.id = $1
     `,
-      [ticketCode],
+      [cleanCode],
     );
     return row || null;
   } catch (e) {
@@ -426,13 +429,16 @@ export async function getOrderById(
   orderId: string,
 ): Promise<(DbOrder & { tickets: DbTicket[] }) | null> {
   try {
+    const cleanId = decodeURIComponent(orderId || "").trim();
+    if (!cleanId) return null;
+
     const order = await dbQueryOne<any>(
       `
       SELECT ${ORDER_SELECT}
       FROM orders
-      WHERE id = $1 OR order_number = $1
+      WHERE id = $1 OR order_number = $1 OR order_number ILIKE $1
     `,
-      [orderId],
+      [cleanId],
     );
     if (!order) return null;
 
@@ -440,12 +446,12 @@ export async function getOrderById(
       `
       SELECT
         ${TICKET_SELECT},
-        tt.name AS "tierName",
-        tt.pax_per_unit AS "paxPerUnit",
+        COALESCE(tt.name, 'Festival Pass') AS "tierName",
+        COALESCE(tt.pax_per_unit, 1) AS "paxPerUnit",
         COALESCE(tt.color, '#00E676') AS "tierColor",
         COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor"
       FROM tickets t
-      JOIN ticket_tiers tt ON t.tier_id = tt.id
+      LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
       WHERE t.order_id = $1
     `,
       [order.id],
