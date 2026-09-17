@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.toLowerCase().trim();
 
     const user = await dbQueryOne<any>(
-      `SELECT id, name, email, password_hash AS "passwordHash", role, is_active AS "isActive"
+      `SELECT id, name, email, password_hash AS "passwordHash", role, is_active AS "isActive",
+              permissions, assigned_events AS "assignedEvents"
        FROM users
        WHERE email = $1 AND is_active = true`,
       [cleanEmail],
@@ -47,7 +48,11 @@ export async function POST(req: NextRequest) {
       name: user.name,
       email: user.email,
       role: user.role,
-      isActive: user.isActive,
+      isActive: user.isActive ? 1 : 0,
+      permissions: Array.isArray(user.permissions) ? user.permissions : [],
+      assignedEvents: Array.isArray(user.assignedEvents)
+        ? user.assignedEvents
+        : ["ALL"],
     };
 
     const token = createSessionToken(authUser);

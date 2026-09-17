@@ -17,7 +17,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
-  isActive: number;
+  isActive: number | boolean;
   permissions?: PermissionKey[];
   assignedEvents?: string[];
 }
