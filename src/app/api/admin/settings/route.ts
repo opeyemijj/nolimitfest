@@ -48,8 +48,8 @@ export async function PUT(req: NextRequest) {
           email          = $6,
           marquee_text   = $7,
           age_limit      = $8,
-          socials        = $9,
-          organizers     = $10,
+          socials        = $9::jsonb,
+          organizers     = $10::jsonb,
           updated_at     = NOW()
          WHERE id = 'global'`,
         [
@@ -61,8 +61,8 @@ export async function PUT(req: NextRequest) {
           config.email,
           config.marqueeText,
           config.ageLimit,
-          config.socials || {},
-          config.organizers || [],
+          JSON.stringify(config.socials || {}),
+          JSON.stringify(Array.isArray(config.organizers) ? config.organizers : []),
         ],
       );
     }

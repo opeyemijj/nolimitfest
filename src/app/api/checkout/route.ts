@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     const orderNumber = `NLF-${event.city.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const orderCurrency = validatedItems[0]?.tier?.currency || "AED";
 
-    const origin = req.nextUrl.origin || "https://nolimitfest.com";
+    const origin = req.nextUrl.origin || "https://nolimitfest.net";
 
     // 4. Handle Stripe Integration if API key is configured
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;

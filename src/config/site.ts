@@ -2,12 +2,13 @@ export const siteConfig = {
   name: "No Limit Fest",
   shortName: "No Limit",
   tagline: "Music, Energy, No limit",
-  description: "No Limit Fest Dubai starring Afrobeats superstar RUGER live at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026, 6PM till late. Supporting artists to be announced.",
-  url: "https://nolimitfest.com",
+  description:
+    "No Limit Fest Dubai starring Afrobeats superstar RUGER live at Helipad by Frozen Cherry, Dubai. Saturday 24th October 2026, 6PM till late. Supporting artists to be announced.",
+  url: "https://nolimitfest.net",
   ogImage: "/images/og-image.png",
   logo: "/images/logo.png",
   defaultWhatsApp: "+971506885946",
-  email: "contact@nolimitfest.com",
+  email: "info@nolimitfest.net",
   socials: {
     instagram: "https://instagram.com/nolimitfest",
     tiktok: "https://tiktok.com/@nolimitfest",

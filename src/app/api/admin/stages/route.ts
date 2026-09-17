@@ -42,8 +42,8 @@ export async function PUT(req: NextRequest) {
         description = $4,
         capacity    = $5,
         image       = $6,
-        genres      = $7,
-        production  = $8,
+        genres      = $7::jsonb,
+        production  = $8::jsonb,
         updated_at  = NOW()
        WHERE id = $9`,
       [
@@ -53,8 +53,8 @@ export async function PUT(req: NextRequest) {
         description,
         capacity,
         image,
-        genres || [],
-        production || {},
+        JSON.stringify(Array.isArray(genres) ? genres : []),
+        JSON.stringify(production || {}),
         id,
       ],
     );

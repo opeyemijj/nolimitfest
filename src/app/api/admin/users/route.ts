@@ -119,15 +119,15 @@ export async function POST(req: NextRequest) {
 
     await dbExecute(
       `INSERT INTO users (id, name, email, password_hash, role, is_active, permissions, assigned_events)
-       VALUES ($1, $2, $3, $4, $5, true, $6, $7)`,
+       VALUES ($1, $2, $3, $4, $5, true, $6::jsonb, $7::jsonb)`,
       [
         id,
         name.trim(),
         cleanEmail,
         passwordHash,
         userRole,
-        userPermissions, // JSONB — pass array directly
-        userEvents, // JSONB — pass array directly
+        JSON.stringify(userPermissions),
+        JSON.stringify(userEvents),
       ],
     );
 
@@ -234,8 +234,8 @@ export async function PUT(req: NextRequest) {
           password_hash = $3,
           role = $4,
           is_active = $5,
-          permissions = $6,
-          assigned_events = $7,
+          permissions = $6::jsonb,
+          assigned_events = $7::jsonb,
           updated_at = NOW()
         WHERE id = $8`,
         [
@@ -244,8 +244,8 @@ export async function PUT(req: NextRequest) {
           passwordHash,
           newRole,
           newIsActive,
-          userPermissions, // JSONB — array directly
-          userEvents, // JSONB — array directly
+          JSON.stringify(userPermissions),
+          JSON.stringify(userEvents),
           id,
         ],
       );
@@ -256,8 +256,8 @@ export async function PUT(req: NextRequest) {
           email = $2,
           role = $3,
           is_active = $4,
-          permissions = $5,
-          assigned_events = $6,
+          permissions = $5::jsonb,
+          assigned_events = $6::jsonb,
           updated_at = NOW()
         WHERE id = $7`,
         [
@@ -265,8 +265,8 @@ export async function PUT(req: NextRequest) {
           cleanEmail,
           newRole,
           newIsActive,
-          userPermissions, // JSONB — array directly
-          userEvents, // JSONB — array directly
+          JSON.stringify(userPermissions),
+          JSON.stringify(userEvents),
           id,
         ],
       );

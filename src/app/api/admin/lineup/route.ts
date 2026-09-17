@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest) {
         image       = $7,
         bio         = $8,
         origin      = $9,
-        hits        = $10,
+        hits        = $10::jsonb,
         spotify_url = $11,
         updated_at  = NOW()
        WHERE id = $12`,
@@ -65,7 +65,7 @@ export async function PUT(req: NextRequest) {
         image,
         bio,
         origin,
-        hits || [],
+        JSON.stringify(Array.isArray(hits) ? hits : []),
         spotifyUrl,
         id,
       ],
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     await dbExecute(
       `INSERT INTO artists (id, name, role, genre, day, stage, time, image, bio, origin, hits, spotify_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12)`,
       [
         id,
         name,
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
         image || "/images/artists/ruger.jpg",
         bio || "",
         origin || "Dubai, UAE",
-        hits || [],
+        JSON.stringify(Array.isArray(hits) ? hits : []),
         spotifyUrl || "",
       ],
     );

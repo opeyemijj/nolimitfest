@@ -20,6 +20,7 @@ import { DbTicketTier } from "@/lib/data-service";
 export default function AdminTicketsPage() {
   const [tiers, setTiers] = useState<DbTicketTier[]>([]);
   const [editingTier, setEditingTier] = useState<DbTicketTier | null>(null);
+  const [editPerksText, setEditPerksText] = useState("");
   const [isNewTierModalOpen, setIsNewTierModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,20 +63,32 @@ export default function AdminTicketsPage() {
     setIsSaving(true);
 
     try {
+      const perksArray = editPerksText
+        .split("\n")
+        .map((p) => p.trim())
+        .filter(Boolean);
+
       const res = await fetch("/api/admin/tickets", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingTier),
+        body: JSON.stringify({
+          ...editingTier,
+          perks: perksArray,
+        }),
       });
 
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
         setNotification("Tier updated successfully!");
         setEditingTier(null);
         fetchTiers();
         setTimeout(() => setNotification(null), 3000);
+      } else {
+        alert(`Failed to save tier: ${data.error || res.statusText || "Server error"}`);
       }
-    } catch {
-      alert("Error saving tier.");
+    } catch (err: any) {
+      alert(`Error saving tier: ${err.message || "Network error"}`);
     } finally {
       setIsSaving(false);
     }
@@ -108,15 +121,19 @@ export default function AdminTicketsPage() {
         }),
       });
 
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
         setNotification("New ticket tier created!");
         setIsNewTierModalOpen(false);
         setNewName("");
         fetchTiers();
         setTimeout(() => setNotification(null), 3000);
+      } else {
+        alert(`Failed to create tier: ${data.error || res.statusText || "Server error"}`);
       }
-    } catch {
-      alert("Error creating tier.");
+    } catch (err: any) {
+      alert(`Error creating tier: ${err.message || "Network error"}`);
     } finally {
       setIsSaving(false);
     }
@@ -258,7 +275,10 @@ export default function AdminTicketsPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => setEditingTier(tier)}
+                  onClick={() => {
+                    setEditingTier(tier);
+                    setEditPerksText(Array.isArray(tier.perks) ? tier.perks.join("\n") : "");
+                  }}
                   className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold flex items-center gap-1.5 transition-colors"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -513,16 +533,10 @@ export default function AdminTicketsPage() {
                 </label>
                 <textarea
                   rows={4}
-                  value={editingTier.perks.join("\n")}
-                  onChange={(e) =>
-                    setEditingTier({
-                      ...editingTier,
-                      perks: e.target.value
-                        .split("\n")
-                        .filter((p) => p.trim().length > 0),
-                    })
-                  }
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white"
+                  value={editPerksText}
+                  onChange={(e) => setEditPerksText(e.target.value)}
+                  placeholder="e.g. VIP Fast-track entry&#10;Access to artist lounge&#10;Complimentary beverage token"
+                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white placeholder:text-gray-500"
                 />
               </div>
 

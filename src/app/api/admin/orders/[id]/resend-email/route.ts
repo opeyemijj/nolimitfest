@@ -54,10 +54,10 @@ export async function POST(
 
     // Update recipient email in DB if changed
     if (targetEmail && targetEmail !== order.customerEmail) {
-      await dbExecute(
-        "UPDATE orders SET customer_email = $1 WHERE id = $2",
-        [targetEmail, order.id],
-      );
+      await dbExecute("UPDATE orders SET customer_email = $1 WHERE id = $2", [
+        targetEmail,
+        order.id,
+      ]);
       order.customerEmail = targetEmail;
     }
 
@@ -90,7 +90,7 @@ export async function POST(
       );
     }
 
-    const origin = req.nextUrl.origin || "https://nolimitfest.com";
+    const origin = req.nextUrl.origin || "https://nolimitfest.net";
 
     const emailResult = await sendTicketConfirmationEmail({
       order: { ...order, customerEmail: recipient },

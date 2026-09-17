@@ -662,7 +662,7 @@ export async function fulfillOrderFromStripeSession(
               baseUrl:
                 baseUrl ||
                 process.env.NEXT_PUBLIC_APP_URL ||
-                "https://nolimitfest.com",
+                "https://nolimitfest.net",
             });
           } catch (mailErr) {
             console.error("Failed to send confirmation email:", mailErr);

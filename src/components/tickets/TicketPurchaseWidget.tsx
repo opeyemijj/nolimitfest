@@ -351,7 +351,8 @@ export default function TicketPurchaseWidget({
             const depositUnitAmount = Math.round(
               (tier.price * depositPct) / 100,
             );
-            const cardIsDeposit = isDepositMode[tier.id] ?? false;
+            const cardIsDeposit =
+              isDepositMode[tier.id] ?? (allowsDeposit ? true : false);
 
             return (
               <div
@@ -393,64 +394,17 @@ export default function TicketPurchaseWidget({
                   </h4>
 
                   {/* Price Section */}
-                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="text-2xl xs:text-3xl font-black text-[#FFD600] font-mono">
                       {tier.currency} {tier.price.toLocaleString()}
                     </span>
-                    {tier.paxPerUnit > 1 && (
-                      <span className="text-[11px] text-gray-400 font-bold">
-                        ({tier.currency}{" "}
-                        {Math.round(tier.price / tier.paxPerUnit)} / person)
+                    {allowsDeposit && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                        <Percent className="w-3 h-3 text-amber-400" />
+                        <span>{depositPct}% Deposit Available</span>
                       </span>
                     )}
                   </div>
-
-                  {/* Table 20% Deposit Option Banner */}
-                  {allowsDeposit && (
-                    <div className="mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <Percent className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          <span className="text-xs font-black uppercase tracking-wider text-amber-300">
-                            {depositPct}% Reservation Deposit Available
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 text-[11px]">
-                        <span className="text-gray-300">
-                          Hold this table for only{" "}
-                          <strong className="text-white font-mono">
-                            {tier.currency} {depositUnitAmount.toLocaleString()}
-                          </strong>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setIsDepositMode((prev) => ({
-                              ...prev,
-                              [tier.id]: !prev[tier.id],
-                            }))
-                          }
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
-                            cardIsDeposit
-                              ? "bg-[#FFD600] text-black border-[#FFD600] shadow-md"
-                              : "bg-white/10 text-gray-300 border-white/20 hover:bg-white/20"
-                          }`}
-                        >
-                          {cardIsDeposit ? "✓ 20% Deposit" : "Select 20%"}
-                        </button>
-                      </div>
-
-                      {cardIsDeposit && (
-                        <p className="text-[10px] text-amber-200/80 italic pt-1 border-t border-amber-500/20">
-                          Balance of {tier.currency}{" "}
-                          {(tier.price - depositUnitAmount).toLocaleString()}{" "}
-                          payable upon concierge gate check-in.
-                        </p>
-                      )}
-                    </div>
-                  )}
 
                   {/* Wristband Color Indicator */}
                   {tier.wristbandColor && (
@@ -550,20 +504,156 @@ export default function TicketPurchaseWidget({
                         </div>
                       </div>
 
-                      {/* Prominent Direct Buy Now Button Under Each Ticket */}
-                      <button
-                        type="button"
-                        onClick={() => handleDirectBuy(tier.id, cardIsDeposit)}
-                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      >
-                        <CreditCard className="w-4 h-4 text-black shrink-0" />
-                        <span className="truncate">
-                          {cardIsDeposit
-                            ? `Reserve with 20% Deposit • ${tier.currency} ${(depositUnitAmount * cardQty).toLocaleString()}`
-                            : `Buy Now • ${tier.currency} ${(tier.price * cardQty).toLocaleString()}`}
-                        </span>
-                        <ArrowRight className="w-4 h-4 text-black shrink-0" />
-                      </button>
+                      {/* Payment Options & CTA Button */}
+                      {allowsDeposit ? (
+                        <div className="space-y-2 pt-1">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <span>Payment Option:</span>
+                            <span className="text-[#FFD600] font-mono text-[10px]">
+                              {cardIsDeposit ? `${depositPct}% Deposit Selected` : "Full Payment Selected"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {/* Option 1: Deposit to hold booking */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setIsDepositMode((prev) => ({
+                                  ...prev,
+                                  [tier.id]: true,
+                                }))
+                              }
+                              className={`p-2.5 rounded-2xl border text-left transition-all relative ${
+                                cardIsDeposit
+                                  ? "bg-amber-500/20 border-[#FFD600] text-white shadow-lg ring-1 ring-[#FFD600]"
+                                  : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span
+                                  className={`text-[10px] font-black uppercase tracking-wider ${
+                                    cardIsDeposit
+                                      ? "text-amber-300"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  {depositPct}% Deposit
+                                </span>
+                                <div
+                                  className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                    cardIsDeposit
+                                      ? "border-[#FFD600] bg-[#FFD600]"
+                                      : "border-gray-500"
+                                  }`}
+                                >
+                                  {cardIsDeposit && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                                  )}
+                                </div>
+                              </div>
+                              <div className="mt-1 font-mono font-black text-sm text-white">
+                                {tier.currency}{" "}
+                                {(depositUnitAmount * cardQty).toLocaleString()}
+                              </div>
+                              <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">
+                                Hold the booking
+                              </p>
+                            </button>
+
+                            {/* Option 2: Pay full amount */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setIsDepositMode((prev) => ({
+                                  ...prev,
+                                  [tier.id]: false,
+                                }))
+                              }
+                              className={`p-2.5 rounded-2xl border text-left transition-all relative ${
+                                !cardIsDeposit
+                                  ? "bg-[#FF5722]/20 border-[#FF5722] text-white shadow-lg ring-1 ring-[#FF5722]"
+                                  : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span
+                                  className={`text-[10px] font-black uppercase tracking-wider ${
+                                    !cardIsDeposit
+                                      ? "text-orange-300"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  Full Amount
+                                </span>
+                                <div
+                                  className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                                    !cardIsDeposit
+                                      ? "border-[#FF5722] bg-[#FF5722]"
+                                      : "border-gray-500"
+                                  }`}
+                                >
+                                  {!cardIsDeposit && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                                  )}
+                                </div>
+                              </div>
+                              <div className="mt-1 font-mono font-black text-sm text-white">
+                                {tier.currency}{" "}
+                                {(tier.price * cardQty).toLocaleString()}
+                              </div>
+                              <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">
+                                Pay 100% upfront
+                              </p>
+                            </button>
+                          </div>
+
+                          {cardIsDeposit && (
+                            <p className="text-[10px] text-amber-200/90 italic text-center px-1">
+                              ⚡ Pay {depositPct}% now to hold the booking. Remaining{" "}
+                              {tier.currency}{" "}
+                              {(
+                                (tier.price - depositUnitAmount) *
+                                cardQty
+                              ).toLocaleString()}{" "}
+                              payable upon entrance check-in.
+                            </p>
+                          )}
+
+                          {/* Primary CTA Button for Tables */}
+                          <button
+                            type="button"
+                            onClick={() => handleDirectBuy(tier.id, cardIsDeposit)}
+                            className={`w-full py-3.5 px-4 rounded-xl text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all ${
+                              cardIsDeposit
+                                ? "bg-gradient-to-r from-amber-500 via-[#FFD600] to-yellow-400 shadow-amber-500/25"
+                                : "bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] shadow-orange-500/25"
+                            }`}
+                          >
+                            <CreditCard className="w-4 h-4 text-black shrink-0" />
+                            <span className="truncate">
+                              {cardIsDeposit
+                                ? `Hold Booking • Pay ${depositPct}% Deposit (${tier.currency} ${(depositUnitAmount * cardQty).toLocaleString()})`
+                                : `Pay Full Amount • ${tier.currency} ${(tier.price * cardQty).toLocaleString()}`}
+                            </span>
+                            <ArrowRight className="w-4 h-4 text-black shrink-0" />
+                          </button>
+                        </div>
+                      ) : (
+                        /* Standard Single Buy Button for GA / Group Passes */
+                        <button
+                          type="button"
+                          onClick={() => handleDirectBuy(tier.id, false)}
+                          className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                          <CreditCard className="w-4 h-4 text-black shrink-0" />
+                          <span className="truncate">
+                            Buy Now • {tier.currency}{" "}
+                            {(tier.price * cardQty).toLocaleString()}
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-black shrink-0" />
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -719,7 +809,7 @@ export default function TicketPurchaseWidget({
                       </span>
                       {hasDepositSelected && (
                         <span className="block text-[10px] text-amber-300 font-semibold">
-                          (20% Table Deposit)
+                          (Table Reservation Deposit)
                         </span>
                       )}
                     </div>
@@ -734,9 +824,10 @@ export default function TicketPurchaseWidget({
                         const isTierDeposit =
                           isDepositMode[tId] &&
                           (t.category === "table" || t.isVVIP);
+                        const depositPct = t.depositPercentage ?? 20;
                         const cost = isTierDeposit
                           ? Math.round(
-                              (t.price * q * (t.depositPercentage ?? 20)) / 100,
+                              (t.price * q * depositPct) / 100,
                             )
                           : t.price * q;
 
@@ -749,7 +840,7 @@ export default function TicketPurchaseWidget({
                               {q}x {t.name}{" "}
                               {isTierDeposit && (
                                 <span className="text-amber-400 font-bold">
-                                  (20% Deposit)
+                                  ({depositPct}% Deposit)
                                 </span>
                               )}
                             </span>

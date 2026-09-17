@@ -288,10 +288,10 @@ export default function AdminSettingsPage() {
             </label>
             <input
               type="email"
-              value={config.email || "tickets@nolimitfest.com"}
+              value={config.email || "tickets@nolimitfest.net"}
               onChange={(e) => setConfig({ ...config, email: e.target.value })}
               className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-white"
-              placeholder="tickets@nolimitfest.com"
+              placeholder="tickets@nolimitfest.net"
             />
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function AdminSettingsPage() {
               type="email"
               id="test-email-input"
               placeholder="Enter recipient email to receive test message..."
-              defaultValue="admin@nolimitfest.com"
+              defaultValue="info@nolimitfest.net"
               className="flex-1 bg-black/40 border border-white/15 rounded-xl px-3.5 py-2 text-white text-xs placeholder:text-gray-500"
             />
             <button
@@ -342,7 +342,7 @@ export default function AdminSettingsPage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       to: input.value,
-                      fromEmail: config.email || "tickets@nolimitfest.com",
+                      fromEmail: config.email || "tickets@nolimitfest.net",
                     }),
                   });
                   const data = await res.json();

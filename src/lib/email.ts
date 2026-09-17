@@ -5,6 +5,7 @@ interface SendTicketEmailParams {
   order: DbOrder;
   tickets: DbTicket[];
   baseUrl?: string;
+  fromEmail?: string;
 }
 
 export interface PostmarkSendResult {
@@ -17,10 +18,36 @@ export interface PostmarkSendResult {
 const DEFAULT_POSTMARK_TOKEN = "0d3db4be-4ac8-4611-8484-6e2429d62213";
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
 
+export const AUTHORIZED_SENDER_EMAILS = [
+  "tickets@nolimitfest.net",
+  "info@nolimitfest.net",
+] as const;
+
+export type AuthorizedSenderEmail = (typeof AUTHORIZED_SENDER_EMAILS)[number];
+
+/**
+ * Resolves and strictly enforces that every outgoing email is sent
+ * from either tickets@nolimitfest.net or info@nolimitfest.net.
+ */
+export function resolveAuthorizedSender(
+  requested?: string,
+): AuthorizedSenderEmail {
+  if (!requested) return "tickets@nolimitfest.net";
+  const clean = requested.toLowerCase().trim();
+  if (
+    clean === "info@nolimitfest.net" ||
+    clean.startsWith("info") ||
+    clean.includes("info")
+  ) {
+    return "info@nolimitfest.net";
+  }
+  return "tickets@nolimitfest.net";
+}
+
 export function getPostmarkConfig() {
   const token = process.env.POSTMARK_SERVER_TOKEN || DEFAULT_POSTMARK_TOKEN;
-  const fromEmail =
-    process.env.POSTMARK_FROM_EMAIL || "tickets@nolimitfest.com";
+  const rawFrom = process.env.POSTMARK_FROM_EMAIL || "tickets@nolimitfest.net";
+  const fromEmail = resolveAuthorizedSender(rawFrom);
   const messageStream = process.env.POSTMARK_MESSAGE_STREAM || "outbound";
   return { token, fromEmail, messageStream };
 }
@@ -47,7 +74,7 @@ export async function sendPostmarkEmail({
 }): Promise<PostmarkSendResult> {
   const config = getPostmarkConfig();
   const serverToken = config.token;
-  const sender = fromEmail || config.fromEmail;
+  const sender = resolveAuthorizedSender(fromEmail || config.fromEmail);
   const stream = messageStream || config.messageStream;
 
   if (!serverToken) {
@@ -122,7 +149,8 @@ export async function sendPostmarkEmail({
 export async function sendTicketConfirmationEmail({
   order,
   tickets,
-  baseUrl = "https://nolimitfest.com",
+  baseUrl = "https://nolimitfest.net",
+  fromEmail,
 }: SendTicketEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -143,6 +171,7 @@ export async function sendTicketConfirmationEmail({
     htmlBody: htmlContent,
     textBody: textContent,
     tag: "ticket-confirmation",
+    fromEmail,
   });
 
   if (postmarkResult.success) {
@@ -253,7 +282,7 @@ IMPORTANT ENTRANCE INSTRUCTIONS:
 VIEW FULL ORDER ONLINE:
 ${baseUrl}/orders/${order.id}
 
-Need assistance? WhatsApp Concierge: +971 50 688 5946 or email contact@nolimitfest.com
+Need assistance? WhatsApp Concierge: +971 50 688 5946 or email tickets@nolimitfest.net / info@nolimitfest.net
   `.trim();
 }
 
@@ -393,7 +422,7 @@ async function generateTicketEmailHtml(
           <tr>
             <td style="background-color: #0B0D16; padding: 20px; text-align: center; border-top: 1px solid #1E2338; font-size: 11px; color: #6B7280;">
               No Limit Fest Dubai • Helipad by Frozen Cherry<br/>
-              Questions? Contact WhatsApp concierge: +971 50 688 5946 or email contact@nolimitfest.com
+              Questions? Contact WhatsApp concierge: +971 50 688 5946 or email tickets@nolimitfest.net / info@nolimitfest.net
             </td>
           </tr>
         </table>

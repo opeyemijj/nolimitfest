@@ -79,7 +79,7 @@ export default function ContactPage() {
               href={`mailto:${siteConfig.email}?subject=Brand%20Sponsorship%20Inquiry%20-%20No%20Limit%20Fest`}
               className="inline-block text-xs font-bold text-[#FF5722] hover:underline"
             >
-              sponsors@nolimitfest.com →
+              info@nolimitfest.net →
             </a>
           </div>
 
@@ -99,7 +99,7 @@ export default function ContactPage() {
               href={`mailto:${siteConfig.email}?subject=Press%20Accreditation%20Inquiry`}
               className="inline-block text-xs font-bold text-[#00E5FF] hover:underline"
             >
-              press@nolimitfest.com →
+              info@nolimitfest.net →
             </a>
           </div>
 
@@ -117,7 +117,7 @@ export default function ContactPage() {
               href={`mailto:${siteConfig.email}?subject=Artist%20Talent%20Submission`}
               className="inline-block text-xs font-bold text-[#FFD600] hover:underline"
             >
-              curation@nolimitfest.com →
+              info@nolimitfest.net →
             </a>
           </div>
         </div>

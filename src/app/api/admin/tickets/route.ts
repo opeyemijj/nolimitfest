@@ -106,6 +106,20 @@ export async function PUT(req: NextRequest) {
     if (!id)
       return NextResponse.json({ error: "Tier ID required" }, { status: 400 });
 
+    let perksJson: string;
+    if (Array.isArray(perks)) {
+      perksJson = JSON.stringify(perks);
+    } else if (typeof perks === "string") {
+      try {
+        const parsed = JSON.parse(perks);
+        perksJson = JSON.stringify(Array.isArray(parsed) ? parsed : perks.split("\n").map((p: string) => p.trim()).filter(Boolean));
+      } catch {
+        perksJson = JSON.stringify(perks.split("\n").map((p: string) => p.trim()).filter(Boolean));
+      }
+    } else {
+      perksJson = "[]";
+    }
+
     await dbExecute(
       `UPDATE ticket_tiers SET
          name               = $1,
@@ -113,7 +127,7 @@ export async function PUT(req: NextRequest) {
          capacity           = $3,
          badge              = $4,
          description        = $5,
-         perks              = $6,
+         perks              = $6::jsonb,
          status             = $7,
          popular            = $8,
          is_vvip            = $9,
@@ -130,7 +144,7 @@ export async function PUT(req: NextRequest) {
         parseInt(capacity, 10),
         badge || "",
         description || "",
-        perks || [],
+        perksJson,
         status || "active",
         Boolean(popular),
         Boolean(isVVIP),
@@ -206,6 +220,20 @@ export async function POST(req: NextRequest) {
 
     const id = `tier-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
+    let perksJson: string;
+    if (Array.isArray(perks)) {
+      perksJson = JSON.stringify(perks);
+    } else if (typeof perks === "string") {
+      try {
+        const parsed = JSON.parse(perks);
+        perksJson = JSON.stringify(Array.isArray(parsed) ? parsed : perks.split("\n").map((p: string) => p.trim()).filter(Boolean));
+      } catch {
+        perksJson = JSON.stringify(perks.split("\n").map((p: string) => p.trim()).filter(Boolean));
+      }
+    } else {
+      perksJson = "[]";
+    }
+
     await dbExecute(
       `INSERT INTO ticket_tiers
          (id, event_id, name, category, price, currency, capacity, sold_count,
@@ -213,7 +241,7 @@ export async function POST(req: NextRequest) {
           sort_order, color, wristband_color, allow_deposit, deposit_percentage)
        VALUES
          ($1, $2, $3, $4, $5, 'AED', $6, 0,
-          $7, $8, $9, $10, $11, $12, $13,
+          $7, $8, $9, $10::jsonb, $11, $12, $13,
           99, $14, $15, $16, $17)`,
       [
         id,
@@ -225,7 +253,7 @@ export async function POST(req: NextRequest) {
         parseInt(paxPerUnit, 10) || 1,
         badge || "",
         description || "",
-        perks || [],
+        perksJson,
         status || "active",
         Boolean(popular),
         Boolean(isVVIP),
