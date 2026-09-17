@@ -55,7 +55,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative min-h-screen flex flex-col justify-center items-center pt-36 sm:pt-40 md:pt-44 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Concert Visual with Dark Overlay */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <Image
