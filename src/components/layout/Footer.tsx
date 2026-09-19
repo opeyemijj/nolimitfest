@@ -157,14 +157,6 @@ export default function Footer() {
                   Buy Tickets &amp; VIP Tables
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/admin"
-                  className="text-gray-400 hover:text-[#00E5FF] transition-colors"
-                >
-                  Staff Backoffice &amp; Door Scanner
-                </Link>
-              </li>
             </ul>
           </div>
 

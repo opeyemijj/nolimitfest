@@ -6,8 +6,8 @@ import Link from "next/link";
 import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("admin@nolimitfest.com");
-  const [password, setPassword] = useState("admin12345!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,10 +56,10 @@ export default function AdminLoginPage() {
             />
           </div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-            Staff &amp; Backoffice Login
+            Staff Portal
           </h1>
           <p className="text-xs text-gray-400 font-medium">
-            Role-Protected Access for Directors, Organizers &amp; Gate Ushers
+            Restricted Access • Authorized Personnel Only
           </p>
         </div>
 
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-300 mb-1">
-                Staff Email Address
+                Authorized Email
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -77,6 +77,7 @@ export default function AdminLoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@domain.com"
                   className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF5722]"
                 />
               </div>
@@ -93,6 +94,7 @@ export default function AdminLoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
                   className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF5722]"
                 />
               </div>
@@ -108,54 +110,12 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF5722] via-[#FFD600] to-[#00E5FF] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer"
             >
-              <span>
-                {isLoading ? "Authenticating..." : "Sign In to Backoffice"}
-              </span>
+              <span>{isLoading ? "Authenticating..." : "Sign In"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-
-          {/* Preset Roles Quick Selector for convenience */}
-          <div className="pt-4 border-t border-white/10 space-y-2">
-            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block text-center">
-              Quick Fill Demo Accounts:
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("admin@nolimitfest.com");
-                  setPassword("admin12345!");
-                }}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-colors"
-              >
-                <span className="font-bold text-white block">
-                  👑 Super Admin
-                </span>
-                <span className="text-[10px] text-gray-400">
-                  Full control &amp; revenue
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail("gate@nolimitfest.com");
-                  setPassword("gate12345!");
-                }}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition-colors"
-              >
-                <span className="font-bold text-white block">
-                  ⚡ Gate Staff
-                </span>
-                <span className="text-[10px] text-gray-400">
-                  Scan &amp; check-in only
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Back link */}

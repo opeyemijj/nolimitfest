@@ -12,7 +12,6 @@ import {
   Globe,
   ChevronDown,
   MessageCircle,
-  Database,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { festivalEvents, getActiveEvent } from "@/data/events";
@@ -186,18 +185,8 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Actions: Leads Manager & Register Interest */}
+          {/* Actions: Direct WhatsApp & Buy Tickets */}
           <div className="flex items-center gap-2.5">
-            {/* Organizer Leads Trigger */}
-            {/* Backoffice Administration Portal Link */}
-            <Link
-              href="/admin"
-              className="relative p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-[#00E5FF] transition-colors"
-              title="Staff Backoffice & Entrance Gate Scanner"
-            >
-              <Database className="w-4 h-4" />
-            </Link>
-
             {/* Direct WhatsApp Quick Chat */}
             <a
               href={`https://wa.me/${siteConfig.defaultWhatsApp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(

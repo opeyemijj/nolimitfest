@@ -7,11 +7,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/"],
+        disallow: ["/api/", "/admin/", "/admin"],
       },
       {
         userAgent: ["Googlebot", "Bingbot", "Applebot", "DuckDuckBot"],
         allow: "/",
+        disallow: ["/api/", "/admin/", "/admin"],
       },
       {
         userAgent: [
@@ -22,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
           "TelegramBot",
         ],
         allow: "/",
+        disallow: ["/api/", "/admin/", "/admin"],
       },
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,

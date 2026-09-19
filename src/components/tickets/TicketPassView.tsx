@@ -550,18 +550,6 @@ export default function TicketPassView({
             <span>Share Pass URL</span>
           </button>
         </div>
-
-        {/* Informative Staff Link for Gate Ushers */}
-        {!canPerformCheckIn && (
-          <div className="text-center pt-2">
-            <Link
-              href={`/admin/login?redirect=/tickets/${ticket.ticketCode}`}
-              className="text-[11px] text-gray-500 hover:text-gray-300 underline transition-colors"
-            >
-              Are you entrance gate staff? Sign in to check in this attendee
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
