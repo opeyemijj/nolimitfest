@@ -59,14 +59,14 @@ export default function Hero() {
       {/* Background Concert Visual with Dark Overlay */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2000&q=80"
-          alt="No Limit Fest Dubai Stage Background"
+          src="/images/banner.webp"
+          alt="No Limit Fest Dubai Stage Atmosphere"
           fill
           priority
-          className="object-cover object-center opacity-25 scale-105 transition-transform duration-1000"
+          className="object-cover object-center opacity-20 blur-sm scale-110 transition-transform duration-1000"
         />
         {/* Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#08090E]/80 via-[#08090E]/60 to-[#08090E]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#08090E]/85 via-[#08090E]/70 to-[#08090E]" />
         <div className="absolute top-1/4 -left-48 w-96 h-96 bg-[#FF5722]/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-[#00E5FF]/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FFD600]/10 rounded-full blur-[150px] pointer-events-none" />
@@ -149,57 +149,46 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Official Headliner & Phase 2 Teaser Preview */}
-        <div className="mt-8 grid grid-cols-2 gap-4 max-w-md w-full">
+        {/* Official Festival Banner Showcase */}
+        <div className="mt-8 max-w-4xl w-full group relative">
           <Link
-            href="/lineup"
-            className="group relative rounded-2xl overflow-hidden border border-amber-500/40 hover:border-[#FF5722] transition-all shadow-xl hover:-translate-y-1"
+            href="#tickets"
+            className="block relative aspect-[16/9] w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-[#FF5722]/50 shadow-[0_0_60px_rgba(255,87,34,0.35)] hover:shadow-[0_0_90px_rgba(255,87,34,0.6)] hover:border-[#FF5722] transition-all duration-500 hover:scale-[1.01]"
           >
-            <div className="relative aspect-[9/16] w-full">
-              <Image
-                src="/images/artists/ruger.jpg"
-                alt="Ruger Live at No Limit Fest Dubai - Official Headliner"
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-            <div className="p-2.5 bg-[#121422] text-center">
-              <span className="text-xs font-black uppercase text-[#FF5722] block">
-                ★ RUGER ★
+            <Image
+              src="/images/banner.webp"
+              alt="No Limit Fest Dubai 2026 Official Festival Banner - Ruger Live at Helipad by Frozen Cherry"
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1100px"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            {/* Subtle Gradient & Hover Action Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-3.5 sm:p-6">
+              <span className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#FF5722] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-xl flex items-center gap-2">
+                <Ticket className="w-3.5 h-3.5" /> Book Passes (From AED 129)
               </span>
-              <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider">
-                Official Headliner
+              <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-[#00E5FF] text-[10px] sm:text-xs font-black uppercase tracking-wider">
+                Helipad • 24th Oct
               </span>
             </div>
           </Link>
 
-          <Link
-            href="/lineup"
-            className="group relative rounded-2xl overflow-hidden border border-dashed border-white/20 hover:border-[#00E5FF] transition-all shadow-xl hover:-translate-y-1 bg-[#121422] flex flex-col justify-between"
-          >
-            <div className="relative aspect-[9/16] w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#121422] via-[#1a1e35] to-[#121422]">
-              <div className="w-12 h-12 rounded-full bg-white/5 border border-white/15 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-                <Sparkles className="w-6 h-6 text-[#00E5FF] animate-pulse" />
-              </div>
-              <span className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
-                More Artists
-              </span>
-              <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-semibold">
-                To Join In...
-              </span>
-              <span className="mt-3 inline-block text-[9px] font-black uppercase text-[#00E5FF] px-2.5 py-0.5 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30">
-                Phase 2 TBA
-              </span>
-            </div>
-            <div className="p-2.5 bg-[#0C0E17] text-center border-t border-white/10">
-              <span className="text-xs font-black uppercase text-[#00E5FF] block">
-                ★ LINEUP ★
-              </span>
-              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
-                Supporting Acts
-              </span>
-            </div>
-          </Link>
+          {/* Lineup & Phase 2 Information Pill */}
+          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300">
+              <span className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse" />
+              <strong className="text-white font-bold">Ruger</strong> (Official Headliner)
+            </span>
+            <Link
+              href="/lineup"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors font-bold text-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Phase 2 Supporting Acts TBA</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
 
         {/* Countdown Timer */}

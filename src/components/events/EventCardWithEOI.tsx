@@ -106,6 +106,7 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
           alt={`${event.name} ${event.city}`}
           fill
           priority={event.isCurrentEdition}
+          sizes="(max-width: 768px) 100vw, 1200px"
           className="object-cover transition-transform duration-700 hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#10121C] via-[#10121C]/60 to-transparent" />

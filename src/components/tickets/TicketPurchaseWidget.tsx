@@ -232,10 +232,12 @@ export default function TicketPurchaseWidget({
       {/* Event Header Banner - Mobile Responsive */}
       <div className="relative h-40 xs:h-48 sm:h-64 w-full bg-gradient-to-r from-orange-950/40 via-purple-950/30 to-blue-950/40 border-b border-white/10">
         <Image
-          src={event.heroImage || "/images/banner.png"}
+          src={event.heroImage || "/images/banner.webp"}
           alt={event.name}
           fill
-          className="object-cover opacity-35 mix-blend-luminosity"
+          priority
+          sizes="(max-width: 768px) 100vw, 1200px"
+          className="object-cover opacity-75 sm:opacity-85 hover:opacity-100 transition-opacity duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0E111C] via-[#0E111C]/60 to-transparent" />
 

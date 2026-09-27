@@ -719,7 +719,7 @@ export const festivalEvents: FestivalEvent[] = [
     address: "Helipad by Frozen Cherry, Dubai, UAE",
     tagline: "Headliner RUGER Live at Helipad by Frozen Cherry • Saturday 24th Oct • 6PM Till Late",
     description: "No Limit Fest unleashes in Dubai on Saturday, October 24th, 2026 at the breathtaking Helipad by Frozen Cherry! Headlined by global Afrobeats superstar RUGER performing his massive chart-topping hits live. Unmatched sunset vibes, skyline views, world-class sound, and exclusive VIP tables.",
-    heroImage: "/images/artists/ruger.jpg",
+    heroImage: "/images/banner.webp",
     stagesCount: 2,
     expectedAttendance: "5,000+ Exclusive Guests",
     isCurrentEdition: true,

@@ -64,6 +64,7 @@ export default function JsonLd() {
     "url": `${siteConfig.url}/events/dubai`,
     "image": [
       `${siteConfig.url}/images/logo.png`,
+      `${siteConfig.url}/images/banner.webp`,
       `${siteConfig.url}/images/artists/ruger.jpg`,
     ],
     "startDate": "2026-10-24T18:00:00+04:00",
