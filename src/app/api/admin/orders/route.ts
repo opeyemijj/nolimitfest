@@ -30,9 +30,19 @@ export async function GET(req: NextRequest) {
     params.push(...assignedEvents);
   }
 
-  if (status) {
-    whereClauses.push(`o.status = $${paramIdx++}`);
-    params.push(status);
+  if (status && status !== "ALL") {
+    if (status === "COMPLIMENTARY" || status === "COMPLEMENTARY") {
+      whereClauses.push(
+        `(o.status IN ('COMPLIMENTARY', 'COMPLEMENTARY') OR o.order_number LIKE 'COMP-%')`,
+      );
+    } else if (status === "PAID") {
+      whereClauses.push(
+        `(o.status = 'PAID' AND o.order_number NOT LIKE 'COMP-%')`,
+      );
+    } else {
+      whereClauses.push(`o.status = $${paramIdx++}`);
+      params.push(status);
+    }
   }
 
   if (query) {
@@ -137,7 +147,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO orders
          (id, order_number, event_id, customer_name, customer_email,
           customer_phone, notes, total_amount, currency, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 'AED', 'PAID')`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 'AED', 'COMPLIMENTARY')`,
       [
         orderId,
         orderNumber,

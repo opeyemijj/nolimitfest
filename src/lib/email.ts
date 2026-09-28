@@ -1,4 +1,4 @@
-import { DbOrder, DbTicket } from "./data-service";
+import { DbOrder, DbTicket, isOrderComplimentary } from "./data-service";
 import { generateQrDataUrl } from "./qrcode";
 
 interface SendTicketEmailParams {
@@ -158,7 +158,10 @@ export async function sendTicketConfirmationEmail({
 }> {
   const htmlContent = await generateTicketEmailHtml(order, tickets, baseUrl);
   const textContent = generateTicketEmailText(order, tickets, baseUrl);
-  const subject = `🎟️ Your No Limit Fest Passes - Order #${order.orderNumber}`;
+  const isComp = isOrderComplimentary(order);
+  const subject = isComp
+    ? `🎟️ Your Complimentary Passes - No Limit Fest Dubai (#${order.orderNumber})`
+    : `🎟️ Your No Limit Fest Passes - Order #${order.orderNumber}`;
 
   console.log(
     `[EMAIL DISPATCH] Sending confirmation email for Order #${order.orderNumber} (${tickets.length} tickets) to ${order.customerEmail}...`,
@@ -257,13 +260,18 @@ function generateTicketEmailText(
     )
     .join("\n\n");
 
+  const isComp = isOrderComplimentary(order);
+  const intro = isComp
+    ? `Welcome to No Limit Fest! Your complimentary VIP guest passes have been confirmed and issued.`
+    : `Thank you for purchasing passes to No Limit Fest! Your payment of ${order.currency} ${order.totalAmount.toLocaleString()} has been confirmed.`;
+
   return `
 NO LIMIT FEST - OFFICIAL FESTIVAL PASS CONFIRMATION
 ==================================================
 
 Hello ${order.customerName},
 
-Thank you for purchasing passes to No Limit Fest! Your payment of ${order.currency} ${order.totalAmount.toLocaleString()} has been confirmed.
+${intro}
 
 ORDER NUMBER: #${order.orderNumber}
 EVENT: RUGER Live • No Limit Fest Dubai
@@ -340,6 +348,13 @@ async function generateTicketEmailHtml(
   );
 
   const ticketCardsHtml = ticketCards.join("");
+  const isComp = isOrderComplimentary(order);
+  const confirmationHeadline = isComp
+    ? `Your Complimentary VIP Passes Confirmed, ${order.customerName}!`
+    : `You're Going to No Limit Fest, ${order.customerName}!`;
+  const confirmationSubtext = isComp
+    ? `Your official complimentary VIP guest passes have been confirmed and issued. Your passes with scannable QR codes are ready below.`
+    : `Your payment of <strong style="color: #FFD600;">${order.currency} ${order.totalAmount.toLocaleString()}</strong> has been confirmed. Your official entry passes with scannable QR codes are ready below.`;
 
   return `
 <!DOCTYPE html>
@@ -369,10 +384,10 @@ async function generateTicketEmailHtml(
           <tr>
             <td style="padding: 30px 25px;">
               <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #FFFFFF; font-weight: 800;">
-                You're Going to No Limit Fest, ${order.customerName}!
+                ${confirmationHeadline}
               </h2>
               <p style="margin: 0 0 20px 0; font-size: 14px; color: #9CA3AF; line-height: 1.6;">
-                Your payment of <strong style="color: #FFD600;">${order.currency} ${order.totalAmount.toLocaleString()}</strong> has been confirmed. Your official entry passes with scannable QR codes are ready below.
+                ${confirmationSubtext}
               </p>
 
               <!-- Event Schedule Pill -->

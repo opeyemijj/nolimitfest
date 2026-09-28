@@ -24,13 +24,13 @@ export async function POST(req: NextRequest) {
       `SELECT id, name, email, password_hash AS "passwordHash", role, is_active AS "isActive",
               permissions, assigned_events AS "assignedEvents"
        FROM users
-       WHERE email = $1 AND is_active = true`,
+       WHERE email = $1`,
       [cleanEmail],
     );
 
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid credentials." },
+        { error: "Invalid email or password." },
         { status: 401 },
       );
     }
@@ -38,8 +38,20 @@ export async function POST(req: NextRequest) {
     const isValid = verifyPassword(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json(
-        { error: "Invalid credentials." },
+        { error: "Invalid email or password." },
         { status: 401 },
+      );
+    }
+
+    // Explicitly restrict and block login for suspended staff members
+    if (!user.isActive) {
+      return NextResponse.json(
+        {
+          error:
+            "Your staff account is currently suspended. Please contact a festival administrator for reactivation.",
+          suspended: true,
+        },
+        { status: 403 },
       );
     }
 

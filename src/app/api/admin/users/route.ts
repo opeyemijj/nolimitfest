@@ -182,7 +182,7 @@ export async function PUT(req: NextRequest) {
     if (targetUser.id === user.id) {
       if (isActive === 0 || isActive === false) {
         return NextResponse.json(
-          { error: "You cannot deactivate your own administrative account." },
+          { error: "You cannot suspend your own administrative account." },
           { status: 400 },
         );
       }
@@ -190,6 +190,25 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json(
           {
             error: "You cannot demote your own account away from Super Admin.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    // Safety: Prevent suspending the last remaining active Super Admin
+    if (
+      targetUser.role === "SUPER_ADMIN" &&
+      (isActive === 0 || isActive === false)
+    ) {
+      const activeSuperAdmins = await dbQuery(
+        "SELECT id FROM users WHERE role = 'SUPER_ADMIN' AND is_active = true AND id != $1",
+        [id],
+      );
+      if (activeSuperAdmins.length === 0) {
+        return NextResponse.json(
+          {
+            error: "Cannot suspend the only remaining active Super Admin account.",
           },
           { status: 400 },
         );
@@ -209,7 +228,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const newRole = (role as UserRole) || targetUser.role;
-    const newIsActive = isActive === 0 || isActive === false ? false : true;
+    const newIsActive = !(isActive === 0 || isActive === false);
 
     const userPermissions =
       permissions && Array.isArray(permissions)

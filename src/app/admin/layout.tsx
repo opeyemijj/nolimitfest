@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getAuthUser } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
@@ -7,35 +8,39 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const rawUser = await getAuthUser();
-  const user = rawUser
-    ? {
-        id: String(rawUser.id),
-        name: String(rawUser.name),
-        email: String(rawUser.email),
-        role: rawUser.role,
-        isActive: Number(rawUser.isActive),
-        permissions: rawUser.permissions || [],
-        assignedEvents: rawUser.assignedEvents || ["ALL"],
-      }
-    : null;
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") || "";
 
-  // If viewing /admin/login, don't redirect
-  // Note: Next.js evaluates layout for all nested routes
-  // For other routes, if no user, redirect to login
+  // Allow login page to render without admin sidebar or authentication redirect
+  if (pathname === "/admin/login") {
+    return (
+      <div className="min-h-screen bg-[#08090E] text-white">{children}</div>
+    );
+  }
+
+  const rawUser = await getAuthUser();
+  if (!rawUser) {
+    redirect(
+      `/admin/login?redirect=${encodeURIComponent(pathname || "/admin")}`,
+    );
+  }
+
+  const user = {
+    id: String(rawUser.id),
+    name: String(rawUser.name),
+    email: String(rawUser.email),
+    role: rawUser.role,
+    isActive: Number(rawUser.isActive),
+    permissions: rawUser.permissions || [],
+    assignedEvents: rawUser.assignedEvents || ["ALL"],
+  };
 
   return (
     <div className="min-h-screen bg-[#08090E] text-white flex flex-col md:flex-row">
-      {user ? (
-        <>
-          <AdminSidebar user={user} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0">
-            {children}
-          </main>
-        </>
-      ) : (
-        <div className="flex-1 w-full">{children}</div>
-      )}
+      <AdminSidebar user={user} />
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0">
+        {children}
+      </main>
     </div>
   );
 }

@@ -444,6 +444,7 @@ function BuyersTableContent() {
             >
               <option value="ALL">All Statuses</option>
               <option value="PAID">Paid Orders</option>
+              <option value="COMPLIMENTARY">Complimentary Passes</option>
               <option value="CHECKED_IN">Checked-In at Gate</option>
               <option value="VALID">Valid / Unscanned</option>
               <option value="PENDING">Pending Payment</option>

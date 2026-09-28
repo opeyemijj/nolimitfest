@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, canManageContent } from "@/lib/auth";
 import { dbQueryOne, dbQuery, dbExecute } from "@/lib/db";
 import { sendTicketConfirmationEmail } from "@/lib/email";
+import { isOrderConfirmed } from "@/lib/data-service";
 
 export async function POST(
   req: NextRequest,
@@ -42,6 +43,15 @@ export async function POST(
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (!isOrderConfirmed(order)) {
+      return NextResponse.json(
+        {
+          error: `Cannot dispatch confirmation email for an unconfirmed order (Current status: ${order.status}). Only paid and complementary tickets are confirmed.`,
+        },
+        { status: 400 },
+      );
     }
 
     const recipient = targetEmail || order.customerEmail;

@@ -113,10 +113,21 @@ export async function getAuthUser(): Promise<AuthUser | null> {
       const dbUser = await dbQueryOne<any>(
         `SELECT id, name, email, role, is_active AS "isActive",
                 permissions, assigned_events AS "assignedEvents"
-         FROM users WHERE id = $1 AND is_active = true`,
+         FROM users WHERE id = $1`,
         [payload.id],
       );
+
       if (dbUser) {
+        // If the staff member is suspended/deactivated, immediately block access and revoke session
+        if (!dbUser.isActive) {
+          try {
+            cookieStore.delete(AUTH_COOKIE_NAME);
+          } catch {
+            // RSC environment does not permit cookie mutations; returning null triggers redirect
+          }
+          return null;
+        }
+
         // JSONB comes back as arrays already in pg; guard against null
         const parsedPermissions: PermissionKey[] = Array.isArray(
           dbUser.permissions,
@@ -132,24 +143,21 @@ export async function getAuthUser(): Promise<AuthUser | null> {
           name: String(dbUser.name),
           email: String(dbUser.email),
           role: dbUser.role,
-          isActive: dbUser.isActive ? 1 : 0,
+          isActive: 1,
           permissions: parsedPermissions,
           assignedEvents: parsedEvents,
         };
+      } else {
+        // User was deleted from the database
+        try {
+          cookieStore.delete(AUTH_COOKIE_NAME);
+        } catch {}
+        return null;
       }
     } catch (e) {
-      // If DB is busy or migrating, rely on the verified HMAC payload
+      console.error("Error verifying authenticated user status:", e);
+      return null;
     }
-
-    return {
-      id: String(payload.id),
-      name: String(payload.name),
-      email: String(payload.email),
-      role: payload.role,
-      isActive: 1,
-      permissions: payload.permissions || [],
-      assignedEvents: payload.assignedEvents || ["ALL"],
-    };
   } catch {
     return null;
   }

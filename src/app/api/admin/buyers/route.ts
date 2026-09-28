@@ -128,7 +128,11 @@ export async function GET(req: NextRequest) {
     } else if (status === "VALID") {
       whereClauses.push("t.status = 'VALID'");
     } else if (status === "PAID") {
-      whereClauses.push("o.status = 'PAID'");
+      whereClauses.push("o.status = 'PAID' AND o.order_number NOT LIKE 'COMP-%'");
+    } else if (status === "COMPLIMENTARY" || status === "COMPLEMENTARY") {
+      whereClauses.push(
+        "(o.status IN ('COMPLIMENTARY', 'COMPLEMENTARY') OR o.order_number LIKE 'COMP-%' OR t.ticket_code LIKE 'COMP-%')",
+      );
     } else if (status === "PENDING") {
       whereClauses.push("o.status = 'PENDING'");
     } else if (status === "CANCELLED") {

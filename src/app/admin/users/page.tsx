@@ -35,7 +35,7 @@ interface StaffUser {
   name: string;
   email: string;
   role: UserRole;
-  isActive: number;
+  isActive: boolean;
   permissions: PermissionKey[];
   assignedEvents: string[];
   createdAt: string;
@@ -124,8 +124,8 @@ export default function AdminUsersPage() {
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
-      if (statusFilter === "ACTIVE" && u.isActive !== 1) return false;
-      if (statusFilter === "INACTIVE" && u.isActive === 1) return false;
+      if (statusFilter === "ACTIVE" && !u.isActive) return false;
+      if (statusFilter === "INACTIVE" && u.isActive) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = u.name.toLowerCase().includes(q);
@@ -168,7 +168,7 @@ export default function AdminUsersPage() {
       email: user.email,
       password: "", // empty means keep existing
       role: user.role,
-      isActive: user.isActive === 1,
+      isActive: Boolean(user.isActive),
       permissions: [
         ...(user.permissions || ROLE_DEFAULT_PERMISSIONS[user.role] || []),
       ],
@@ -270,7 +270,7 @@ export default function AdminUsersPage() {
             email: formData.email,
             password: formData.password || undefined,
             role: formData.role,
-            isActive: formData.isActive ? 1 : 0,
+            isActive: Boolean(formData.isActive),
             permissions: formData.permissions,
             assignedEvents,
           }),
@@ -324,13 +324,20 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Quick Toggle Active / Deactive
+  // Quick Toggle Active / Suspended
   const handleQuickToggleActive = async (u: StaffUser) => {
-    const newActiveState = u.isActive === 1 ? 0 : 1;
-    const actionLabel = newActiveState === 1 ? "activate" : "deactivate";
+    const isCurrentlyActive = Boolean(u.isActive);
+    const newActiveState = !isCurrentlyActive;
+    const actionLabel = newActiveState ? "unsuspend (activate)" : "suspend";
 
     if (
-      !confirm(`Are you sure you want to ${actionLabel} ${u.name}'s account?`)
+      !confirm(
+        `Are you sure you want to ${actionLabel} ${u.name}'s staff account?${
+          !newActiveState
+            ? " This will immediately revoke their access and block them from logging in."
+            : " This will restore their login access."
+        }`,
+      )
     ) {
       return;
     }
@@ -352,7 +359,7 @@ export default function AdminUsersPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setNotification(
-          `✓ Account for ${u.name} is now ${newActiveState === 1 ? "Active" : "Deactivated"}.`,
+          `✓ Account for ${u.name} is now ${newActiveState ? "Active" : "Suspended"}.`,
         );
         fetchUsers();
       } else {
@@ -507,7 +514,7 @@ export default function AdminUsersPage() {
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Deactivated</option>
+              <option value="INACTIVE">Suspended</option>
             </select>
           </div>
         </div>
@@ -627,13 +634,13 @@ export default function AdminUsersPage() {
 
                       {/* Status */}
                       <td className="py-3.5 px-4">
-                        {u.isActive === 1 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
+                        {Boolean(u.isActive) ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold">
                             <CheckCircle2 className="w-3 h-3" />
                             <span>Active</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold">
                             <X className="w-3 h-3" />
                             <span>Suspended</span>
                           </span>
@@ -657,17 +664,17 @@ export default function AdminUsersPage() {
                             type="button"
                             onClick={() => handleQuickToggleActive(u)}
                             className={`p-1.5 rounded-lg border transition-colors ${
-                              u.isActive === 1
+                              Boolean(u.isActive)
                                 ? "bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20"
                                 : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20"
                             }`}
                             title={
-                              u.isActive === 1
-                                ? "Suspend Account"
-                                : "Activate Account"
+                              Boolean(u.isActive)
+                                ? "Suspend Staff Account"
+                                : "Unsuspend / Activate Account"
                             }
                           >
-                            {u.isActive === 1 ? (
+                            {Boolean(u.isActive) ? (
                               <Lock className="w-3.5 h-3.5" />
                             ) : (
                               <Unlock className="w-3.5 h-3.5" />
@@ -836,7 +843,7 @@ export default function AdminUsersPage() {
                         className="w-full bg-[#1A1D2E] border border-white/15 rounded-xl px-3 py-2 text-white"
                       >
                         <option value="1">Active (Can Sign In)</option>
-                        <option value="0">Suspended / Deactivated</option>
+                        <option value="0">Suspended (Access Blocked)</option>
                       </select>
                     </div>
                   </div>

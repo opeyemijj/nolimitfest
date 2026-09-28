@@ -238,7 +238,7 @@ export default function AdminOrdersPage() {
         </form>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {["ALL", "PAID", "PENDING"].map((st) => (
+          {["ALL", "PAID", "COMPLIMENTARY", "PENDING"].map((st) => (
             <button
               key={st}
               type="button"
@@ -310,17 +310,27 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-3 font-mono font-bold text-[#FFD600]">
-                      {ord.currency} {ord.totalAmount?.toLocaleString()}
+                      {ord.status === "COMPLIMENTARY" ||
+                      ord.status === "COMPLEMENTARY" ||
+                      ord.orderNumber.startsWith("COMP-")
+                        ? "COMP (AED 0)"
+                        : `${ord.currency} ${ord.totalAmount?.toLocaleString()}`}
                     </td>
                     <td className="py-3.5 px-3">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          ord.status === "PAID"
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          ord.status === "COMPLIMENTARY" ||
+                          ord.status === "COMPLEMENTARY" ||
+                          ord.orderNumber.startsWith("COMP-")
+                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                            : ord.status === "PAID"
+                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                         }`}
                       >
-                        {ord.status}
+                        {ord.orderNumber.startsWith("COMP-")
+                          ? "COMPLIMENTARY"
+                          : ord.status}
                       </span>
                     </td>
                     <td className="py-3.5 px-3 text-gray-400 text-[11px]">

@@ -13,6 +13,7 @@ import { festivalStages, Stage } from "@/data/stages";
 import { festivalFaqs, FAQItem } from "@/data/faq";
 import { sendTicketConfirmationEmail } from "./email";
 import { generateTicketSignature } from "./qrcode";
+import { isTicketConfirmedAndValid } from "./ticket-utils";
 import crypto from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -94,7 +95,15 @@ export interface DbOrder {
   notes?: string;
   totalAmount: number;
   currency: string;
-  status: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+  status:
+    | "PENDING"
+    | "PAID"
+    | "COMPLIMENTARY"
+    | "COMPLEMENTARY"
+    | "FAILED"
+    | "REFUNDED"
+    | "CANCELLED"
+    | string;
   stripeSessionId?: string;
   isDeposit?: boolean;
   depositAmount?: number;
@@ -111,7 +120,14 @@ export interface DbTicket {
   qrHash: string;
   attendeeName: string;
   attendeeEmail?: string;
-  status: "VALID" | "CHECKED_IN" | "CANCELLED";
+  status:
+    | "VALID"
+    | "CHECKED_IN"
+    | "CANCELLED"
+    | "PENDING"
+    | "COMPLIMENTARY"
+    | "COMPLEMENTARY"
+    | string;
   checkedInAt?: string;
   checkedInBy?: string;
   tierName?: string;
@@ -123,6 +139,10 @@ export interface DbTicket {
   eventTime?: string;
   tierColor?: string;
   wristbandColor?: string;
+  orderStatus?: string;
+  orderNumber?: string;
+  orderTotalAmount?: number;
+  orderNotes?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -367,6 +387,11 @@ export async function getAllFAQs(): Promise<FAQItem[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Ticket & Order Validation Helpers (Paid & Complementary Enforcement)
+// ---------------------------------------------------------------------------
+export * from "./ticket-utils";
+
+// ---------------------------------------------------------------------------
 // Tickets
 // ---------------------------------------------------------------------------
 export async function getTicketByCode(
@@ -389,7 +414,11 @@ export async function getTicketByCode(
         COALESCE(e.name, 'No Limit Fest Dubai') AS "eventName",
         COALESCE(e.venue, 'Helipad by Frozen Cherry, Dubai') AS "eventVenue",
         COALESCE(e.dates, 'Saturday 24th October 2026') AS "eventDates",
-        COALESCE(e.time, '6:00 PM Till Late') AS "eventTime"
+        COALESCE(e.time, '6:00 PM Till Late') AS "eventTime",
+        COALESCE(o.status, 'UNKNOWN') AS "orderStatus",
+        COALESCE(o.order_number, '') AS "orderNumber",
+        COALESCE(o.total_amount, 0) AS "orderTotalAmount",
+        COALESCE(o.notes, '') AS "orderNotes"
       FROM tickets t
       LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
       LEFT JOIN orders o ON t.order_id = o.id
@@ -449,9 +478,14 @@ export async function getOrderById(
         COALESCE(tt.name, 'Festival Pass') AS "tierName",
         COALESCE(tt.pax_per_unit, 1) AS "paxPerUnit",
         COALESCE(tt.color, '#00E676') AS "tierColor",
-        COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor"
+        COALESCE(tt.wristband_color, 'NEON GREEN') AS "wristbandColor",
+        COALESCE(o.status, 'UNKNOWN') AS "orderStatus",
+        COALESCE(o.order_number, '') AS "orderNumber",
+        COALESCE(o.total_amount, 0) AS "orderTotalAmount",
+        COALESCE(o.notes, '') AS "orderNotes"
       FROM tickets t
       LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+      LEFT JOIN orders o ON t.order_id = o.id
       WHERE t.order_id = $1
     `,
       [order.id],
@@ -498,6 +532,23 @@ export async function performTicketCheckIn(
       status: "ALREADY_CHECKED_IN",
       ticket,
       message: `Already checked in on ${ticket.checkedInAt} by ${ticket.checkedInBy || "Gate Staff"}.`,
+    };
+  }
+
+  // Only paid and complementary tickets are confirmed and permitted for gate admission
+  const isConfirmed = isTicketConfirmedAndValid(ticket);
+  if (!isConfirmed) {
+    const logId = `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    await dbExecute(
+      `INSERT INTO check_in_logs (id, ticket_id, result, staff_email, device_info)
+       VALUES ($1, $2, 'INVALID', $3, $4)`,
+      [logId, ticket.id, staffEmail, deviceInfo || "web"],
+    );
+    return {
+      success: false,
+      status: "NOT_FOUND",
+      ticket,
+      message: `ENTRY DENIED: Pass is not confirmed. Only paid and complementary tickets are valid for admission (Ticket status: ${ticket.status}, Order status: ${ticket.orderStatus || "PENDING"}).`,
     };
   }
 

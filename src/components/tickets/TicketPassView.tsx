@@ -23,8 +23,14 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Lock,
+  ShieldAlert,
 } from "lucide-react";
-import { DbTicket } from "@/lib/data-service";
+import {
+  DbTicket,
+  isTicketComplimentary,
+  isTicketConfirmedAndValid,
+} from "@/lib/ticket-utils";
 import { AuthUser } from "@/lib/auth";
 
 interface TicketPassViewProps {
@@ -122,7 +128,9 @@ export default function TicketPassView({
 
   const isCheckedIn = ticket.status === "CHECKED_IN";
   const isCancelled = ticket.status === "CANCELLED";
-  const isValid = ticket.status === "VALID";
+  const isComplimentary = isTicketComplimentary(ticket);
+  const isConfirmed = isTicketConfirmedAndValid(ticket);
+  const isValid = isConfirmed && !isCheckedIn && !isCancelled;
 
   // Gate Check-in permission check (SUPER_ADMIN, GATE_STAFF, ORGANIZER)
   const canPerformCheckIn =
@@ -203,18 +211,41 @@ export default function TicketPassView({
                 className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                   isCheckedIn
                     ? "bg-amber-500 text-black animate-pulse"
-                    : isCancelled
+                    : isCancelled || !isConfirmed
                       ? "bg-red-500 text-white"
-                      : "bg-emerald-500 text-black"
+                      : isComplimentary
+                        ? "bg-purple-500 text-white"
+                        : "bg-emerald-500 text-black"
                 }`}
               >
                 {isCheckedIn
                   ? "ALREADY CHECKED IN"
                   : isCancelled
                     ? "VOID / CANCELLED"
-                    : "VALID FOR ADMISSION"}
+                    : isValid
+                      ? isComplimentary
+                        ? "COMPLIMENTARY PASS • CONFIRMED"
+                        : "VALID FOR ADMISSION"
+                      : "PAYMENT PENDING / UNCONFIRMED"}
               </span>
             </div>
+
+            {/* Warning if ticket is unpaid / unconfirmed */}
+            {!isConfirmed && !isCheckedIn && !isCancelled && (
+              <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/40 text-xs text-red-200 space-y-1">
+                <div className="flex items-center gap-2 text-red-400 font-bold">
+                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                  <span>PASS NOT CONFIRMED • DO NOT ADMIT</span>
+                </div>
+                <p className="text-[11px] text-gray-300">
+                  This pass is neither paid nor verified as complimentary.
+                </p>
+                <p className="text-[10px] text-red-300/90 pt-1 font-semibold">
+                  ⛔ Entry Denied. Only paid and complementary tickets are
+                  confirmed for gate admission.
+                </p>
+              </div>
+            )}
 
             {/* Check-In Action Button or Status Info */}
             {isValid && (
@@ -258,7 +289,9 @@ export default function TicketPassView({
                   <span>
                     {isCheckingIn
                       ? "Validating Entry..."
-                      : "⚡ CHECK IN & ADMIT ATTENDEE"}
+                      : isComplimentary
+                        ? "⚡ CHECK IN COMPLIMENTARY GUEST"
+                        : "⚡ CHECK IN & ADMIT ATTENDEE"}
                   </span>
                 </button>
               </div>
@@ -316,6 +349,17 @@ export default function TicketPassView({
               </div>
             )}
           </div>
+        ) : !isConfirmed && !isCheckedIn ? (
+          <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center space-y-1.5">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-red-400">
+              <ShieldAlert className="w-4 h-4" />
+              <span>Pass Inactive • Not Confirmed</span>
+            </div>
+            <p className="text-[11px] text-gray-300 max-w-sm mx-auto leading-relaxed">
+              This pass is not confirmed. Only paid and complementary tickets
+              receive active entry passes and admission at the gate.
+            </p>
+          </div>
         ) : (
           /* ==================================================================== */
           /* MODE B: ATTENDEE / PUBLIC INFORMATIVE VALIDATION BANNER              */
@@ -323,12 +367,16 @@ export default function TicketPassView({
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-1.5">
             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
-              <span>Official Digital Pass Verification</span>
+              <span>
+                {isComplimentary
+                  ? "Complimentary VIP Pass Verification"
+                  : "Official Digital Pass Verification"}
+              </span>
             </div>
             <p className="text-[11px] text-gray-400 max-w-sm mx-auto leading-relaxed">
-              This is the official digital ticket for No Limit Fest. Present the
-              scannable QR code below at the festival entrance for door check-in
-              and wristband issuance.
+              {isComplimentary
+                ? "This is the official complimentary VIP guest pass for No Limit Fest. Present the scannable QR code below at the festival entrance for door check-in and wristband issuance."
+                : "This is the official digital ticket for No Limit Fest. Present the scannable QR code below at the festival entrance for door check-in and wristband issuance."}
             </p>
           </div>
         )}
@@ -344,7 +392,11 @@ export default function TicketPassView({
           <div className="p-6 bg-gradient-to-b from-[#181D33] to-[#121524] border-b border-white/10 text-center relative">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[10px] font-black uppercase tracking-widest text-[#00E5FF] mb-2">
               <Sparkles className="w-3 h-3" />
-              <span>Official Festival Pass</span>
+              <span>
+                {isComplimentary
+                  ? "Complimentary Pass • VIP Guest"
+                  : "Official Festival Pass"}
+              </span>
             </div>
 
             <h1 className="text-2xl font-black uppercase tracking-tight text-white">
@@ -366,10 +418,22 @@ export default function TicketPassView({
                   <AlertTriangle className="w-3.5 h-3.5" />
                   <span>Void / Cancelled</span>
                 </span>
+              ) : isValid ? (
+                isComplimentary ? (
+                  <span className="px-4 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/50 text-purple-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+                    <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" />
+                    <span>Complimentary Pass • Confirmed</span>
+                  </span>
+                ) : (
+                  <span className="px-4 py-1.5 rounded-full bg-[#FF5722]/20 border border-[#FF5722]/50 text-[#FF6E40] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Valid Entry Pass</span>
+                  </span>
+                )
               ) : (
-                <span className="px-4 py-1.5 rounded-full bg-[#FF5722]/20 border border-[#FF5722]/50 text-[#FF6E40] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Valid Entry Pass</span>
+                <span className="px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Payment Pending • Unconfirmed</span>
                 </span>
               )}
             </div>
@@ -377,50 +441,78 @@ export default function TicketPassView({
 
           {/* CAMERA-SCANNABLE QR CODE AREA (Direct Absolute URL) */}
           <div className="p-6 text-center bg-[#0C0E18] flex flex-col items-center justify-center relative">
-            {/* Standard ISO/IEC 18004 Compliant QR Code SVG */}
-            <div
-              className="p-3 bg-white rounded-2xl shadow-2xl inline-block"
-              dangerouslySetInnerHTML={{ __html: qrSvg }}
-            />
+            {isValid || isCheckedIn ? (
+              <>
+                {/* Standard ISO/IEC 18004 Compliant QR Code SVG */}
+                <div
+                  className="p-3 bg-white rounded-2xl shadow-2xl inline-block"
+                  dangerouslySetInnerHTML={{ __html: qrSvg }}
+                />
 
-            {/* Ticket Code & Direct URL */}
-            <div className="mt-4 space-y-1.5 w-full">
-              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block">
-                Ticket Reference Code
-              </span>
-              <p className="text-lg font-mono font-black text-[#00E5FF] tracking-widest">
-                {ticket.ticketCode}
-              </p>
+                {/* Ticket Code & Direct URL */}
+                <div className="mt-4 space-y-1.5 w-full">
+                  <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block">
+                    Ticket Reference Code
+                  </span>
+                  <p className="text-lg font-mono font-black text-[#00E5FF] tracking-widest">
+                    {ticket.ticketCode}
+                  </p>
 
-              {/* Direct Scannable URL info */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={copyTicketUrl}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white transition-colors cursor-pointer"
-                  title="Copy Direct URL"
-                >
-                  {copiedUrl ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-400">URL Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3 text-gray-400" />
-                      <span className="truncate max-w-[240px]">
-                        {ticketUrl}
-                      </span>
-                    </>
-                  )}
-                </button>
+                  {/* Direct Scannable URL info */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={copyTicketUrl}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-gray-300 hover:text-white transition-colors cursor-pointer"
+                      title="Copy Direct URL"
+                    >
+                      {copiedUrl ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          <span className="text-emerald-400">URL Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-gray-400" />
+                          <span className="truncate max-w-[240px]">
+                            {ticketUrl}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-gray-400 mt-3 max-w-xs leading-relaxed">
+                  📷 <strong>Scan with any phone camera</strong> to directly open
+                  this ticket pass URL and validate admission.
+                </p>
+              </>
+            ) : (
+              <div className="py-8 px-4 flex flex-col items-center justify-center space-y-3 max-w-xs text-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 flex items-center justify-center shadow-lg shadow-red-500/10">
+                  <Lock className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                    Pass Locked • Not Confirmed
+                  </h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    This pass has not been paid or confirmed as complimentary.
+                    Only paid and complementary tickets receive active entrance
+                    QR codes.
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    href="/#tickets"
+                    className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-white font-bold text-xs uppercase tracking-wider shadow-md hover:scale-105 transition-all inline-block"
+                  >
+                    Purchase Valid Pass
+                  </Link>
+                </div>
               </div>
-            </div>
-
-            <p className="text-[10px] text-gray-400 mt-3 max-w-xs leading-relaxed">
-              📷 <strong>Scan with any phone camera</strong> to directly open
-              this ticket pass URL and validate admission.
-            </p>
+            )}
           </div>
 
           {/* HIGH VISIBILITY WRISTBAND COLOR ALLOCATION */}
