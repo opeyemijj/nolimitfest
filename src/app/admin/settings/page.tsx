@@ -318,7 +318,7 @@ export default function AdminSettingsPage() {
               type="email"
               id="test-email-input"
               placeholder="Enter recipient email to receive test message..."
-              defaultValue="info@nolimitfest.net"
+              defaultValue="nolimitfest.net@gmail.com"
               className="flex-1 bg-black/40 border border-white/15 rounded-xl px-3.5 py-2 text-white text-xs placeholder:text-gray-500"
             />
             <button
