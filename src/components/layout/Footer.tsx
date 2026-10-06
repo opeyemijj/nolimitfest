@@ -326,15 +326,29 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                © {new Date().getFullYear()} No Limit Fest Worldwide Ltd. All
+                Rights Reserved. Licensed Event in Dubai, UAE.
+              </span>
+            </div>
+            <span className="hidden sm:inline text-gray-600">•</span>
             <span>
-              © {new Date().getFullYear()} No Limit Fest Worldwide Ltd. All
-              Rights Reserved. Licensed Event in Dubai, UAE.
+              Built by{" "}
+              <a
+                href="https://brainmedia.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-[#00E5FF] transition-colors font-medium underline underline-offset-2"
+              >
+                Brainmedia
+              </a>
             </span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap justify-center">
             <Link
               href="/info"
               className="hover:text-gray-300 transition-colors"
