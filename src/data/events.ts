@@ -16,7 +16,7 @@ export interface TicketPhase {
   price: number;
   currency: string;
   formattedPrice: string;
-  status: "active" | "upcoming" | "door";
+  status: "active" | "upcoming" | "door" | "sold_out";
   badge?: string;
   description: string;
 }
@@ -84,9 +84,9 @@ export const dubaiTicketPhases: TicketPhase[] = [
     price: 129,
     currency: "AED",
     formattedPrice: "AED 129",
-    status: "active",
-    badge: "Now Selling • Limited",
-    description: "Lowest available entry price for early supporters. Instant access to Helipad festival grounds and Ruger live headline show.",
+    status: "sold_out",
+    badge: "Sold Out",
+    description: "Lowest available entry price for early supporters. Allocation exhausted.",
   },
   {
     id: "phase-1",
@@ -95,9 +95,9 @@ export const dubaiTicketPhases: TicketPhase[] = [
     price: 150,
     currency: "AED",
     formattedPrice: "AED 150",
-    status: "upcoming",
-    badge: "Next Tier",
-    description: "Standard advance general admission once Early Bird allocation sells out.",
+    status: "active",
+    badge: "On Sale Now",
+    description: "Standard advance general admission now live with instant digital ticket delivery.",
   },
   {
     id: "phase-2",
@@ -266,7 +266,7 @@ export const standardTiersDubai: TicketTier[] = [
   {
     id: "early-bird",
     name: "Early Bird (AED 129)",
-    badge: "Now Selling • Limited",
+    badge: "Sold Out",
     capacity: 1,
     capacityLabel: "1 Guest",
     priceEstimate: "AED 129",

@@ -85,22 +85,39 @@ export default function TicketPurchaseWidget({
     .filter((t) => t.category === "phase" && t.status !== "hidden")
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
-  // Find current active phase tier (or earliest upcoming if none active)
+  // Find current active phase tier (or earliest non-sold-out upcoming phase, or first)
   const activePhaseTier =
-    phaseTiers.find((t) => t.status === "active") || phaseTiers[0];
+    phaseTiers.find((t) => t.status === "active") ||
+    phaseTiers.find((t) => t.status === "upcoming") ||
+    phaseTiers[0];
 
   // Find the next upcoming phase tier for price alerts
   const upcomingPhaseTiers = phaseTiers.filter(
-    (t) => t.sortOrder > (activePhaseTier?.sortOrder ?? -1),
+    (t) =>
+      t.sortOrder > (activePhaseTier?.sortOrder ?? -1) &&
+      t.status === "upcoming",
   );
   const nextPhaseTier =
     upcomingPhaseTiers.length > 0 ? upcomingPhaseTiers[0] : null;
 
-  // 2. Deduplicate tiers: hide future upcoming phase duplicates to eliminate repetition
+  // 2. Filter tiers:
+  // - Show all non-phase tiers (squads, VIP tables, cabanas)
+  // - For phase tiers:
+  //   * Always show sold out phases (e.g. Early Bird) so users clearly know it's sold out
+  //   * Show the active phase (e.g. Phase 1) for live purchase
+  //   * If no phase is active, show the earliest upcoming phase
   const deduplicatedTiers = tiers.filter((tier) => {
     if (tier.status === "hidden") return false;
-    if (tier.category === "phase" && activePhaseTier) {
-      return tier.id === activePhaseTier.id;
+    if (tier.category === "phase") {
+      if (tier.status === "sold_out") return true;
+      if (tier.status === "active") return true;
+      if (
+        !phaseTiers.some((t) => t.status === "active") &&
+        tier.id === activePhaseTier?.id
+      ) {
+        return true;
+      }
+      return false;
     }
     return true;
   });
@@ -360,9 +377,11 @@ export default function TicketPurchaseWidget({
               <div
                 key={tier.id}
                 className={`rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 border flex flex-col justify-between transition-all relative ${
-                  tier.popular || tier.badge?.includes("POPULAR")
-                    ? "bg-[#181D33] border-[#FF5722] shadow-2xl shadow-orange-500/15 ring-1 ring-[#FF5722]/40"
-                    : "bg-[#131626] border-white/10 hover:border-white/20"
+                  isSoldOut
+                    ? "bg-[#10121C] border-red-500/20 opacity-90"
+                    : tier.popular || tier.badge?.includes("POPULAR")
+                      ? "bg-[#181D33] border-[#FF5722] shadow-2xl shadow-orange-500/15 ring-1 ring-[#FF5722]/40"
+                      : "bg-[#131626] border-white/10 hover:border-white/20"
                 }`}
               >
                 <div>
@@ -370,18 +389,32 @@ export default function TicketPurchaseWidget({
                     <div className="flex items-center gap-1.5">
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
-                        style={{ backgroundColor: tier.color || "#00E676" }}
+                        style={{
+                          backgroundColor: isSoldOut
+                            ? "#EF4444"
+                            : tier.color || "#00E676",
+                        }}
                       />
                       <span className="px-2.5 py-1 rounded-full bg-white/10 text-white text-[10px] font-black uppercase tracking-wider">
                         {tier.paxPerUnit}{" "}
                         {tier.paxPerUnit === 1 ? "Guest Pass" : "Guests Pass"}
                       </span>
                     </div>
-                    {tier.badge && (
+                    {isSoldOut ? (
+                      <span className="px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        Sold Out
+                      </span>
+                    ) : tier.badge ? (
                       <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FFD600] text-black text-[10px] font-black uppercase tracking-wider">
                         {tier.badge}
                       </span>
-                    )}
+                    ) : isPhase && tier.status === "active" ? (
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        On Sale Now
+                      </span>
+                    ) : null}
                   </div>
 
                   <h4 className="text-lg xs:text-xl font-black text-white flex items-center gap-2">
@@ -392,19 +425,36 @@ export default function TicketPurchaseWidget({
                     ) : (
                       <User className="w-4 h-4 text-[#FF5722] shrink-0" />
                     )}
-                    <span className="truncate">{tier.name}</span>
+                    <span
+                      className={`truncate ${isSoldOut ? "text-gray-400" : ""}`}
+                    >
+                      {tier.name}
+                    </span>
                   </h4>
 
                   {/* Price Section */}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="text-2xl xs:text-3xl font-black text-[#FFD600] font-mono">
-                      {tier.currency} {tier.price.toLocaleString()}
-                    </span>
-                    {allowsDeposit && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                        <Percent className="w-3 h-3 text-amber-400" />
-                        <span>{depositPct}% Deposit Available</span>
-                      </span>
+                    {isSoldOut ? (
+                      <>
+                        <span className="text-2xl xs:text-3xl font-black text-gray-500 line-through font-mono">
+                          {tier.currency} {tier.price.toLocaleString()}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30">
+                          Tier Sold Out
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-2xl xs:text-3xl font-black text-[#FFD600] font-mono">
+                          {tier.currency} {tier.price.toLocaleString()}
+                        </span>
+                        {allowsDeposit && (
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            <Percent className="w-3 h-3 text-amber-400" />
+                            <span>{depositPct}% Deposit Available</span>
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -714,34 +764,56 @@ export default function TicketPurchaseWidget({
 
               <div className="space-y-2">
                 {phaseTiers.map((p) => {
-                  const isCurrent = p.id === activePhaseTier?.id;
+                  const isSoldOut =
+                    p.status === "sold_out" || p.capacity - p.soldCount <= 0;
+                  const isCurrent = p.id === activePhaseTier?.id && !isSoldOut;
                   return (
                     <div
                       key={p.id}
                       className={`p-3 rounded-2xl border flex items-center justify-between ${
-                        isCurrent
-                          ? "bg-[#FF5722]/15 border-[#FF5722] ring-1 ring-[#FF5722]/50 text-white"
-                          : "bg-white/5 border-white/10 text-gray-400"
+                        isSoldOut
+                          ? "bg-red-500/5 border-red-500/20 text-gray-400"
+                          : isCurrent
+                            ? "bg-[#FF5722]/15 border-[#FF5722] ring-1 ring-[#FF5722]/50 text-white"
+                            : "bg-white/5 border-white/10 text-gray-400"
                       }`}
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-white">
+                          <span
+                            className={`font-bold text-xs ${
+                              isSoldOut ? "text-gray-400 line-through" : "text-white"
+                            }`}
+                          >
                             {p.name}
                           </span>
-                          {isCurrent && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#FF5722] text-white text-[9px] font-black uppercase tracking-wider animate-pulse">
-                              ACTIVE NOW
+                          {isSoldOut ? (
+                            <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-wider border border-red-500/30">
+                              SOLD OUT
+                            </span>
+                          ) : isCurrent ? (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              ON SALE NOW
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full bg-white/10 text-gray-400 text-[9px] font-black uppercase tracking-wider">
+                              UPCOMING
                             </span>
                           )}
                         </div>
                         <span className="text-[10px] text-gray-400">
-                          {isCurrent
-                            ? "Available for immediate purchase"
-                            : "Scheduled upcoming allocation"}
+                          {isSoldOut
+                            ? "Allocation fully exhausted"
+                            : isCurrent
+                              ? "Available for immediate purchase"
+                              : "Scheduled upcoming allocation"}
                         </span>
                       </div>
-                      <span className="font-mono font-black text-sm text-[#FFD600]">
+                      <span
+                        className={`font-mono font-black text-sm ${
+                          isSoldOut ? "text-gray-500 line-through" : "text-[#FFD600]"
+                        }`}
+                      >
                         {p.currency} {p.price.toLocaleString()}
                       </span>
                     </div>

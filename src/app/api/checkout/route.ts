@@ -79,6 +79,33 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (tier.status === "sold_out" || tier.capacity - tier.soldCount <= 0) {
+        return NextResponse.json(
+          {
+            error: `${tier.name} tickets are completely sold out.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      if (tier.status === "upcoming") {
+        return NextResponse.json(
+          {
+            error: `${tier.name} tickets are not yet on sale.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      if (tier.status !== "active") {
+        return NextResponse.json(
+          {
+            error: `${tier.name} is currently unavailable for purchase.`,
+          },
+          { status: 400 },
+        );
+      }
+
       const available = tier.capacity - tier.soldCount;
       if (item.quantity > available) {
         return NextResponse.json(
