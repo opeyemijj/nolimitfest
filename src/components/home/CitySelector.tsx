@@ -1,4 +1,5 @@
 "use client";
+import VenueLink from "@/components/layout/VenueLink";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -142,7 +143,9 @@ export default function CitySelector() {
                   </h3>
                   <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                    <span className="truncate">{event.venue}</span>
+                    <span className="truncate">
+                      <VenueLink venue={event.venue}>{event.venue}</VenueLink>
+                    </span>
                   </p>
 
                   <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs">

@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import { Metadata } from "next";
 import {
   Mail,
@@ -161,7 +162,8 @@ export default function ContactPage() {
             JOIN US LIVE IN DUBAI
           </h2>
           <p className="text-sm sm:text-base text-gray-300 max-w-xl mx-auto">
-            Headliner RUGER Live at Helipad by Frozen Cherry. Saturday 24th
+            Headliner RUGER Live at{" "}
+            <VenueLink>Helipad by Frozen Cherry</VenueLink>. Saturday 24th
             October 2026. Secure your pass today.
           </p>
           <div className="pt-2">

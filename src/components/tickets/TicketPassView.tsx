@@ -1,4 +1,5 @@
 "use client";
+import VenueLink from "@/components/layout/VenueLink";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -598,7 +599,11 @@ export default function TicketPassView({
               <div className="flex items-center gap-2 text-gray-300">
                 <MapPin className="w-4 h-4 text-[#00E5FF] shrink-0" />
                 <span className="font-bold text-white truncate">
-                  {ticket.eventVenue || "Helipad by Frozen Cherry, Dubai"}
+                  <VenueLink
+                    venue={ticket.eventVenue || "Helipad by Frozen Cherry, Dubai"}
+                  >
+                    {ticket.eventVenue || "Helipad by Frozen Cherry, Dubai"}
+                  </VenueLink>
                 </span>
               </div>
             </div>

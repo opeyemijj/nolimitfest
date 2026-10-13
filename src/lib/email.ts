@@ -1,5 +1,6 @@
 import { DbOrder, DbTicket, isOrderComplimentary } from "./data-service";
 import { generateQrDataUrl } from "./qrcode";
+import { siteConfig } from "@/config/site";
 
 interface SendTicketEmailParams {
   order: DbOrder;
@@ -275,7 +276,7 @@ ${intro}
 
 ORDER NUMBER: #${order.orderNumber}
 EVENT: RUGER Live • No Limit Fest Dubai
-VENUE: Helipad by Frozen Cherry, Dubai, UAE
+VENUE: Helipad by Frozen Cherry, Dubai, UAE (${siteConfig.dubaiEdition.mapUrl})
 DATE: Saturday 24th October 2026 | 6:00 PM Till Late
 
 YOUR DIGITAL PASSES:
@@ -401,7 +402,7 @@ async function generateTicketEmailHtml(
                       RUGER Live • No Limit Fest Dubai
                     </div>
                     <div style="font-size: 13px; color: #9CA3AF; margin-top: 4px;">
-                      📍 <strong>Helipad by Frozen Cherry</strong>, Dubai, UAE<br/>
+                      📍 <a href="${siteConfig.dubaiEdition.mapUrl}" target="_blank" style="color: inherit; text-decoration: none;"><strong>Helipad by Frozen Cherry</strong>, Dubai, UAE</a><br/>
                       🗓️ <strong>Saturday 24th October 2026</strong> | ⏰ <strong>6:00 PM Till Late</strong>
                     </div>
                   </td>
@@ -436,7 +437,7 @@ async function generateTicketEmailHtml(
           <!-- Footer -->
           <tr>
             <td style="background-color: #0B0D16; padding: 20px; text-align: center; border-top: 1px solid #1E2338; font-size: 11px; color: #6B7280;">
-              No Limit Fest Dubai • Helipad by Frozen Cherry<br/>
+              No Limit Fest Dubai • <a href="${siteConfig.dubaiEdition.mapUrl}" target="_blank" style="color: inherit; text-decoration: none;">Helipad by Frozen Cherry</a><br/>
               Questions? Contact WhatsApp concierge: +971 50 688 5946 or email tickets@nolimitfest.net / info@nolimitfest.net
             </td>
           </tr>

@@ -1,4 +1,5 @@
 "use client";
+import VenueLink from "@/components/layout/VenueLink";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -146,7 +147,9 @@ export default function AdminEventsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
-                  <span className="truncate">{evt.venue}</span>
+                  <span className="truncate">
+                    <VenueLink venue={evt.venue}>{evt.venue}</VenueLink>
+                  </span>
                 </div>
               </div>
             </div>

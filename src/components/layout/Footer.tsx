@@ -1,4 +1,5 @@
 "use client";
+import VenueLink, { VENUE_MAP_URL } from "@/components/layout/VenueLink";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -193,7 +194,7 @@ export default function Footer() {
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-[#FF5722] shrink-0 mt-0.5" />
                 <span className="text-xs leading-relaxed text-gray-300">
-                  {siteConfig.dubaiEdition.venue}, Dubai, UAE
+                  <VenueLink>{siteConfig.dubaiEdition.venue}, Dubai, UAE</VenueLink>
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
@@ -254,7 +255,7 @@ export default function Footer() {
                   <strong className="text-emerald-400">Typical Naija</strong>,
                   hosted live at{" "}
                   <strong className="text-[#E08A3E]">
-                    Helipad by Frozen Cherry
+                    <VenueLink>Helipad by Frozen Cherry</VenueLink>
                   </strong>
                   .
                 </p>
@@ -304,7 +305,10 @@ export default function Footer() {
 
                 {/* Helipad by Frozen Cherry */}
                 <div className="flex flex-col items-center gap-3 group">
-                  <div
+                  <a
+                    href={VENUE_MAP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="relative h-20 sm:h-24 w-40 sm:w-48 flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
                     title="Helipad by Frozen Cherry"
                   >
@@ -314,7 +318,7 @@ export default function Footer() {
                       fill
                       className="object-contain filter drop-shadow-[0_0_20px_rgba(224,138,62,0.45)] brightness-110"
                     />
-                  </div>
+                  </a>
                   <span className="text-[10px] text-[#E08A3E] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#E08A3E]/10 border border-[#E08A3E]/20">
                     Official Venue
                   </span>

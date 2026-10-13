@@ -1,4 +1,5 @@
 "use client";
+import VenueLink, { VENUE_MAP_URL } from "@/components/layout/VenueLink";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -124,7 +125,9 @@ export default function Hero() {
 
         <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-gray-300 max-w-2xl font-medium leading-relaxed px-2 sm:px-0">
           The global debut of No Limit Fest takes over the breathtaking{" "}
-          <strong className="text-white">Helipad by Frozen Cherry</strong>. An
+          <strong className="text-white">
+            <VenueLink>Helipad by Frozen Cherry</VenueLink>
+          </strong>. An
           unforgettable sunset-to-night spectacle with Afrobeats, Amapiano, and
           Dubai’s finest party crowd.
         </p>
@@ -144,7 +147,7 @@ export default function Hero() {
           <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/5 border border-white/10">
             <MapPin className="w-4 h-4 text-[#00E5FF]" />
             <span className="font-bold text-white">
-              Helipad by Frozen Cherry, Dubai
+              <VenueLink>Helipad by Frozen Cherry, Dubai</VenueLink>
             </span>
           </div>
         </div>
@@ -281,7 +284,10 @@ export default function Hero() {
               />
             </div>
             <span className="text-gray-600 text-sm">•</span>
-            <div
+            <a
+              href={VENUE_MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="relative h-6 sm:h-7 w-28 sm:w-36 flex items-center justify-center"
               title="Helipad by Frozen Cherry - Venue"
             >
@@ -291,7 +297,7 @@ export default function Hero() {
                 fill
                 className="object-contain filter drop-shadow-[0_0_10px_rgba(224,138,62,0.4)] brightness-110"
               />
-            </div>
+            </a>
           </div>
         </div>
       </div>

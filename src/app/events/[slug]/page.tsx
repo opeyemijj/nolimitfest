@@ -8,6 +8,7 @@ import {
   getTicketTiers,
 } from "@/lib/data-service";
 import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
+import SeatingMap from "@/components/events/SeatingMap";
 import { siteConfig } from "@/config/site";
 
 interface PageProps {
@@ -85,6 +86,13 @@ export default async function SingleEventPage({ params }: PageProps) {
 
         {/* Dedicated Event Ticket Purchase Storefront */}
         <TicketPurchaseWidget event={event} tiers={tiers} />
+
+        {/* Venue seating map (Dubai edition only) */}
+        {event.slug === "dubai" && (
+          <div className="mt-12">
+            <SeatingMap />
+          </div>
+        )}
       </div>
     </div>
   );

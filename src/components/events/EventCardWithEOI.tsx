@@ -1,4 +1,5 @@
 "use client";
+import VenueLink from "@/components/layout/VenueLink";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -169,7 +170,9 @@ export default function EventCardWithEOI({ event, isInitialExpanded = true }: Ev
             <MapPin className="w-4 h-4 text-[#00E5FF] shrink-0" />
             <div>
               <p className="text-gray-400 text-[10px]">Venue</p>
-              <p className="font-bold text-white truncate max-w-[140px]">{event.venue}</p>
+              <p className="font-bold text-white truncate max-w-[140px]">
+                <VenueLink venue={event.venue}>{event.venue}</VenueLink>
+              </p>
             </div>
           </div>
 

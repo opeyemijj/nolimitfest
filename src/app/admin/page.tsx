@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import { getAuthUser, hasPermission } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { dbQuery, dbQueryOne } from "@/lib/db";
@@ -182,7 +183,7 @@ export default async function AdminDashboardPage() {
               Dubai 2026 (Flagship)
             </p>
             <p className="text-[11px] text-gray-400 mt-1 truncate">
-              Helipad by Frozen Cherry • Oct 24
+              <VenueLink>Helipad by Frozen Cherry</VenueLink> • Oct 24
             </p>
           </div>
         </div>

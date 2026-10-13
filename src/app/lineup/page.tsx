@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -79,7 +80,7 @@ export default async function LineupPage() {
             </span>
             Headlined by Afrobeats powerhouse{" "}
             <strong className="text-[#FF5722]">RUGER</strong> live at the iconic
-            Helipad by Frozen Cherry.
+            <VenueLink>Helipad by Frozen Cherry</VenueLink>.
           </p>
         </div>
       </div>

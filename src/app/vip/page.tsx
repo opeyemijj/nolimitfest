@@ -16,6 +16,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { getActiveEvent, getTicketTiers } from "@/lib/data-service";
 import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
+import SeatingMap from "@/components/events/SeatingMap";
 
 export const metadata: Metadata = {
   title:
@@ -275,6 +276,9 @@ export default async function VIPPage() {
             );
           })}
         </div>
+
+        {/* Venue Seating Map */}
+        <SeatingMap />
 
         {/* Direct VIP Ticket Store Widget */}
         <div id="tickets" className="pt-8">

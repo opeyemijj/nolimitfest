@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -146,7 +147,9 @@ export default async function EventsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
-                      <span className="truncate">{stop.venue}</span>
+                      <span className="truncate">
+                        <VenueLink venue={stop.venue}>{stop.venue}</VenueLink>
+                      </span>
                     </div>
                   </div>
                 </div>

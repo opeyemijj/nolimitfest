@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -272,7 +273,9 @@ export default async function OrderConfirmationPage(props: {
               <MapPin className="w-4 h-4 text-[#00E5FF] mb-1" />
               <p className="text-gray-400 text-[10px]">Venue</p>
               <p className="font-bold text-white truncate">
-                {currentEvent.venue}
+                <VenueLink venue={currentEvent.venue}>
+                  {currentEvent.venue}
+                </VenueLink>
               </p>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import VenueLink from "@/components/layout/VenueLink";
 import Image from "next/image";
 import Link from "next/link";
 import { Sparkles, Music2, Flame, ArrowRight, Radio, Plus } from "lucide-react";
@@ -123,7 +124,7 @@ export default function LineupTeaser() {
 
                 <div className="pt-3 border-t border-white/10 flex items-center justify-between">
                   <span className="text-xs font-bold text-gray-400">
-                    {artist.venue}
+                    <VenueLink venue={artist.venue}>{artist.venue}</VenueLink>
                   </span>
 
                   <a

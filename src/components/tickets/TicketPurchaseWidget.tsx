@@ -1,4 +1,5 @@
 "use client";
+import VenueLink from "@/components/layout/VenueLink";
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -311,7 +312,7 @@ export default function TicketPurchaseWidget({
             <div className="min-w-0">
               <p className="text-gray-400 text-[9px] xs:text-[10px]">Venue</p>
               <p className="font-bold text-white text-[11px] xs:text-xs truncate">
-                {event.venue}
+                <VenueLink venue={event.venue}>{event.venue}</VenueLink>
               </p>
             </div>
           </div>

@@ -20,6 +20,7 @@ export const siteConfig = {
     dates: "Saturday 24th October 2026",
     time: "6:00 PM till Late",
     venue: "Helipad by Frozen Cherry",
+    mapUrl: "https://maps.app.goo.gl/M5UDkY6RmMg8DWtQ6",
     city: "Dubai",
     country: "United Arab Emirates",
     artists: ["RUGER"],

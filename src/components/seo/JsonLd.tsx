@@ -80,7 +80,7 @@ export default function JsonLd() {
       "@type": "Place",
       "@id": `${siteConfig.url}/#venue-helipad`,
       "name": "Helipad by Frozen Cherry, Dubai",
-      "hasMap": "https://maps.google.com/?q=Helipad+by+Frozen+Cherry+Dubai",
+      "hasMap": "https://maps.app.goo.gl/M5UDkY6RmMg8DWtQ6",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Helipad by Frozen Cherry, Dubai Festival City / Al Jaddaf Waterfront",
