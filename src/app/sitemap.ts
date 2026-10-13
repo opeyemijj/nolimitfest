@@ -1,5 +1,4 @@
 import { MetadataRoute } from "next";
-import { festivalEvents } from "@/data/events";
 import { siteConfig } from "@/config/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -13,19 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/lineup`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.95,
-    },
-    {
       url: `${baseUrl}/vip`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/events`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
@@ -50,12 +37,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const dynamicRoutes: MetadataRoute.Sitemap = festivalEvents.map((evt) => ({
-    url: `${baseUrl}/events/${evt.slug}`,
-    lastModified: new Date(),
-    changeFrequency: evt.isCurrentEdition ? "daily" : "weekly",
-    priority: evt.isCurrentEdition ? 0.95 : evt.status === "waitlist" ? 0.85 : 0.75,
-  }));
-
-  return [...staticRoutes, ...dynamicRoutes];
+  return staticRoutes;
 }

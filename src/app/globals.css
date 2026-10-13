@@ -18,6 +18,11 @@
   --foreground: #F3F4F6;
 }
 
+/* Offset in-page anchor jumps (/#tickets, /#lineup, ...) for the fixed navbar */
+html {
+  scroll-padding-top: 7rem;
+}
+
 body {
   background: #08090E;
   color: #F3F4F6;

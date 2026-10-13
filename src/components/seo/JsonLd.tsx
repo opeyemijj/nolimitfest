@@ -61,7 +61,7 @@ export default function JsonLd() {
     "alternateName": "No Limit Fest Dubai Edition 01",
     "slogan": siteConfig.tagline,
     "description": currentEvent.description,
-    "url": `${siteConfig.url}/events/dubai`,
+    "url": `${siteConfig.url}/#tickets`,
     "image": [
       `${siteConfig.url}/images/logo.png`,
       `${siteConfig.url}/images/banner.webp`,
@@ -312,13 +312,13 @@ export default function JsonLd() {
         "@type": "ListItem",
         "position": 2,
         "name": "Dubai Premiere 2026",
-        "item": `${siteConfig.url}/events/dubai`,
+        "item": `${siteConfig.url}/#tickets`,
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": "Lineup (Headliner Ruger)",
-        "item": `${siteConfig.url}/lineup`,
+        "item": `${siteConfig.url}/#lineup`,
       },
       {
         "@type": "ListItem",
@@ -330,7 +330,7 @@ export default function JsonLd() {
         "@type": "ListItem",
         "position": 5,
         "name": "Global Tour Stops",
-        "item": `${siteConfig.url}/events`,
+        "item": `${siteConfig.url}/#events`,
       },
     ],
   };

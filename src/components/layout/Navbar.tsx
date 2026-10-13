@@ -59,10 +59,10 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Tickets", href: "/#tickets" },
-    { name: "Dubai Lineup", href: "/lineup" },
-    { name: "Experience", href: "/experience" },
-    { name: "Festival Guide", href: "/info" },
-    { name: "Contact", href: "/contact" },
+    { name: "Dubai Lineup", href: "/#lineup" },
+    { name: "Experience", href: "/#experience" },
+    { name: "Festival Guide", href: "/#faq" },
+    { name: "Contact", href: "/#contact" },
   ];
 
   // Do not render storefront navbar on admin backoffice routes or standalone ticket verification passes
@@ -127,7 +127,7 @@ export default function Navbar() {
                   {festivalEvents.map((evt) => (
                     <Link
                       key={evt.id}
-                      href={`/events/${evt.slug}`}
+                      href={evt.isCurrentEdition ? "/#tickets" : "/#events"}
                       onClick={() => setCityDropdown(false)}
                       className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                         evt.isCurrentEdition

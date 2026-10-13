@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       );
       stripeParams.append(
         "cancel_url",
-        `${origin}/events/${event.slug || "dubai"}`,
+        `${origin}/#tickets`,
       );
       stripeParams.append("customer_email", customerEmail);
       stripeParams.append("client_reference_id", orderNumber);

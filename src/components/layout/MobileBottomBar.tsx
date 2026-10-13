@@ -65,12 +65,8 @@ export default function MobileBottomBar() {
 
           {/* 2. Lineup Quick Link */}
           <Link
-            href="/lineup"
-            className={`py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-0.5 border text-center transition-all ${
-              pathname === "/lineup"
-                ? "bg-white/15 border-[#00E5FF]/40 text-[#00E5FF]"
-                : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
-            }`}
+            href="/#lineup"
+            className="py-2 px-1 rounded-2xl flex flex-col items-center justify-center gap-0.5 border text-center transition-all bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
           >
             <Sparkles className="w-4 h-4 text-[#00E5FF]" />
             <span className="text-[10px] font-bold uppercase tracking-tight truncate">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Globe, Sparkles } from "lucide-react";
 import { DbEvent, DbTicketTier } from "@/lib/data-service";
 import TicketPurchaseWidget from "@/components/tickets/TicketPurchaseWidget";
+import SeatingMap from "@/components/events/SeatingMap";
 
 interface EventsShowcaseProps {
   events: DbEvent[];
@@ -83,6 +84,9 @@ export default function EventsShowcase({
             event={currentSelectedEvent}
             tiers={currentTiers}
           />
+
+          {/* Venue seating map (Dubai edition only) */}
+          {currentSelectedEvent.slug === "dubai" && <SeatingMap />}
         </div>
       </div>
     </section>

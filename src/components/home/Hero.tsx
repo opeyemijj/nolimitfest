@@ -184,7 +184,7 @@ export default function Hero() {
               <strong className="text-white font-bold">Ruger</strong> (Official Headliner)
             </span>
             <Link
-              href="/lineup"
+              href="/#lineup"
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors font-bold text-xs"
             >
               <Sparkles className="w-3.5 h-3.5" />

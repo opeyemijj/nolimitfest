@@ -1,5 +1,4 @@
 "use client";
-import VenueLink from "@/components/layout/VenueLink";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,7 +15,7 @@ export default function CitySelector() {
   });
 
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[#08090E] relative overflow-hidden">
+    <section id="events" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#08090E] relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-[#FFD600]/5 rounded-full blur-[140px] pointer-events-none" />
 
@@ -36,10 +35,10 @@ export default function CitySelector() {
           </div>
 
           <Link
-            href="/events"
+            href="/#tickets"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-bold transition-all hover:scale-105 self-start md:self-auto"
           >
-            <span>View All Tour Stops</span>
+            <span>Book Dubai Tickets</span>
             <ArrowUpRight className="w-4 h-4 text-[#FF5722]" />
           </Link>
         </div>
@@ -89,7 +88,7 @@ export default function CitySelector() {
             return (
               <Link
                 key={event.id}
-                href={`/events/${event.slug}`}
+                href={event.isCurrentEdition ? "/#tickets" : "/#events"}
                 className={`group relative rounded-3xl overflow-hidden border transition-all duration-300 hover:-translate-y-1.5 ${
                   event.isCurrentEdition
                     ? "border-[#FF5722]/60 shadow-2xl shadow-orange-500/15 ring-1 ring-[#FF5722]/30"
@@ -143,9 +142,7 @@ export default function CitySelector() {
                   </h3>
                   <p className="text-xs text-gray-400 mt-1 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                    <span className="truncate">
-                      <VenueLink venue={event.venue}>{event.venue}</VenueLink>
-                    </span>
+                    <span className="truncate">{event.venue}</span>
                   </p>
 
                   <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-xs">

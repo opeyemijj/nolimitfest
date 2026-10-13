@@ -25,7 +25,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="relative bg-[#05060A] border-t border-white/10 text-gray-400 pt-16 pb-12 overflow-hidden">
+    <footer id="contact" className="relative bg-[#05060A] border-t border-white/10 text-gray-400 pt-16 pb-12 overflow-hidden">
       {/* Ambient background glow */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#FF5722]/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#00E5FF]/10 rounded-full blur-3xl pointer-events-none translate-y-1/2" />
@@ -120,7 +120,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link
-                  href="/lineup"
+                  href="/#lineup"
                   className="hover:text-white transition-colors"
                 >
                   Dubai Artist Lineup
@@ -128,7 +128,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/experience"
+                  href="/#experience"
                   className="hover:text-white transition-colors"
                 >
                   Festival Experience & Art
@@ -136,7 +136,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/vip"
+                  href="/#tickets"
                   className="hover:text-white transition-colors"
                 >
                   VIP Cabanas & Hospitality
@@ -144,7 +144,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/experience"
+                  href="/#experience"
                   className="hover:text-white transition-colors"
                 >
                   Experience & Production
@@ -170,7 +170,7 @@ export default function Footer() {
               {festivalEvents.map((evt) => (
                 <li key={evt.id}>
                   <Link
-                    href={`/events/${evt.slug}`}
+                    href={evt.isCurrentEdition ? "/#tickets" : "/#events"}
                     className="flex items-center justify-between hover:text-white transition-colors"
                   >
                     <span>

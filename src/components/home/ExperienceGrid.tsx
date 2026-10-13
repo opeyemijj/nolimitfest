@@ -39,7 +39,7 @@ export default function ExperienceGrid() {
   ];
 
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0B0D15] relative overflow-hidden">
+    <section id="experience" className="py-24 px-4 sm:px-6 lg:px-8 bg-[#0B0D15] relative overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
