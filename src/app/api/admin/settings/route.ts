@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAuthUser, hasPermission } from "@/lib/auth";
 import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
 
@@ -89,6 +90,8 @@ export async function PUT(req: NextRequest) {
         }
       }
     }
+
+    revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

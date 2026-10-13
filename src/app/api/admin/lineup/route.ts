@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAuthUser, hasPermission } from "@/lib/auth";
 import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
 
@@ -91,6 +92,8 @@ export async function PUT(req: NextRequest) {
       ],
     );
 
+    revalidatePath("/", "layout");
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -157,6 +160,8 @@ export async function POST(req: NextRequest) {
       ],
     );
 
+    revalidatePath("/", "layout");
+
     return NextResponse.json({ success: true, id: finalId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -199,6 +204,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     await dbExecute(`DELETE FROM artists WHERE id = $1`, [id]);
+
+    revalidatePath("/", "layout");
 
     return NextResponse.json({
       success: true,

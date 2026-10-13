@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbQueryOne, dbExecute } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
 import { sendTicketConfirmationEmail } from "@/lib/email";
+import { calculateServiceFee, SERVICE_FEE_LABEL } from "@/lib/fees";
 import crypto from "node:crypto";
 
 export async function POST(req: NextRequest) {
@@ -143,6 +144,10 @@ export async function POST(req: NextRequest) {
       ? fullTotalAmount - chargeAmount
       : 0;
 
+    // Service fee is charged on top of every payment (deposit or full amount)
+    const serviceFee = calculateServiceFee(chargeAmount);
+    const totalCharged = Math.round((chargeAmount + serviceFee) * 100) / 100;
+
     // 3. Generate Order Reference Number
     const orderId = `ord-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
     const orderNumber = `NLF-${event.city.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -208,6 +213,23 @@ export async function POST(req: NextRequest) {
         lineIndex++;
       }
 
+      if (serviceFee > 0) {
+        stripeParams.append(
+          `line_items[${lineIndex}][price_data][currency]`,
+          orderCurrency.toLowerCase(),
+        );
+        stripeParams.append(
+          `line_items[${lineIndex}][price_data][product_data][name]`,
+          SERVICE_FEE_LABEL,
+        );
+        stripeParams.append(
+          `line_items[${lineIndex}][price_data][unit_amount]`,
+          Math.round(serviceFee * 100).toString(),
+        );
+        stripeParams.append(`line_items[${lineIndex}][quantity]`, "1");
+        lineIndex++;
+      }
+
       const stripeRes = await fetch(
         "https://api.stripe.com/v1/checkout/sessions",
         {
@@ -246,7 +268,7 @@ export async function POST(req: NextRequest) {
           customerPhone,
           customerLocation || "",
           notes || "",
-          chargeAmount,
+          totalCharged,
           orderCurrency,
           stripeSession.id,
           isOrderDeposit,
@@ -297,7 +319,7 @@ export async function POST(req: NextRequest) {
         customerPhone,
         customerLocation || "",
         notes || "",
-        chargeAmount,
+        totalCharged,
         orderCurrency,
         `test_session_${Date.now()}`,
         isOrderDeposit,
@@ -360,7 +382,7 @@ export async function POST(req: NextRequest) {
         customerName,
         customerEmail,
         customerPhone,
-        totalAmount: chargeAmount,
+        totalAmount: totalCharged,
         currency: orderCurrency,
         status: "PAID",
         isDeposit: isOrderDeposit,

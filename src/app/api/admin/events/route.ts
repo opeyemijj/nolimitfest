@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   getAuthUser,
   hasPermission,
@@ -134,6 +135,8 @@ export async function PUT(req: NextRequest) {
        WHERE id = $1`,
       [id],
     );
+
+    revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true, event: updated });
   } catch (err: any) {

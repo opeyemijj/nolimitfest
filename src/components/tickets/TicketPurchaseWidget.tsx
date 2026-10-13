@@ -24,6 +24,7 @@ import {
   Percent,
 } from "lucide-react";
 import { DbEvent, DbTicketTier } from "@/lib/data-service";
+import { calculateServiceFee, SERVICE_FEE_LABEL } from "@/lib/fees";
 
 interface TicketPurchaseWidgetProps {
   event: DbEvent;
@@ -184,6 +185,10 @@ export default function TicketPurchaseWidget({
   );
 
   const remainingBalance = Math.max(0, fullTotalAmount - payableAmount);
+
+  // 5% service fee on top of the amount paid now
+  const serviceFee = calculateServiceFee(payableAmount);
+  const totalDue = Math.round((payableAmount + serviceFee) * 100) / 100;
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -883,7 +888,7 @@ export default function TicketPurchaseWidget({
                     <div className="text-right">
                       <span className="font-mono font-black text-[#FFD600] text-sm sm:text-base">
                         {event.currency || "AED"}{" "}
-                        {payableAmount.toLocaleString()}
+                        {totalDue.toLocaleString()}
                       </span>
                       {hasDepositSelected && (
                         <span className="block text-[10px] text-amber-300 font-semibold">
@@ -926,6 +931,15 @@ export default function TicketPurchaseWidget({
                           </div>
                         );
                       })}
+                    {serviceFee > 0 && (
+                      <div className="flex justify-between text-[11px] text-gray-400">
+                        <span>{SERVICE_FEE_LABEL}</span>
+                        <span className="font-mono text-white">
+                          {event.currency || "AED"}{" "}
+                          {serviceFee.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {remainingBalance > 0 && (
@@ -1047,7 +1061,7 @@ export default function TicketPurchaseWidget({
                     <span>
                       {isSubmitting
                         ? "Initiating Stripe Payment..."
-                        : `Pay ${event.currency || "AED"} ${payableAmount.toLocaleString()} with Stripe`}
+                        : `Pay ${event.currency || "AED"} ${totalDue.toLocaleString()} with Stripe`}
                     </span>
                   </button>
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   getAuthUser,
   hasPermission,
@@ -185,6 +186,7 @@ export async function PUT(req: NextRequest) {
        WHERE id = $1`,
       [id],
     );
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true, tier: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
@@ -292,6 +294,7 @@ export async function POST(req: NextRequest) {
        WHERE id = $1`,
       [id],
     );
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true, tier: created });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
