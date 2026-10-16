@@ -52,8 +52,16 @@ export function isTicketVoided(ticket?: {
   status?: string;
   orderStatus?: string;
   voidReason?: string;
+  ticketCode?: string;
+  orderNumber?: string;
+  tierName?: string;
+  attendeeName?: string;
+  orderNotes?: string;
 } | null): boolean {
   if (!ticket) return false;
+  // Void is strictly for paid tickets; complimentary passes cannot be voided
+  if (isTicketComplimentary(ticket)) return false;
+
   const statusUpper = (ticket.status || "").toUpperCase();
   if (
     statusUpper === "VOIDED" ||
@@ -174,6 +182,13 @@ export function isTicketConfirmedAndValid(ticket?: {
   orderNotes?: string;
 } | null): boolean {
   if (!ticket) return false;
+
+  // Complimentary tickets are always confirmed and valid (void never applies to comp tickets)
+  if (isTicketComplimentary(ticket)) {
+    const statusUpper = (ticket.status || "").toUpperCase();
+    return statusUpper !== "CANCELLED";
+  }
+
   const statusUpper = (ticket.status || "").toUpperCase();
 
   // Voided, cancelled, disputed, refunded or pending ticket status is always invalid
@@ -195,11 +210,6 @@ export function isTicketConfirmedAndValid(ticket?: {
     statusUpper !== "COMPLEMENTARY"
   ) {
     return false;
-  }
-
-  // If the ticket is complementary, it is confirmed
-  if (isTicketComplimentary(ticket)) {
-    return true;
   }
 
   // If associated with an order, order must be confirmed (PAID or COMPLIMENTARY)

@@ -13,7 +13,21 @@ import { festivalStages, Stage } from "@/data/stages";
 import { festivalFaqs, FAQItem } from "@/data/faq";
 import { sendTicketConfirmationEmail, sendTicketRevocationEmail } from "./email";
 import { generateTicketSignature } from "./qrcode";
-import { isTicketConfirmedAndValid, isTicketVoided } from "./ticket-utils";
+import {
+  isTicketConfirmedAndValid,
+  isTicketVoided,
+  isTicketComplimentary,
+  isOrderComplimentary,
+  isOrderConfirmed,
+} from "./ticket-utils";
+
+export {
+  isTicketConfirmedAndValid,
+  isTicketVoided,
+  isTicketComplimentary,
+  isOrderComplimentary,
+  isOrderConfirmed,
+};
 import crypto from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -540,14 +554,16 @@ export async function performTicketCheckIn(
     };
   }
 
-  // 1. Strict Check: Pass or Order Voided / Disputed / Cancelled
+  // 1. Strict Check: Pass or Order Voided / Disputed / Cancelled (Void is strictly for paid tickets)
+  const isComp = isTicketComplimentary(ticket);
   const isVoided =
-    ticket.status === "VOIDED" ||
-    ticket.status === "CANCELLED" ||
-    ticket.orderStatus === "VOIDED" ||
-    ticket.orderStatus === "DISPUTED" ||
-    ticket.orderStatus === "REFUNDED" ||
-    isTicketVoided(ticket);
+    !isComp &&
+    (ticket.status === "VOIDED" ||
+      ticket.status === "CANCELLED" ||
+      ticket.orderStatus === "VOIDED" ||
+      ticket.orderStatus === "DISPUTED" ||
+      ticket.orderStatus === "REFUNDED" ||
+      isTicketVoided(ticket));
 
   if (isVoided) {
     const logId = `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
@@ -644,6 +660,23 @@ export async function voidOrderWithTickets(
     const order = await getOrderById(orderId);
     if (!order) {
       return { success: false, message: "Order not found in database", ticketsVoided: 0 };
+    }
+
+    // Void is strictly reserved for paid ticket transactions
+    if (isOrderComplimentary(order) || order.orderNumber.startsWith("COMP-")) {
+      return {
+        success: false,
+        message: "Complimentary passes cannot be voided. The void function is strictly reserved for paid ticket transactions.",
+        ticketsVoided: 0,
+      };
+    }
+
+    if (order.status !== "PAID" && order.status !== "DISPUTED" && order.status !== "REFUNDED") {
+      return {
+        success: false,
+        message: `Only paid ticket orders can be voided (Current order status: ${order.status}).`,
+        ticketsVoided: 0,
+      };
     }
 
     const now = new Date().toISOString();

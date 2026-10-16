@@ -131,14 +131,16 @@ export default function TicketPassView({
 
   const isCheckedIn = ticket.status === "CHECKED_IN";
   const isCancelled = ticket.status === "CANCELLED";
-  const isVoided =
-    ticket.status === "VOIDED" ||
-    isCancelled ||
-    ticket.orderStatus === "VOIDED" ||
-    ticket.orderStatus === "DISPUTED" ||
-    ticket.orderStatus === "REFUNDED" ||
-    isTicketVoided(ticket);
   const isComplimentary = isTicketComplimentary(ticket);
+  // Void is strictly for paid tickets; complimentary passes cannot be voided
+  const isVoided =
+    !isComplimentary &&
+    (ticket.status === "VOIDED" ||
+      isCancelled ||
+      ticket.orderStatus === "VOIDED" ||
+      ticket.orderStatus === "DISPUTED" ||
+      ticket.orderStatus === "REFUNDED" ||
+      isTicketVoided(ticket));
   const isConfirmed = isTicketConfirmedAndValid(ticket);
   const isValid = isConfirmed && !isCheckedIn && !isVoided;
 

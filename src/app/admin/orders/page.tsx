@@ -48,6 +48,16 @@ export default function AdminOrdersPage() {
   const [isSubmittingVoid, setIsSubmittingVoid] = useState(false);
 
   const openVoidModal = (ord: any) => {
+    // Voiding is strictly permitted for paid ticket orders
+    if (
+      ord.status !== "PAID" ||
+      ord.orderNumber?.startsWith("COMP-") ||
+      ord.status === "COMPLIMENTARY" ||
+      ord.status === "COMPLEMENTARY"
+    ) {
+      alert("Voiding is strictly reserved for paid ticket orders. Complimentary passes cannot be voided.");
+      return;
+    }
     setVoidingOrder(ord);
     setVoidReasonCategory("Stripe Cardholder Dispute / Chargeback");
     setVoidCustomReason("");
@@ -417,14 +427,15 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="py-3.5 px-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {ord.status !== "VOIDED" &&
-                          ord.status !== "CANCELLED" &&
-                          ord.status !== "DISPUTED" && (
+                        {ord.status === "PAID" &&
+                          !ord.orderNumber.startsWith("COMP-") &&
+                          ord.status !== "COMPLIMENTARY" &&
+                          ord.status !== "COMPLEMENTARY" && (
                             <button
                               type="button"
                               onClick={() => openVoidModal(ord)}
                               className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-xs font-bold text-red-400 hover:text-red-300 inline-flex items-center gap-1 transition-colors cursor-pointer"
-                              title="Void tickets with reason"
+                              title="Void paid ticket with reason"
                             >
                               <Ban className="w-3 h-3" />
                               <span className="hidden sm:inline">Void</span>
@@ -615,7 +626,7 @@ export default function AdminOrdersPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white">
-                    Void Order &amp; Revoke Passes
+                    Void Paid Order &amp; Revoke Passes
                   </h3>
                   <p className="text-[11px] text-gray-400">
                     Order #{voidingOrder.orderNumber} • {voidingOrder.customerName}

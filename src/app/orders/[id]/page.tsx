@@ -78,12 +78,14 @@ export default async function OrderConfirmationPage(props: {
   }
 
   const currentEvent = await getActiveEvent();
-  const isVoidedOrDisputed =
-    order.status === "VOIDED" ||
-    order.status === "DISPUTED" ||
-    order.status === "REFUNDED";
-  const isConfirmed = isOrderConfirmed(order);
   const isComp = isOrderComplimentary(order);
+  // Void is strictly for paid tickets; complimentary orders are never voided
+  const isVoidedOrDisputed =
+    !isComp &&
+    (order.status === "VOIDED" ||
+      order.status === "DISPUTED" ||
+      order.status === "REFUNDED");
+  const isConfirmed = isOrderConfirmed(order);
   const isPaid = isConfirmed && !isComp;
   const validTickets =
     order.tickets?.filter((t) => isTicketConfirmedAndValid(t)) || [];
