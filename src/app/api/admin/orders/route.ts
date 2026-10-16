@@ -70,6 +70,11 @@ export async function GET(req: NextRequest) {
       o.status,
       o.notes,
       o.stripe_session_id    AS "stripeSessionId",
+      o.stripe_dispute_id    AS "stripeDisputeId",
+      o.dispute_reason       AS "disputeReason",
+      o.void_reason          AS "voidReason",
+      o.voided_at            AS "voidedAt",
+      o.voided_by            AS "voidedBy",
       o.created_at           AS "createdAt",
       e.name                 AS "eventName",
       COUNT(t.id)            AS "ticketsCount",
@@ -81,7 +86,8 @@ export async function GET(req: NextRequest) {
     GROUP BY
       o.id, o.order_number, o.event_id, o.customer_name, o.customer_email,
       o.customer_phone, o.customer_location, o.total_amount, o.currency,
-      o.status, o.notes, o.stripe_session_id, o.created_at, e.name
+      o.status, o.notes, o.stripe_session_id, o.stripe_dispute_id, o.dispute_reason,
+      o.void_reason, o.voided_at, o.voided_by, o.created_at, e.name
     ORDER BY o.created_at DESC
     LIMIT 100
   `;

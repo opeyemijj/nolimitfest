@@ -18,12 +18,16 @@ export interface DbTicket {
     | "VALID"
     | "CHECKED_IN"
     | "CANCELLED"
+    | "VOIDED"
     | "PENDING"
     | "COMPLIMENTARY"
     | "COMPLEMENTARY"
     | string;
   checkedInAt?: string;
   checkedInBy?: string;
+  voidReason?: string;
+  voidedAt?: string;
+  voidedBy?: string;
   tierName?: string;
   paxPerUnit?: number;
   category?: string;
@@ -37,6 +41,39 @@ export interface DbTicket {
   orderNumber?: string;
   orderTotalAmount?: number;
   orderNotes?: string;
+  orderVoidReason?: string;
+  disputeReason?: string;
+}
+
+/**
+ * Returns true if a ticket or its parent order has been voided or disputed
+ */
+export function isTicketVoided(ticket?: {
+  status?: string;
+  orderStatus?: string;
+  voidReason?: string;
+} | null): boolean {
+  if (!ticket) return false;
+  const statusUpper = (ticket.status || "").toUpperCase();
+  if (
+    statusUpper === "VOIDED" ||
+    statusUpper === "CANCELLED" ||
+    statusUpper === "DISPUTED"
+  ) {
+    return true;
+  }
+  if (ticket.orderStatus) {
+    const ordUpper = ticket.orderStatus.toUpperCase();
+    if (
+      ordUpper === "VOIDED" ||
+      ordUpper === "DISPUTED" ||
+      ordUpper === "CANCELLED" ||
+      ordUpper === "REFUNDED"
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -139,9 +176,11 @@ export function isTicketConfirmedAndValid(ticket?: {
   if (!ticket) return false;
   const statusUpper = (ticket.status || "").toUpperCase();
 
-  // Cancelled or pending ticket status is always invalid
+  // Voided, cancelled, disputed, refunded or pending ticket status is always invalid
   if (
     statusUpper === "CANCELLED" ||
+    statusUpper === "VOIDED" ||
+    statusUpper === "DISPUTED" ||
     statusUpper === "PENDING" ||
     statusUpper === "REFUNDED"
   ) {

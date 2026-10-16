@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   ArrowLeft,
   ExternalLink,
+  Ban,
 } from "lucide-react";
 import { DbTicket } from "@/lib/data-service";
 
@@ -30,7 +31,7 @@ export default function GateScannerPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [manualCode, setManualCode] = useState("");
   const [scanResult, setScanResult] = useState<{
-    status: "SUCCESS" | "DUPLICATE" | "INVALID";
+    status: "SUCCESS" | "DUPLICATE" | "INVALID" | "VOIDED";
     message: string;
     ticket?: DbTicket;
   } | null>(null);
@@ -164,6 +165,13 @@ export default function GateScannerPage() {
         });
         setGateCount((prev) => prev + 1);
         playSound("success");
+      } else if (data.status === "VOIDED") {
+        setScanResult({
+          status: "VOIDED",
+          message: data.error || "ENTRY BLOCKED: Pass has been VOIDED.",
+          ticket: data.ticket,
+        });
+        playSound("error");
       } else if (res.status === 409) {
         setScanResult({
           status: "DUPLICATE",
@@ -318,7 +326,9 @@ export default function GateScannerPage() {
               ? "bg-emerald-950/60 border-emerald-500/60 text-emerald-200"
               : scanResult.status === "DUPLICATE"
                 ? "bg-amber-950/60 border-amber-500/60 text-amber-200"
-                : "bg-red-950/60 border-red-500/60 text-red-200"
+                : scanResult.status === "VOIDED"
+                  ? "bg-red-950/90 border-red-500 shadow-red-500/40 text-red-200 ring-2 ring-red-500/50"
+                  : "bg-red-950/60 border-red-500/60 text-red-200"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -328,6 +338,9 @@ export default function GateScannerPage() {
               )}
               {scanResult.status === "DUPLICATE" && (
                 <AlertTriangle className="w-6 h-6 text-amber-400" />
+              )}
+              {scanResult.status === "VOIDED" && (
+                <Ban className="w-6 h-6 text-red-400 animate-pulse" />
               )}
               {scanResult.status === "INVALID" && (
                 <XCircle className="w-6 h-6 text-red-400" />
@@ -342,43 +355,59 @@ export default function GateScannerPage() {
 
           {scanResult.ticket && (
             <div className="space-y-3">
-              {/* ULTRA PROMINENT WRISTBAND ALLOCATION BANNER */}
-              <div
-                className="p-5 rounded-2xl border-2 text-center shadow-2xl space-y-2 transition-all"
-                style={{
-                  backgroundColor: `${scanResult.ticket.tierColor || "#00E676"}18`,
-                  borderColor: scanResult.ticket.tierColor || "#00E676",
-                  boxShadow: `0 0 35px ${scanResult.ticket.tierColor || "#00E676"}40`,
-                }}
-              >
-                <span className="text-[11px] font-black uppercase tracking-widest text-gray-300 block">
-                  Wristband Color to Assign
-                </span>
-
-                <div className="flex items-center justify-center gap-3">
-                  <span
-                    className="w-5 h-5 rounded-full border-2 border-white shadow-lg animate-pulse shrink-0"
-                    style={{
-                      backgroundColor: scanResult.ticket.tierColor || "#00E676",
-                    }}
-                  />
-                  <h4
-                    className="text-2xl sm:text-3xl font-black uppercase tracking-tight font-mono drop-shadow-md"
-                    style={{
-                      color: scanResult.ticket.tierColor || "#00E676",
-                    }}
-                  >
-                    {scanResult.ticket.wristbandColor || "NEON GREEN"}
+              {scanResult.status === "VOIDED" ? (
+                /* CRITICAL REFUSAL BANNER FOR VOIDED TICKETS */
+                <div className="p-5 rounded-2xl border-2 border-red-500 bg-red-950/90 text-center shadow-[0_0_35px_rgba(239,68,68,0.5)] space-y-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600 text-white text-xs font-black uppercase tracking-widest shadow-lg">
+                    <Ban className="w-4 h-4" />
+                    <span>ENTRY REFUSED • PASS REVOKED</span>
+                  </div>
+                  <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white font-mono">
+                    DO NOT ISSUE WRISTBAND
                   </h4>
+                  <p className="text-xs text-red-200 leading-relaxed font-semibold max-w-md mx-auto">
+                    This pass was voided due to cardholder payment dispute, chargeback, or administrative revocation. Confiscate any wristband and escort attendee to Festival Box Office / Security.
+                  </p>
                 </div>
-
-                <div className="pt-1">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/70 border border-white/20 text-white text-xs sm:text-sm font-black uppercase tracking-wider">
-                    👉 ISSUE {scanResult.ticket.paxPerUnit || 1} WRISTBAND
-                    {(scanResult.ticket.paxPerUnit || 1) > 1 ? "S" : ""}
+              ) : (
+                /* ULTRA PROMINENT WRISTBAND ALLOCATION BANNER */
+                <div
+                  className="p-5 rounded-2xl border-2 text-center shadow-2xl space-y-2 transition-all"
+                  style={{
+                    backgroundColor: `${scanResult.ticket.tierColor || "#00E676"}18`,
+                    borderColor: scanResult.ticket.tierColor || "#00E676",
+                    boxShadow: `0 0 35px ${scanResult.ticket.tierColor || "#00E676"}40`,
+                  }}
+                >
+                  <span className="text-[11px] font-black uppercase tracking-widest text-gray-300 block">
+                    Wristband Color to Assign
                   </span>
+
+                  <div className="flex items-center justify-center gap-3">
+                    <span
+                      className="w-5 h-5 rounded-full border-2 border-white shadow-lg animate-pulse shrink-0"
+                      style={{
+                        backgroundColor: scanResult.ticket.tierColor || "#00E676",
+                      }}
+                    />
+                    <h4
+                      className="text-2xl sm:text-3xl font-black uppercase tracking-tight font-mono drop-shadow-md"
+                      style={{
+                        color: scanResult.ticket.tierColor || "#00E676",
+                      }}
+                    >
+                      {scanResult.ticket.wristbandColor || "NEON GREEN"}
+                    </h4>
+                  </div>
+
+                  <div className="pt-1">
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/70 border border-white/20 text-white text-xs sm:text-sm font-black uppercase tracking-wider">
+                      👉 ISSUE {scanResult.ticket.paxPerUnit || 1} WRISTBAND
+                      {(scanResult.ticket.paxPerUnit || 1) > 1 ? "S" : ""}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Attendee Details Card */}
               <div className="p-4 rounded-2xl bg-black/40 border border-white/10 grid grid-cols-2 gap-3 text-xs">

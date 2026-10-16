@@ -11,9 +11,9 @@ import { festivalEvents, FestivalEvent, TicketTier } from "@/data/events";
 import { festivalArtists, Artist } from "@/data/artists";
 import { festivalStages, Stage } from "@/data/stages";
 import { festivalFaqs, FAQItem } from "@/data/faq";
-import { sendTicketConfirmationEmail } from "./email";
+import { sendTicketConfirmationEmail, sendTicketRevocationEmail } from "./email";
 import { generateTicketSignature } from "./qrcode";
-import { isTicketConfirmedAndValid } from "./ticket-utils";
+import { isTicketConfirmedAndValid, isTicketVoided } from "./ticket-utils";
 import crypto from "node:crypto";
 
 // ---------------------------------------------------------------------------
@@ -103,8 +103,17 @@ export interface DbOrder {
     | "FAILED"
     | "REFUNDED"
     | "CANCELLED"
+    | "VOIDED"
+    | "DISPUTED"
     | string;
   stripeSessionId?: string;
+  stripePaymentIntent?: string;
+  stripeDisputeId?: string;
+  disputeReason?: string;
+  disputedAt?: string;
+  voidReason?: string;
+  voidedAt?: string;
+  voidedBy?: string;
   isDeposit?: boolean;
   depositAmount?: number;
   remainingBalance?: number;
@@ -124,12 +133,16 @@ export interface DbTicket {
     | "VALID"
     | "CHECKED_IN"
     | "CANCELLED"
+    | "VOIDED"
     | "PENDING"
     | "COMPLIMENTARY"
     | "COMPLEMENTARY"
     | string;
   checkedInAt?: string;
   checkedInBy?: string;
+  voidReason?: string;
+  voidedAt?: string;
+  voidedBy?: string;
   tierName?: string;
   paxPerUnit?: number;
   category?: string;
@@ -143,6 +156,8 @@ export interface DbTicket {
   orderNumber?: string;
   orderTotalAmount?: number;
   orderNotes?: string;
+  orderVoidReason?: string;
+  disputeReason?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +191,8 @@ const ORDER_SELECT = `
   COALESCE(deposit_amount, 0) AS "depositAmount",
   COALESCE(remaining_balance, 0) AS "remainingBalance",
   stripe_session_id AS "stripeSessionId", stripe_payment_intent AS "stripePaymentIntent",
+  stripe_dispute_id AS "stripeDisputeId", dispute_reason AS "disputeReason", disputed_at AS "disputedAt",
+  void_reason AS "voidReason", voided_at AS "voidedAt", voided_by AS "voidedBy",
   created_at AS "createdAt", updated_at AS "updatedAt"
 `;
 
@@ -183,6 +200,7 @@ const TICKET_SELECT = `
   t.id, t.order_id AS "orderId", t.tier_id AS "tierId", t.ticket_code AS "ticketCode",
   t.qr_hash AS "qrHash", t.attendee_name AS "attendeeName", t.attendee_email AS "attendeeEmail",
   t.status, t.checked_in_at AS "checkedInAt", t.checked_in_by AS "checkedInBy",
+  t.void_reason AS "voidReason", t.voided_at AS "voidedAt", t.voided_by AS "voidedBy",
   t.created_at AS "createdAt", t.updated_at AS "updatedAt"
 `;
 
@@ -418,7 +436,9 @@ export async function getTicketByCode(
         COALESCE(o.status, 'UNKNOWN') AS "orderStatus",
         COALESCE(o.order_number, '') AS "orderNumber",
         COALESCE(o.total_amount, 0) AS "orderTotalAmount",
-        COALESCE(o.notes, '') AS "orderNotes"
+        COALESCE(o.notes, '') AS "orderNotes",
+        COALESCE(o.void_reason, '') AS "orderVoidReason",
+        COALESCE(o.dispute_reason, '') AS "disputeReason"
       FROM tickets t
       LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
       LEFT JOIN orders o ON t.order_id = o.id
@@ -507,7 +527,7 @@ export async function performTicketCheckIn(
   deviceInfo?: string,
 ): Promise<{
   success: boolean;
-  status: "CHECKED_IN" | "ALREADY_CHECKED_IN" | "NOT_FOUND";
+  status: "CHECKED_IN" | "ALREADY_CHECKED_IN" | "NOT_FOUND" | "VOIDED";
   ticket?: DbTicket;
   message: string;
 }> {
@@ -517,6 +537,35 @@ export async function performTicketCheckIn(
       success: false,
       status: "NOT_FOUND",
       message: "Ticket not found in festival registry.",
+    };
+  }
+
+  // 1. Strict Check: Pass or Order Voided / Disputed / Cancelled
+  const isVoided =
+    ticket.status === "VOIDED" ||
+    ticket.status === "CANCELLED" ||
+    ticket.orderStatus === "VOIDED" ||
+    ticket.orderStatus === "DISPUTED" ||
+    ticket.orderStatus === "REFUNDED" ||
+    isTicketVoided(ticket);
+
+  if (isVoided) {
+    const logId = `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    await dbExecute(
+      `INSERT INTO check_in_logs (id, ticket_id, result, staff_email, device_info)
+       VALUES ($1, $2, 'BLOCKED_VOIDED', $3, $4)`,
+      [logId, ticket.id, staffEmail, deviceInfo || "web"],
+    );
+    const reasonText =
+      ticket.voidReason ||
+      ticket.orderVoidReason ||
+      (ticket.disputeReason ? `Stripe Cardholder Dispute: ${ticket.disputeReason}` : "") ||
+      "Payment dispute, chargeback, or ticket cancellation";
+    return {
+      success: false,
+      status: "VOIDED",
+      ticket,
+      message: `ENTRY BLOCKED: Pass has been VOIDED (${reasonText}). Do not admit. Confiscate wristband and refer to Festival Box Office / Security.`,
     };
   }
 
@@ -574,6 +623,101 @@ export async function performTicketCheckIn(
     ticket: updatedTicket || ticket,
     message: `Attendee successfully admitted. Wristband allocation: ${ticket.paxPerUnit || 1} pass(es).`,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Void / Invalidate Order and Associated Tickets
+// ---------------------------------------------------------------------------
+export async function voidOrderWithTickets(
+  orderId: string,
+  reason: string,
+  voidedBy: string,
+  releaseInventory = true,
+  notifyCustomer = true,
+): Promise<{
+  success: boolean;
+  message: string;
+  ticketsVoided: number;
+  order?: DbOrder;
+}> {
+  try {
+    const order = await getOrderById(orderId);
+    if (!order) {
+      return { success: false, message: "Order not found in database", ticketsVoided: 0 };
+    }
+
+    const now = new Date().toISOString();
+
+    // 1. Update Order status
+    await dbExecute(
+      `UPDATE orders
+       SET status = 'VOIDED',
+           void_reason = $1,
+           voided_at = $2,
+           voided_by = $3,
+           updated_at = $2
+       WHERE id = $4`,
+      [reason, now, voidedBy, order.id],
+    );
+
+    // 2. Update all associated tickets
+    await dbExecute(
+      `UPDATE tickets
+       SET status = 'VOIDED',
+           void_reason = $1,
+           voided_at = $2,
+           voided_by = $3,
+           updated_at = $2
+       WHERE order_id = $4`,
+      [reason, now, voidedBy, order.id],
+    );
+
+    // 3. Release inventory back to tier capacity if requested
+    if (releaseInventory && order.tickets && order.tickets.length > 0) {
+      for (const t of order.tickets) {
+        await dbExecute(
+          `UPDATE ticket_tiers
+           SET sold_count = GREATEST(0, sold_count - 1),
+               updated_at = NOW()
+           WHERE id = $1`,
+          [t.tierId],
+        );
+      }
+    }
+
+    // 4. Send formal ticket revocation email
+    if (notifyCustomer && order.customerEmail) {
+      try {
+        await sendTicketRevocationEmail({
+          order: {
+            ...order,
+            status: "VOIDED",
+            voidReason: reason,
+            voidedAt: now,
+            voidedBy,
+          },
+          reason,
+          tickets: order.tickets || [],
+        });
+      } catch (emailErr) {
+        console.error("Error sending revocation email:", emailErr);
+      }
+    }
+
+    return {
+      success: true,
+      message: `Order #${order.orderNumber} and ${order.tickets?.length || 0} pass(es) voided successfully.`,
+      ticketsVoided: order.tickets?.length || 0,
+      order: { ...order, status: "VOIDED", voidReason: reason },
+    };
+  } catch (err: any) {
+    console.error("Error voiding order:", err);
+    return {
+      success: false,
+      message: err.message || "Failed to void order",
+      ticketsVoided: 0,
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------

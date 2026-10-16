@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbQueryOne, dbExecute, dbQuery } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
 import { sendTicketConfirmationEmail } from "@/lib/email";
+import { voidOrderWithTickets } from "@/lib/data-service";
 import crypto from "node:crypto";
 
 export async function POST(req: NextRequest) {
@@ -206,6 +207,140 @@ export async function POST(req: NextRequest) {
             });
           }
         }
+      }
+    }
+
+    // =========================================================================
+    // 2. DISPUTE FILED (Cardholder Fraud / Chargeback)
+    // =========================================================================
+    if (event.type === "charge.dispute.created") {
+      const dispute = event.data?.object;
+      const disputeId = dispute?.id;
+      const disputeReason = dispute?.reason || "fraudulent";
+      let paymentIntentId = dispute?.payment_intent;
+
+      // If payment_intent is not directly on dispute, retrieve charge from Stripe
+      if (!paymentIntentId && dispute?.charge && process.env.STRIPE_SECRET_KEY) {
+        try {
+          const chRes = await fetch(
+            `https://api.stripe.com/v1/charges/${dispute.charge}`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+              },
+            },
+          );
+          if (chRes.ok) {
+            const chData = await chRes.json();
+            paymentIntentId = chData.payment_intent;
+          }
+        } catch (e) {
+          console.error("Error fetching charge for dispute:", e);
+        }
+      }
+
+      // Find order by stripe_payment_intent
+      let order = null;
+      if (paymentIntentId) {
+        order = await dbQueryOne<any>(
+          `SELECT id, order_number AS "orderNumber", customer_name AS "customerName", customer_email AS "customerEmail"
+           FROM orders
+           WHERE stripe_payment_intent = $1`,
+          [paymentIntentId],
+        );
+      }
+
+      if (order) {
+        const voidReasonText = `Stripe Cardholder Dispute (${disputeReason}) [Dispute ID: ${disputeId}]`;
+        await voidOrderWithTickets(
+          order.id,
+          voidReasonText,
+          "STRIPE_WEBHOOK_DISPUTE",
+          true, // release inventory back to tier
+          true, // notify customer with revocation email
+        );
+
+        // Record dispute details on order
+        await dbExecute(
+          `UPDATE orders
+           SET status = 'DISPUTED',
+               stripe_dispute_id = $1,
+               dispute_reason = $2,
+               disputed_at = NOW(),
+               updated_at = NOW()
+           WHERE id = $3`,
+          [disputeId, disputeReason, order.id],
+        );
+
+        console.log(
+          `[Stripe Webhook] Order #${order.orderNumber} successfully marked DISPUTED and tickets VOIDED due to dispute ${disputeId}`,
+        );
+      } else {
+        console.warn(
+          `[Stripe Webhook] Received dispute ${disputeId} but no matching order found for payment_intent ${paymentIntentId}`,
+        );
+      }
+    }
+
+    // =========================================================================
+    // 3. CHARGE REFUNDED (Voluntary or Bank Refund)
+    // =========================================================================
+    if (event.type === "charge.refunded") {
+      const charge = event.data?.object;
+      const paymentIntentId = charge?.payment_intent;
+
+      if (paymentIntentId) {
+        const order = await dbQueryOne<any>(
+          `SELECT id, order_number AS "orderNumber", customer_name AS "customerName", customer_email AS "customerEmail"
+           FROM orders
+           WHERE stripe_payment_intent = $1 AND status != 'REFUNDED'`,
+          [paymentIntentId],
+        );
+
+        if (order) {
+          const voidReasonText = "Payment refunded in Stripe";
+          await voidOrderWithTickets(
+            order.id,
+            voidReasonText,
+            "STRIPE_WEBHOOK_REFUND",
+            true, // release inventory
+            true, // notify customer
+          );
+
+          await dbExecute(
+            `UPDATE orders
+             SET status = 'REFUNDED',
+                 updated_at = NOW()
+             WHERE id = $1`,
+            [order.id],
+          );
+
+          console.log(
+            `[Stripe Webhook] Order #${order.orderNumber} successfully marked REFUNDED and tickets VOIDED.`,
+          );
+        }
+      }
+    }
+
+    // =========================================================================
+    // 4. DISPUTE CLOSED (Won or Lost)
+    // =========================================================================
+    if (event.type === "charge.dispute.closed") {
+      const dispute = event.data?.object;
+      const disputeId = dispute?.id;
+      const disputeStatus = dispute?.status; // 'won', 'lost', etc.
+
+      if (disputeId && disputeStatus === "won") {
+        await dbExecute(
+          `UPDATE orders
+           SET status = 'DISPUTE_WON',
+               updated_at = NOW()
+           WHERE stripe_dispute_id = $1`,
+          [disputeId],
+        );
+        console.log(
+          `[Stripe Webhook] Dispute ${disputeId} was WON by festival organizer.`,
+        );
       }
     }
 

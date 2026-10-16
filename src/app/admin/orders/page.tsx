@@ -16,6 +16,8 @@ import {
   CheckCircle2,
   Mail,
   Send,
+  Ban,
+  ShieldAlert,
 } from "lucide-react";
 
 export default function AdminOrdersPage() {
@@ -35,6 +37,61 @@ export default function AdminOrdersPage() {
   const [compQty, setCompQty] = useState(1);
   const [isSubmittingComp, setIsSubmittingComp] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Void Modal State
+  const [isVoidModalOpen, setIsVoidModalOpen] = useState(false);
+  const [voidingOrder, setVoidingOrder] = useState<any>(null);
+  const [voidReasonCategory, setVoidReasonCategory] = useState("Stripe Cardholder Dispute / Chargeback");
+  const [voidCustomReason, setVoidCustomReason] = useState("");
+  const [voidReleaseInventory, setVoidReleaseInventory] = useState(true);
+  const [voidNotifyCustomer, setVoidNotifyCustomer] = useState(true);
+  const [isSubmittingVoid, setIsSubmittingVoid] = useState(false);
+
+  const openVoidModal = (ord: any) => {
+    setVoidingOrder(ord);
+    setVoidReasonCategory("Stripe Cardholder Dispute / Chargeback");
+    setVoidCustomReason("");
+    setVoidReleaseInventory(true);
+    setVoidNotifyCustomer(true);
+    setIsVoidModalOpen(true);
+  };
+
+  const handleVoidOrderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!voidingOrder) return;
+
+    const fullReason = voidCustomReason.trim()
+      ? `${voidReasonCategory} — ${voidCustomReason.trim()}`
+      : voidReasonCategory;
+
+    setIsSubmittingVoid(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${voidingOrder.id}/void`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: fullReason,
+          releaseInventory: voidReleaseInventory,
+          notifyCustomer: voidNotifyCustomer,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setNotification(`✓ Order #${voidingOrder.orderNumber} successfully voided`);
+        setIsVoidModalOpen(false);
+        setVoidingOrder(null);
+        fetchOrders();
+      } else {
+        alert(data.error || "Failed to void order.");
+      }
+    } catch {
+      alert("Network error voiding order.");
+    } finally {
+      setIsSubmittingVoid(false);
+      setTimeout(() => setNotification(null), 4000);
+    }
+  };
 
   const handleResendEmail = async (orderId: string, email: string) => {
     if (
@@ -237,15 +294,15 @@ export default function AdminOrdersPage() {
           />
         </form>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {["ALL", "PAID", "COMPLIMENTARY", "PENDING"].map((st) => (
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 no-scrollbar">
+          {["ALL", "PAID", "COMPLIMENTARY", "DISPUTED", "VOIDED", "PENDING"].map((st) => (
             <button
               key={st}
               type="button"
               onClick={() => setSelectedStatus(st)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                 selectedStatus === st
-                  ? "bg-[#FF5722] text-white"
+                  ? "bg-[#FF5722] text-white shadow-md shadow-orange-500/20"
                   : "bg-white/5 text-gray-400 hover:text-white"
               }`}
             >
@@ -273,7 +330,7 @@ export default function AdminOrdersPage() {
                   <th className="py-3 px-3">Amount</th>
                   <th className="py-3 px-3">Status</th>
                   <th className="py-3 px-3">Date</th>
-                  <th className="py-3 px-3 text-right">Passes</th>
+                  <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -317,41 +374,81 @@ export default function AdminOrdersPage() {
                         : `${ord.currency} ${ord.totalAmount?.toLocaleString()}`}
                     </td>
                     <td className="py-3.5 px-3">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          ord.status === "COMPLIMENTARY" ||
-                          ord.status === "COMPLEMENTARY" ||
-                          ord.orderNumber.startsWith("COMP-")
-                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                            : ord.status === "PAID"
-                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        }`}
-                      >
-                        {ord.orderNumber.startsWith("COMP-")
-                          ? "COMPLIMENTARY"
-                          : ord.status}
-                      </span>
+                      <div>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-flex items-center gap-1 ${
+                            ord.status === "COMPLIMENTARY" ||
+                            ord.status === "COMPLEMENTARY" ||
+                            ord.orderNumber.startsWith("COMP-")
+                              ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                              : ord.status === "DISPUTED"
+                                ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                                : ord.status === "VOIDED" || ord.status === "REFUNDED" || ord.status === "CANCELLED"
+                                  ? "bg-red-950/60 text-red-400 border border-red-500/30"
+                                  : ord.status === "PAID"
+                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          }`}
+                        >
+                          {ord.status === "DISPUTED" && (
+                            <ShieldAlert className="w-3 h-3 text-red-400" />
+                          )}
+                          {(ord.status === "VOIDED" || ord.status === "CANCELLED") && (
+                            <Ban className="w-3 h-3 text-red-400" />
+                          )}
+                          <span>
+                            {ord.orderNumber.startsWith("COMP-")
+                              ? "COMPLIMENTARY"
+                              : ord.status}
+                          </span>
+                        </span>
+                        {(ord.voidReason || ord.disputeReason) && (
+                          <p
+                            className="text-[10px] text-red-400/90 mt-1 max-w-[200px] truncate"
+                            title={ord.voidReason || ord.disputeReason}
+                          >
+                            {ord.voidReason || ord.disputeReason}
+                          </p>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-3 text-gray-400 text-[11px]">
                       {new Date(ord.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {ord.status !== "VOIDED" &&
+                          ord.status !== "CANCELLED" &&
+                          ord.status !== "DISPUTED" && (
+                            <button
+                              type="button"
+                              onClick={() => openVoidModal(ord)}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-xs font-bold text-red-400 hover:text-red-300 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                              title="Void tickets with reason"
+                            >
+                              <Ban className="w-3 h-3" />
+                              <span className="hidden sm:inline">Void</span>
+                            </button>
+                          )}
                         <button
                           type="button"
-                          disabled={resendingOrderId === ord.id}
+                          disabled={
+                            resendingOrderId === ord.id ||
+                            ord.status === "VOIDED" ||
+                            ord.status === "CANCELLED" ||
+                            ord.status === "DISPUTED"
+                          }
                           onClick={() =>
                             handleResendEmail(ord.id, ord.customerEmail)
                           }
-                          className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white inline-flex items-center gap-1 transition-colors disabled:opacity-50 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white inline-flex items-center gap-1 transition-colors disabled:opacity-30 cursor-pointer"
                           title={`Resend passes to ${ord.customerEmail}`}
                         >
                           <Mail className="w-3 h-3 text-[#FF5722]" />
                           <span className="hidden sm:inline">
                             {resendingOrderId === ord.id
                               ? "Sending..."
-                              : "Resend Email"}
+                              : "Resend"}
                           </span>
                         </button>
                         <Link
@@ -500,6 +597,132 @@ export default function AdminOrdersPage() {
                 >
                   <Plus className="w-4 h-4" />
                   <span>{isSubmittingComp ? "Issuing..." : "Issue Pass"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* VOID ORDER & TICKETS MODAL */}
+      {isVoidModalOpen && voidingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="bg-[#121524] border border-red-500/30 rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400">
+                  <Ban className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">
+                    Void Order &amp; Revoke Passes
+                  </h3>
+                  <p className="text-[11px] text-gray-400">
+                    Order #{voidingOrder.orderNumber} • {voidingOrder.customerName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsVoidModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-300 space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 shrink-0" />
+                <span>Gate Invalidation Warning</span>
+              </p>
+              <p className="text-[11px] text-gray-300 leading-relaxed">
+                All {voidingOrder.ticketsCount || 1} digital QR entrance pass(es) associated with this order will be permanently deactivated. Any attempt to scan these passes at festival entrance gates will be rejected with an audible warning.
+              </p>
+            </div>
+
+            <form onSubmit={handleVoidOrderSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-gray-300 mb-1">
+                  Primary Void Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={voidReasonCategory}
+                  onChange={(e) => setVoidReasonCategory(e.target.value)}
+                  className="w-full bg-[#1A1D2E] border border-white/15 rounded-xl px-3 py-2.5 text-white"
+                >
+                  <option value="Stripe Cardholder Dispute / Chargeback">
+                    Stripe Cardholder Dispute / Chargeback (Stolen card or unauthorized transaction)
+                  </option>
+                  <option value="Suspected Card Fraud / Unauthorized Buyer">
+                    Suspected Card Fraud / High Risk Unauthorized Transaction
+                  </option>
+                  <option value="Customer Cancellation & Refund Request">
+                    Customer Cancellation &amp; Refund Approved
+                  </option>
+                  <option value="Duplicate Order Invalidation">
+                    Duplicate Order Invalidation
+                  </option>
+                  <option value="Festival Box Office Admin Decision">
+                    Festival Box Office / Security Revocation
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-300 mb-1">
+                  Additional Reason Details / Case Reference (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={voidCustomReason}
+                  onChange={(e) => setVoidCustomReason(e.target.value)}
+                  placeholder="e.g. Bank dispute ID dp_1N... or cardholder email claiming unauthorized transaction"
+                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white placeholder-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2.5 pt-1">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={voidReleaseInventory}
+                    onChange={(e) => setVoidReleaseInventory(e.target.checked)}
+                    className="mt-0.5 rounded border-gray-600 text-[#FF5722] focus:ring-0"
+                  />
+                  <span className="text-gray-300 text-[11px] leading-snug">
+                    <strong>Release Ticket Inventory:</strong> Decrement sold count so tickets can be purchased by genuine festival attendees.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={voidNotifyCustomer}
+                    onChange={(e) => setVoidNotifyCustomer(e.target.checked)}
+                    className="mt-0.5 rounded border-gray-600 text-[#FF5722] focus:ring-0"
+                  />
+                  <span className="text-gray-300 text-[11px] leading-snug">
+                    <strong>Send Invalidation Email:</strong> Dispatch official revocation notice to {voidingOrder.customerEmail} detailing that their passes are voided.
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsVoidModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingVoid}
+                  className="px-6 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-red-600/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>{isSubmittingVoid ? "Voiding Passes..." : "Confirm Void Order"}</span>
                 </button>
               </div>
             </form>

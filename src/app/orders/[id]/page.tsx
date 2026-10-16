@@ -21,6 +21,7 @@ import {
   HelpCircle,
   ShieldAlert,
   Sparkles,
+  Ban,
 } from "lucide-react";
 import { Metadata } from "next";
 
@@ -77,6 +78,10 @@ export default async function OrderConfirmationPage(props: {
   }
 
   const currentEvent = await getActiveEvent();
+  const isVoidedOrDisputed =
+    order.status === "VOIDED" ||
+    order.status === "DISPUTED" ||
+    order.status === "REFUNDED";
   const isConfirmed = isOrderConfirmed(order);
   const isComp = isOrderComplimentary(order);
   const isPaid = isConfirmed && !isComp;
@@ -89,8 +94,40 @@ export default async function OrderConfirmationPage(props: {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#FF5722]/15 rounded-full blur-[160px] pointer-events-none" />
 
       <div className="max-w-2xl mx-auto space-y-8 relative z-10">
-        {/* Header - Only confirmed (Paid or Complimentary) orders show passes */}
-        {isConfirmed ? (
+        {/* Header */}
+        {isVoidedOrDisputed ? (
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 text-red-400 flex items-center justify-center mx-auto shadow-lg shadow-red-500/20 animate-pulse">
+              <Ban className="w-8 h-8" />
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+              {order.status === "DISPUTED"
+                ? "Payment Disputed • Passes Revoked"
+                : order.status === "REFUNDED"
+                  ? "Order Refunded • Passes Cancelled"
+                  : "Order Voided • Passes Cancelled"}
+            </h1>
+            <p className="text-sm text-gray-300 max-w-md mx-auto leading-relaxed">
+              {order.status === "DISPUTED"
+                ? "A dispute or chargeback was logged for this transaction. All digital festival passes attached to this order have been permanently invalidated and door admission is strictly blocked."
+                : "This order has been voided. All digital festival passes attached to this order are invalid and door admission is strictly blocked."}
+            </p>
+
+            {(order.voidReason || order.disputeReason) && (
+              <div className="max-w-md mx-auto p-3 rounded-2xl bg-red-950/40 border border-red-500/40 text-red-200 text-xs font-mono text-center">
+                <strong>Reason on Record:</strong>{" "}
+                {order.voidReason || order.disputeReason}
+              </div>
+            )}
+
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-600/20 border border-red-500 text-xs font-mono text-red-300">
+              <span>Status: {order.status}</span>
+              <span className="text-gray-500">•</span>
+              <span>ENTRY BLOCKED</span>
+            </div>
+          </div>
+        ) : isConfirmed ? (
           isComp ? (
             <div className="text-center space-y-3">
               <div className="w-16 h-16 rounded-full bg-purple-500/20 border border-purple-500/40 text-[#00E5FF] flex items-center justify-center mx-auto shadow-lg shadow-purple-500/25 animate-bounce">
@@ -214,6 +251,39 @@ export default async function OrderConfirmationPage(props: {
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+        ) : isVoidedOrDisputed ? (
+          <div className="p-6 rounded-3xl bg-red-950/30 border border-red-500/40 text-center space-y-4 shadow-xl">
+            <ShieldAlert className="w-10 h-10 text-red-400 mx-auto" />
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">
+                Festival Passes Inactive & Deactivated
+              </h3>
+              <p className="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
+                The {order.tickets?.length || 0} pass(es) associated with this
+                order cannot be used for venue entry or wristband redemption. If
+                you believe this dispute or cancellation was filed in error,
+                please contact our event operations team.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href="https://wa.me/971506885946"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs uppercase tracking-wider hover:bg-emerald-600/40 transition-all inline-flex items-center justify-center gap-2"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Contact Event Support</span>
+              </a>
+              <Link
+                href="/#tickets"
+                className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-xs uppercase tracking-wider transition-all"
+              >
+                Buy Valid Tickets
+              </Link>
             </div>
           </div>
         ) : (

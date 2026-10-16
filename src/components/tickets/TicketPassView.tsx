@@ -26,11 +26,13 @@ import {
   ExternalLink,
   Lock,
   ShieldAlert,
+  Ban,
 } from "lucide-react";
 import {
   DbTicket,
   isTicketComplimentary,
   isTicketConfirmedAndValid,
+  isTicketVoided,
 } from "@/lib/ticket-utils";
 import { AuthUser } from "@/lib/auth";
 
@@ -129,9 +131,16 @@ export default function TicketPassView({
 
   const isCheckedIn = ticket.status === "CHECKED_IN";
   const isCancelled = ticket.status === "CANCELLED";
+  const isVoided =
+    ticket.status === "VOIDED" ||
+    isCancelled ||
+    ticket.orderStatus === "VOIDED" ||
+    ticket.orderStatus === "DISPUTED" ||
+    ticket.orderStatus === "REFUNDED" ||
+    isTicketVoided(ticket);
   const isComplimentary = isTicketComplimentary(ticket);
   const isConfirmed = isTicketConfirmedAndValid(ticket);
-  const isValid = isConfirmed && !isCheckedIn && !isCancelled;
+  const isValid = isConfirmed && !isCheckedIn && !isVoided;
 
   // Gate Check-in permission check (SUPER_ADMIN, GATE_STAFF, ORGANIZER)
   const canPerformCheckIn =
@@ -212,27 +221,31 @@ export default function TicketPassView({
                 className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                   isCheckedIn
                     ? "bg-amber-500 text-black animate-pulse"
-                    : isCancelled || !isConfirmed
-                      ? "bg-red-500 text-white"
-                      : isComplimentary
-                        ? "bg-purple-500 text-white"
-                        : "bg-emerald-500 text-black"
+                    : isVoided
+                      ? "bg-red-600 text-white font-mono"
+                      : isCancelled || !isConfirmed
+                        ? "bg-red-500 text-white"
+                        : isComplimentary
+                          ? "bg-purple-500 text-white"
+                          : "bg-emerald-500 text-black"
                 }`}
               >
                 {isCheckedIn
                   ? "ALREADY CHECKED IN"
-                  : isCancelled
-                    ? "VOID / CANCELLED"
-                    : isValid
-                      ? isComplimentary
-                        ? "COMPLIMENTARY PASS • CONFIRMED"
-                        : "VALID FOR ADMISSION"
-                      : "PAYMENT PENDING / UNCONFIRMED"}
+                  : isVoided
+                    ? "ENTRY BLOCKED • PASS VOIDED"
+                    : isCancelled
+                      ? "VOID / CANCELLED"
+                      : isValid
+                        ? isComplimentary
+                          ? "COMPLIMENTARY PASS • CONFIRMED"
+                          : "VALID FOR ADMISSION"
+                        : "PAYMENT PENDING / UNCONFIRMED"}
               </span>
             </div>
 
             {/* Warning if ticket is unpaid / unconfirmed */}
-            {!isConfirmed && !isCheckedIn && !isCancelled && (
+            {!isConfirmed && !isCheckedIn && !isCancelled && !isVoided && (
               <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/40 text-xs text-red-200 space-y-1">
                 <div className="flex items-center gap-2 text-red-400 font-bold">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
@@ -323,7 +336,22 @@ export default function TicketPassView({
               </div>
             )}
 
-            {isCancelled && (
+            {isVoided && !isCheckedIn ? (
+              <div className="p-4 rounded-2xl bg-red-500/20 border-2 border-red-500 text-xs text-red-200 space-y-2">
+                <div className="flex items-center gap-2 text-red-400 font-bold">
+                  <ShieldAlert className="w-5 h-5 shrink-0" />
+                  <span className="text-sm font-black uppercase tracking-wider">ENTRY BLOCKED: PASS VOIDED</span>
+                </div>
+                <p className="text-[11px] text-gray-300">
+                  This ticket has been revoked and marked invalid for gate admission. <strong>DO NOT ISSUE WRISTBAND</strong>.
+                </p>
+                {(ticket.voidReason || ticket.orderVoidReason || ticket.disputeReason) && (
+                  <div className="p-2.5 rounded-lg bg-black/60 border border-red-500/40 text-red-300 font-mono text-[11px]">
+                    <strong>Reason:</strong> {ticket.voidReason || ticket.orderVoidReason || ticket.disputeReason}
+                  </div>
+                )}
+              </div>
+            ) : isCancelled ? (
               <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-200 space-y-1">
                 <div className="flex items-center gap-2 text-red-400 font-bold">
                   <AlertTriangle className="w-4 h-4" />
@@ -334,7 +362,7 @@ export default function TicketPassView({
                   gate.
                 </p>
               </div>
-            )}
+            ) : null}
 
             {checkInSuccess && (
               <div className="mt-3 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
@@ -349,6 +377,16 @@ export default function TicketPassView({
                 <span>{checkInError}</span>
               </div>
             )}
+          </div>
+        ) : isVoided ? (
+          <div className="p-4 rounded-2xl bg-red-950/40 border border-red-500/50 text-center space-y-1.5">
+            <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-red-400">
+              <ShieldAlert className="w-4 h-4" />
+              <span>Ticket Pass Revoked & Inactive</span>
+            </div>
+            <p className="text-[11px] text-gray-300 max-w-sm mx-auto leading-relaxed">
+              This pass has been voided due to payment dispute, refund, or administrative cancellation and is no longer valid for admission.
+            </p>
           </div>
         ) : !isConfirmed && !isCheckedIn ? (
           <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-center space-y-1.5">
@@ -414,10 +452,10 @@ export default function TicketPassView({
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Checked In / Admitted</span>
                 </span>
-              ) : isCancelled ? (
-                <span className="px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Void / Cancelled</span>
+              ) : isVoided ? (
+                <span className="px-4 py-1.5 rounded-full bg-red-600/30 border border-red-500 text-red-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+                  <Ban className="w-3.5 h-3.5" />
+                  <span>Pass Voided • Entry Denied</span>
                 </span>
               ) : isValid ? (
                 isComplimentary ? (
@@ -489,6 +527,25 @@ export default function TicketPassView({
                   this ticket pass URL and validate admission.
                 </p>
               </>
+            ) : isVoided ? (
+              <div className="py-8 px-4 flex flex-col items-center justify-center space-y-3 max-w-xs text-center">
+                <div className="w-16 h-16 rounded-full bg-red-600/20 border-2 border-red-500 text-red-400 flex items-center justify-center shadow-lg shadow-red-600/20">
+                  <Ban className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-black uppercase tracking-wider text-red-400">
+                    Pass Revoked & Voided
+                  </h3>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    This digital pass has been deactivated. Admission at the gate is blocked.
+                  </p>
+                  {(ticket.voidReason || ticket.orderVoidReason || ticket.disputeReason) && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-red-950/50 border border-red-500/40 text-red-300 text-[11px] font-mono leading-relaxed">
+                      <strong>Reason:</strong> {ticket.voidReason || ticket.orderVoidReason || ticket.disputeReason}
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="py-8 px-4 flex flex-col items-center justify-center space-y-3 max-w-xs text-center">
                 <div className="w-16 h-16 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 flex items-center justify-center shadow-lg shadow-red-500/10">
@@ -516,43 +573,45 @@ export default function TicketPassView({
             )}
           </div>
 
-          {/* HIGH VISIBILITY WRISTBAND COLOR ALLOCATION */}
-          <div
-            className="mx-6 my-2 p-4 rounded-2xl border-2 shadow-xl flex items-center justify-between gap-3"
-            style={{
-              backgroundColor: `${ticket.tierColor || "#00E676"}15`,
-              borderColor: ticket.tierColor || "#00E676",
-              boxShadow: `0 0 25px ${ticket.tierColor || "#00E676"}25`,
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-white shadow-md shrink-0 animate-pulse"
-                style={{ backgroundColor: ticket.tierColor || "#00E676" }}
-              />
-              <div className="text-left">
-                <span className="text-[10px] uppercase font-black tracking-wider text-gray-300 block">
-                  Wristband Color
+          {/* HIGH VISIBILITY WRISTBAND COLOR ALLOCATION (Only shown if NOT voided) */}
+          {!isVoided && (
+            <div
+              className="mx-6 my-2 p-4 rounded-2xl border-2 shadow-xl flex items-center justify-between gap-3"
+              style={{
+                backgroundColor: `${ticket.tierColor || "#00E676"}15`,
+                borderColor: ticket.tierColor || "#00E676",
+                boxShadow: `0 0 25px ${ticket.tierColor || "#00E676"}25`,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-white shadow-md shrink-0 animate-pulse"
+                  style={{ backgroundColor: ticket.tierColor || "#00E676" }}
+                />
+                <div className="text-left">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-gray-300 block">
+                    Wristband Color
+                  </span>
+                  <span
+                    className="text-base font-black uppercase font-mono tracking-tight block"
+                    style={{ color: ticket.tierColor || "#00E676" }}
+                  >
+                    {ticket.wristbandColor || "NEON GREEN"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                  Allocation
                 </span>
-                <span
-                  className="text-base font-black uppercase font-mono tracking-tight block"
-                  style={{ color: ticket.tierColor || "#00E676" }}
-                >
-                  {ticket.wristbandColor || "NEON GREEN"}
+                <span className="text-xs font-black text-white font-mono bg-black/60 px-2.5 py-1 rounded-full border border-white/20 inline-block">
+                  {ticket.paxPerUnit || 1} Wristband
+                  {(ticket.paxPerUnit || 1) > 1 ? "s" : ""}
                 </span>
               </div>
             </div>
-
-            <div className="text-right">
-              <span className="text-[10px] text-gray-400 uppercase font-bold block">
-                Allocation
-              </span>
-              <span className="text-xs font-black text-white font-mono bg-black/60 px-2.5 py-1 rounded-full border border-white/20 inline-block">
-                {ticket.paxPerUnit || 1} Wristband
-                {(ticket.paxPerUnit || 1) > 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
+          )}
 
           {/* ATTENDEE & TIER DETAILS */}
           <div className="p-6 space-y-4 border-t border-white/10">

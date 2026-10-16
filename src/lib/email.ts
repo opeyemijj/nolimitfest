@@ -449,3 +449,131 @@ async function generateTicketEmailHtml(
 </html>
   `;
 }
+
+/**
+ * Sends a formal ticket revocation / void notification email to customer
+ * when an order is disputed in Stripe or manually voided.
+ */
+export async function sendTicketRevocationEmail({
+  order,
+  reason,
+  tickets = [],
+  baseUrl = "https://nolimitfest.net",
+}: {
+  order: DbOrder;
+  reason: string;
+  tickets?: DbTicket[];
+  baseUrl?: string;
+}): Promise<PostmarkSendResult> {
+  const recipient = order.customerEmail;
+  if (!recipient) {
+    return { success: false, message: "Missing recipient customer email" };
+  }
+
+  const subject = `IMPORTANT: Passes Voided & Invalidation Notice - Order #${order.orderNumber} | No Limit Fest`;
+
+  const ticketRows = tickets.map((t) => `
+    <tr style="border-bottom: 1px solid #2E3550;">
+      <td style="padding: 10px; color: #FFFFFF; font-weight: bold;">${t.tierName || "Festival Pass"}</td>
+      <td style="padding: 10px; font-family: monospace; color: #EF4444; font-weight: bold;">${t.ticketCode}</td>
+      <td style="padding: 10px; color: #EF4444; font-weight: bold;">VOIDED</td>
+    </tr>
+  `).join("");
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>No Limit Fest - Ticket Invalidation Notice</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #08090E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #E5E7EB;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090E; padding: 30px 10px;">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #101320; border-radius: 20px; overflow: hidden; border: 1px solid #EF4444; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+          <!-- Header Banner -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); padding: 25px 20px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #FFFFFF;">
+                NO LIMIT FEST
+              </h1>
+              <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #FEE2E2;">
+                TICKET VOID / REVOCATION NOTICE
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content Body -->
+          <tr>
+            <td style="padding: 30px 25px;">
+              <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #FFFFFF; font-weight: 800;">
+                Notice of Ticket Invalidation — Order #${order.orderNumber}
+              </h2>
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #D1D5DB; line-height: 1.6;">
+                Dear ${order.customerName},
+              </p>
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: #D1D5DB; line-height: 1.6;">
+                Please be advised that your ticket order (<strong>${order.orderNumber}</strong>) and all associated entrance passes for No Limit Fest have been <strong style="color: #EF4444;">VOIDED and CANCELLED</strong>.
+              </p>
+
+              <!-- Reason Box -->
+              <div style="background-color: rgba(239,68,68,0.1); border-left: 4px solid #EF4444; padding: 14px 16px; border-radius: 6px; font-size: 13px; color: #FCA5A5; line-height: 1.5; margin-bottom: 24px;">
+                <strong>REASON FOR VOIDING:</strong><br/>
+                ${reason}
+              </div>
+
+              <!-- Voided Passes Table -->
+              ${tickets.length > 0 ? `
+              <div style="font-size: 13px; font-weight: 800; color: #FFFFFF; text-transform: uppercase; margin-bottom: 10px;">
+                Invalidated Passes (${tickets.length})
+              </div>
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #161A2C; border-radius: 10px; border: 1px solid #2E3550; font-size: 12px; margin-bottom: 24px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid #2E3550; color: #9CA3AF; text-align: left;">
+                    <th style="padding: 10px;">Pass Tier</th>
+                    <th style="padding: 10px;">Ticket Code</th>
+                    <th style="padding: 10px;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${ticketRows}
+                </tbody>
+              </table>
+              ` : ""}
+
+              <!-- Gate Warning -->
+              <div style="background-color: #161A2C; border: 1px solid #374151; padding: 16px; border-radius: 12px; font-size: 12px; color: #9CA3AF; line-height: 1.5; margin-bottom: 24px;">
+                <strong style="color: #F87171;">⚠️ IMPORTANT GATE NOTICE:</strong><br/>
+                All digital barcodes and QR codes linked to this order have been permanently deactivated in our gate scanning system. 
+                Any attempt to present these voided passes at the Helipad entrance gates will result in an immediate refusal of entry and referral to festival security.
+              </div>
+
+              <p style="margin: 0; font-size: 13px; color: #9CA3AF; line-height: 1.5;">
+                If you believe this voiding was made in error or wish to repurchase verified admission with an authorized payment card, please contact our support team at <a href="mailto:nolimitfest.net@gmail.com" style="color: #00E5FF;">nolimitfest.net@gmail.com</a> or via WhatsApp concierge at <strong>+971 50 688 5946</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0B0D16; padding: 20px; text-align: center; border-top: 1px solid #1E2338; font-size: 11px; color: #6B7280;">
+              No Limit Fest Dubai • Helipad by Frozen Cherry<br/>
+              Support: nolimitfest.net@gmail.com • tickets@nolimitfest.net
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  return await sendPostmarkEmail({
+    to: recipient,
+    subject,
+    htmlBody,
+    tag: "ticket-revocation",
+  });
+}
