@@ -114,6 +114,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   other: {
+    "google-adsense-account": "ca-pub-4534664442603103",
     "geo.region": "AE-DU",
     "geo.placename": "Dubai, United Arab Emirates",
     "geo.position": "25.2048;55.2708",
@@ -168,6 +169,10 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="No Limit Fest" />
+        <meta
+          name="google-adsense-account"
+          content="ca-pub-4534664442603103"
+        />
         <JsonLd />
         {/* Google Tag Manager */}
         <script
