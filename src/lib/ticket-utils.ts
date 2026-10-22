@@ -40,6 +40,10 @@ export interface DbTicket {
   orderStatus?: string;
   orderNumber?: string;
   orderTotalAmount?: number;
+  orderCurrency?: string;
+  isDeposit?: boolean;
+  depositAmount?: number;
+  remainingBalance?: number;
   orderNotes?: string;
   orderVoidReason?: string;
   disputeReason?: string;

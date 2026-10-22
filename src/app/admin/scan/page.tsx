@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   ExternalLink,
   Ban,
+  Receipt,
 } from "lucide-react";
 import { DbTicket } from "@/lib/data-service";
 
@@ -370,7 +371,62 @@ export default function GateScannerPage() {
                   </p>
                 </div>
               ) : (
-                /* ULTRA PROMINENT WRISTBAND ALLOCATION BANNER */
+                <>
+                  {/* TABLE 20% DEPOSIT & DOOR BALANCE DUE ALERT FOR GATEKEEPERS */}
+                  {(() => {
+                    const t = scanResult.ticket;
+                    const isDeposit = Boolean(
+                      t.isDeposit ||
+                        (t.remainingBalance && t.remainingBalance > 0) ||
+                        t.orderNotes?.toLowerCase().includes("deposit")
+                    );
+                    const paid = Number(t.depositAmount || t.orderTotalAmount || 0);
+                    const due = Number(
+                      t.remainingBalance && t.remainingBalance > 0
+                        ? t.remainingBalance
+                        : isDeposit && paid > 0
+                          ? paid * 4
+                          : 0
+                    );
+                    const curr = t.orderCurrency || "AED";
+
+                    if (!isDeposit || due <= 0) return null;
+
+                    return (
+                      <div className="p-5 rounded-2xl border-2 border-amber-400 bg-amber-950/90 text-center shadow-[0_0_35px_rgba(245,158,11,0.35)] space-y-3">
+                        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 text-black text-xs font-black uppercase tracking-wider shadow-lg">
+                          <Receipt className="w-4 h-4 text-black shrink-0" />
+                          <span>COLLECT TABLE BALANCE BEFORE ADMISSION</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left">
+                          <div className="p-3 rounded-xl bg-black/70 border border-white/10">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                              Paid Online (20%)
+                            </span>
+                            <span className="text-sm font-black text-emerald-400 font-mono block">
+                              {curr} {paid.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-amber-500/20 border-2 border-amber-400 shadow-lg">
+                            <span className="text-[10px] text-amber-300 uppercase font-bold block">
+                              Collect at Door (80%)
+                            </span>
+                            <span className="text-lg font-black text-white font-mono block">
+                              {curr} {due.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-amber-200 font-black max-w-md mx-auto leading-relaxed bg-black/40 py-2 px-3 rounded-xl border border-amber-500/30">
+                          ⚠️ Verify payment of <strong>{curr} {due.toLocaleString()}</strong> balance before issuing {t.paxPerUnit || 1} wristband(s).
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ULTRA PROMINENT WRISTBAND ALLOCATION BANNER */}
                 <div
                   className="p-5 rounded-2xl border-2 text-center shadow-2xl space-y-2 transition-all"
                   style={{
@@ -407,6 +463,7 @@ export default function GateScannerPage() {
                     </span>
                   </div>
                 </div>
+              </>
               )}
 
               {/* Attendee Details Card */}

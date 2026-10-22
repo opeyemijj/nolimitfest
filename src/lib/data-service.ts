@@ -169,6 +169,10 @@ export interface DbTicket {
   orderStatus?: string;
   orderNumber?: string;
   orderTotalAmount?: number;
+  orderCurrency?: string;
+  isDeposit?: boolean;
+  depositAmount?: number;
+  remainingBalance?: number;
   orderNotes?: string;
   orderVoidReason?: string;
   disputeReason?: string;
@@ -450,6 +454,10 @@ export async function getTicketByCode(
         COALESCE(o.status, 'UNKNOWN') AS "orderStatus",
         COALESCE(o.order_number, '') AS "orderNumber",
         COALESCE(o.total_amount, 0) AS "orderTotalAmount",
+        COALESCE(o.currency, 'AED') AS "orderCurrency",
+        COALESCE(o.is_deposit, false) AS "isDeposit",
+        COALESCE(o.deposit_amount, 0) AS "depositAmount",
+        COALESCE(o.remaining_balance, 0) AS "remainingBalance",
         COALESCE(o.notes, '') AS "orderNotes",
         COALESCE(o.void_reason, '') AS "orderVoidReason",
         COALESCE(o.dispute_reason, '') AS "disputeReason"
@@ -633,11 +641,32 @@ export async function performTicketCheckIn(
   );
 
   const updatedTicket = await getTicketByCode(ticketCode);
+  const activeTicket = updatedTicket || ticket;
+
+  const isDepositOrder = Boolean(
+    activeTicket.isDeposit ||
+    (activeTicket.remainingBalance && activeTicket.remainingBalance > 0) ||
+    activeTicket.orderNotes?.toLowerCase().includes("deposit")
+  );
+  const depositPaid = Number(activeTicket.depositAmount || activeTicket.orderTotalAmount || 0);
+  const balanceDue = Number(
+    activeTicket.remainingBalance && activeTicket.remainingBalance > 0
+      ? activeTicket.remainingBalance
+      : isDepositOrder && depositPaid > 0
+        ? depositPaid * 4
+        : 0
+  );
+  const currency = activeTicket.orderCurrency || "AED";
+  const balanceNotice =
+    isDepositOrder && balanceDue > 0
+      ? ` • ⚠️ COLLECT BALANCE: ${currency} ${balanceDue.toLocaleString()}`
+      : "";
+
   return {
     success: true,
     status: "CHECKED_IN",
-    ticket: updatedTicket || ticket,
-    message: `Attendee successfully admitted. Wristband allocation: ${ticket.paxPerUnit || 1} pass(es).`,
+    ticket: activeTicket,
+    message: `Attendee successfully admitted. Wristband allocation: ${activeTicket.paxPerUnit || 1} pass(es)${balanceNotice}.`,
   };
 }
 

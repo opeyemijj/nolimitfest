@@ -161,22 +161,48 @@ export default async function OrderConfirmationPage(props: {
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                Order Confirmed!
+                {order.isDeposit ? "Table Deposit Confirmed!" : "Order Confirmed!"}
               </h1>
               <p className="text-sm text-gray-400 max-w-md mx-auto">
                 Thank you,{" "}
-                <strong className="text-white">{order.customerName}</strong>!
-                Your payment of{" "}
-                <strong className="text-[#FFD600]">
-                  {order.currency} {order.totalAmount.toLocaleString()}
-                </strong>{" "}
-                has been processed.
+                <strong className="text-white">{order.customerName}</strong>!{" "}
+                {order.isDeposit ? (
+                  <>
+                    Your 20% table deposit of{" "}
+                    <strong className="text-[#FFD600]">
+                      {order.currency} {(order.depositAmount || order.totalAmount).toLocaleString()}
+                    </strong>{" "}
+                    has been received. The remaining 80% balance of{" "}
+                    <strong className="text-amber-400">
+                      {order.currency} {(order.remainingBalance || 0).toLocaleString()}
+                    </strong>{" "}
+                    is due upon arrival at the door.
+                  </>
+                ) : (
+                  <>
+                    Your payment of{" "}
+                    <strong className="text-[#FFD600]">
+                      {order.currency} {order.totalAmount.toLocaleString()}
+                    </strong>{" "}
+                    has been processed.
+                  </>
+                )}
               </p>
 
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-[#00E5FF]">
                 <span>Order #{order.orderNumber}</span>
                 <span className="text-gray-500">•</span>
-                <span className="text-emerald-400 font-bold">PAID</span>
+                <span className="text-emerald-400 font-bold">
+                  {order.isDeposit ? "20% DEPOSIT PAID" : "PAID"}
+                </span>
+                {order.isDeposit && (order.remainingBalance || 0) > 0 && (
+                  <>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-amber-300 font-bold">
+                      DUE AT DOOR: {order.currency} {(order.remainingBalance || 0).toLocaleString()}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           )

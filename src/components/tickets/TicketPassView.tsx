@@ -27,6 +27,8 @@ import {
   Lock,
   ShieldAlert,
   Ban,
+  Receipt,
+  CreditCard,
 } from "lucide-react";
 import {
   DbTicket,
@@ -143,6 +145,22 @@ export default function TicketPassView({
       isTicketVoided(ticket));
   const isConfirmed = isTicketConfirmedAndValid(ticket);
   const isValid = isConfirmed && !isCheckedIn && !isVoided;
+
+  // Table 20% Deposit & Remaining Balance Checks
+  const isDepositOrder = Boolean(
+    ticket.isDeposit ||
+      (ticket.remainingBalance && ticket.remainingBalance > 0) ||
+      ticket.orderNotes?.toLowerCase().includes("deposit")
+  );
+  const depositPaid = Number(ticket.depositAmount || ticket.orderTotalAmount || 0);
+  const balanceDue = Number(
+    ticket.remainingBalance && ticket.remainingBalance > 0
+      ? ticket.remainingBalance
+      : isDepositOrder && depositPaid > 0
+        ? depositPaid * 4
+        : 0
+  );
+  const currency = ticket.orderCurrency || "AED";
 
   // Gate Check-in permission check (SUPER_ADMIN, GATE_STAFF, ORGANIZER)
   const canPerformCheckIn =
@@ -266,6 +284,44 @@ export default function TicketPassView({
             {/* Check-In Action Button or Status Info */}
             {isValid && (
               <div className="space-y-3">
+                {/* HIGH VISIBILITY TABLE 20% DEPOSIT & DOOR BALANCE DUE BANNER */}
+                {isDepositOrder && balanceDue > 0 && (
+                  <div className="p-4 rounded-2xl bg-amber-500/20 border-2 border-amber-400 text-amber-100 shadow-xl space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 text-amber-300 font-black text-xs uppercase tracking-wider">
+                        <Receipt className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+                        <span>Table 20% Deposit • Door Collection Required</span>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-black uppercase tracking-wider font-mono">
+                        80% DUE AT GATE
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-left">
+                      <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                          Paid Online (20%)
+                        </span>
+                        <span className="text-base font-black text-emerald-400 font-mono block">
+                          {currency} {depositPaid.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-950/90 border-2 border-amber-400 shadow-lg shadow-amber-500/20">
+                        <span className="text-[10px] uppercase font-bold text-amber-300 block">
+                          Collect at Door (80%)
+                        </span>
+                        <span className="text-lg font-black text-white font-mono block">
+                          {currency} {balanceDue.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-amber-200/95 font-bold leading-relaxed bg-black/40 p-2 rounded-xl border border-amber-500/30">
+                      ⚠️ Gate Staff: Collect <strong>{currency} {balanceDue.toLocaleString()}</strong> remaining balance before wristband issuance.
+                    </p>
+                  </div>
+                )}
+
                 <div
                   className="p-4 rounded-2xl border-2 shadow-lg space-y-1.5 transition-all text-center"
                   style={{
@@ -478,6 +534,47 @@ export default function TicketPassView({
                 </span>
               )}
             </div>
+
+            {/* UP-FRONT TABLE DEPOSIT & BALANCE COLLECTION ALERT (FOR GATEKEEPERS & ATTENDEES) */}
+            {isDepositOrder && balanceDue > 0 && !isVoided && (
+              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-600/15 to-amber-500/20 border-2 border-amber-400/90 shadow-[0_0_25px_rgba(245,158,11,0.25)] text-left space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-300">
+                    <Receipt className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span>Table 20% Deposit Pass</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-black uppercase tracking-wider font-mono">
+                    BALANCE DUE AT DOOR
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                      Paid Online (20%)
+                    </span>
+                    <span className="text-sm font-black text-emerald-400 font-mono block">
+                      {currency} {depositPaid.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-amber-950/90 border-2 border-amber-400 shadow-md">
+                    <span className="text-[10px] uppercase font-bold text-amber-300 block">
+                      Due at Entrance (80%)
+                    </span>
+                    <span className="text-base font-black text-white font-mono block">
+                      {currency} {balanceDue.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-amber-400/10 border border-amber-400/30 p-2 rounded-xl text-center">
+                  <p className="text-[10px] text-amber-200 font-bold leading-tight">
+                    ⚠️ Gatekeepers: Verify payment of <strong>{currency} {balanceDue.toLocaleString()}</strong> remaining balance before admission.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* CAMERA-SCANNABLE QR CODE AREA (Direct Absolute URL) */}
@@ -642,6 +739,28 @@ export default function TicketPassView({
                 </span>
               </div>
             </div>
+
+            {/* Table Deposit Payment Details */}
+            {isDepositOrder && (
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-xs">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                    Payment Plan
+                  </span>
+                  <span className="font-bold text-amber-300">
+                    20% Deposit ({currency} {depositPaid.toLocaleString()} paid)
+                  </span>
+                </div>
+                <div className="text-right space-y-0.5">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                    Door Balance Due
+                  </span>
+                  <span className="font-mono font-black text-white text-sm">
+                    {currency} {balanceDue.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Event Logistics */}
             <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
