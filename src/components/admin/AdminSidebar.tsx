@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   QrCode,
   Users,
+  UserPlus,
   LogOut,
   Menu,
   X,
@@ -92,6 +93,12 @@ export default function AdminSidebar({ user }: AdminSidebarProps) {
       icon: QrCode,
       highlight: true,
       permission: "scan",
+    },
+    {
+      name: "Walk-in Desk & Cashier",
+      href: "/admin/walk-ins",
+      icon: UserPlus,
+      permission: "walkins",
     },
     {
       name: "Site Settings & FAQs",

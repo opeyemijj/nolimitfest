@@ -171,6 +171,9 @@ export default function TicketPassView({
 
   // Total balance due at the door = base + 5% tax (e.g. 4,800 + 240 = 5,040 AED)
   const totalBalanceDue = Math.round((baseRemainingBalance + balanceTax) * 100) / 100;
+
+  // Total price incl. 5% tax (e.g. 1,260 + 5,040 = 6,300 AED)
+  const fullTotalWithTax = Math.round((depositPaid + totalBalanceDue) * 100) / 100;
   const currency = ticket.orderCurrency || "AED";
 
   // Gate Check-in permission check (SUPER_ADMIN, GATE_STAFF, ORGANIZER)
@@ -304,37 +307,41 @@ export default function TicketPassView({
                         <span>Table 20% Deposit • Door Collection Required</span>
                       </div>
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-black uppercase tracking-wider font-mono">
-                        80% + 5% TAX DUE
+                        BALANCE DUE
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-left">
+                    <div className="grid grid-cols-3 gap-2 text-left">
                       <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
-                        <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                          Paid Online (20% + Tax)
+                        <span className="text-[10px] uppercase font-bold text-gray-400 block truncate">
+                          Total
                         </span>
-                        <span className="text-base font-black text-emerald-400 font-mono block">
+                        <span className="text-sm sm:text-base font-black text-white font-mono block">
+                          {currency} {fullTotalWithTax.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 block truncate">
+                          Paid online
+                        </span>
+                        <span className="text-sm sm:text-base font-black text-emerald-400 font-mono block">
                           {currency} {depositPaid.toLocaleString()}
                         </span>
                       </div>
+
                       <div className="p-2.5 rounded-xl bg-amber-950/90 border-2 border-amber-400 shadow-lg shadow-amber-500/20">
-                        <span className="text-[10px] uppercase font-bold text-amber-300 block">
-                          Collect at Door (80% + Tax)
+                        <span className="text-[10px] uppercase font-bold text-amber-300 block truncate">
+                          To be paid at entrance
                         </span>
-                        <span className="text-lg font-black text-white font-mono block">
+                        <span className="text-sm sm:text-base font-black text-white font-mono block">
                           {currency} {totalBalanceDue.toLocaleString()}
                         </span>
                       </div>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-black/50 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-center justify-between">
-                      <span>Base: <strong>{currency} {baseRemainingBalance.toLocaleString()}</strong></span>
-                      <span>5% Tax: <strong>{currency} {balanceTax.toLocaleString()}</strong></span>
-                      <span className="text-white font-bold">Total: <strong>{currency} {totalBalanceDue.toLocaleString()}</strong></span>
-                    </div>
-
                     <p className="text-[11px] text-amber-200/95 font-bold leading-relaxed bg-black/40 p-2 rounded-xl border border-amber-500/30 text-center">
-                      ⚠️ Gate Staff: Collect <strong>{currency} {totalBalanceDue.toLocaleString()}</strong> ({currency} {baseRemainingBalance.toLocaleString()} + 5% tax) before wristband issuance.
+                      ⚠️ Gate Staff: Collect <strong>{currency} {totalBalanceDue.toLocaleString()}</strong> remaining balance before wristband issuance.
                     </p>
                   </div>
                 )}
@@ -561,39 +568,42 @@ export default function TicketPassView({
                     <span>Table 20% Deposit Pass</span>
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-black text-[10px] font-black uppercase tracking-wider font-mono">
-                    80% + 5% TAX DUE
+                    BALANCE DUE AT DOOR
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-left">
+                <div className="grid grid-cols-3 gap-2 text-left">
                   <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                      Paid Online (20% + Tax)
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block truncate">
+                      Total
                     </span>
-                    <span className="text-sm font-black text-emerald-400 font-mono block">
+                    <span className="text-xs sm:text-sm font-black text-white font-mono block">
+                      {currency} {fullTotalWithTax.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block truncate">
+                      Paid online
+                    </span>
+                    <span className="text-xs sm:text-sm font-black text-emerald-400 font-mono block">
                       {currency} {depositPaid.toLocaleString()}
                     </span>
                   </div>
 
                   <div className="p-2.5 rounded-xl bg-amber-950/90 border-2 border-amber-400 shadow-md">
-                    <span className="text-[10px] uppercase font-bold text-amber-300 block">
-                      Due at Entrance (80% + Tax)
+                    <span className="text-[10px] uppercase font-bold text-amber-300 block truncate">
+                      To be paid at entrance
                     </span>
-                    <span className="text-base font-black text-white font-mono block">
+                    <span className="text-xs sm:text-sm font-black text-white font-mono block">
                       {currency} {totalBalanceDue.toLocaleString()}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-black/50 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-center justify-between">
-                  <span>Base: <strong>{currency} {baseRemainingBalance.toLocaleString()}</strong></span>
-                  <span>5% Tax: <strong>{currency} {balanceTax.toLocaleString()}</strong></span>
-                  <span className="text-white font-bold">Total: <strong>{currency} {totalBalanceDue.toLocaleString()}</strong></span>
-                </div>
-
                 <div className="bg-amber-400/10 border border-amber-400/30 p-2 rounded-xl text-center">
                   <p className="text-[10px] text-amber-200 font-bold leading-tight">
-                    ⚠️ Gatekeepers: Verify payment of <strong>{currency} {totalBalanceDue.toLocaleString()}</strong> ({currency} {baseRemainingBalance.toLocaleString()} + 5% tax) before admission.
+                    ⚠️ Gatekeepers: Verify payment of <strong>{currency} {totalBalanceDue.toLocaleString()}</strong> remaining balance before admission.
                   </p>
                 </div>
               </div>
@@ -765,25 +775,24 @@ export default function TicketPassView({
 
             {/* Table Deposit Payment Details */}
             {isDepositOrder && (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-xs">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                    Payment Plan
-                  </span>
-                  <span className="font-bold text-amber-300">
-                    20% Deposit ({currency} {depositPaid.toLocaleString()} paid)
-                  </span>
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-gray-400 font-bold text-[10px] uppercase tracking-wider border-b border-amber-500/20 pb-1.5">
+                  <span>Table Payment Summary</span>
+                  <span className="text-amber-300">20% Deposit Plan</span>
                 </div>
-                <div className="text-right space-y-0.5">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">
-                    Door Balance Due (incl. 5% Tax)
-                  </span>
-                  <span className="font-mono font-black text-white text-sm">
-                    {currency} {totalBalanceDue.toLocaleString()}
-                  </span>
-                  <span className="text-[10px] text-amber-200/80 block font-mono">
-                    ({currency} {baseRemainingBalance.toLocaleString()} + 5% tax)
-                  </span>
+                <div className="space-y-1.5 font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Total</span>
+                    <span className="font-bold text-white">{currency} {fullTotalWithTax.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-emerald-400">Paid online</span>
+                    <span className="font-bold text-emerald-400">{currency} {depositPaid.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-amber-500/20">
+                    <span className="text-amber-300 font-bold">To be paid at entrance</span>
+                    <span className="font-black text-white text-sm">{currency} {totalBalanceDue.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             )}

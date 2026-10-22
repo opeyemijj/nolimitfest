@@ -9,6 +9,7 @@ export type PermissionKey =
   | "orders"
   | "buyers"
   | "scan"
+  | "walkins"
   | "settings"
   | "users";
 
@@ -68,6 +69,11 @@ export const ALL_PERMISSIONS: {
     description: "Continuous camera door check-in & wristband management",
   },
   {
+    key: "walkins",
+    label: "Walk-in Desk & Gate Sales",
+    description: "Process walk-in registrations, invoice payments, and entrance sales",
+  },
+  {
     key: "settings",
     label: "Site Settings & FAQs",
     description: "Site announcement text, FAQs, Postmark email server",
@@ -89,6 +95,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "orders",
     "buyers",
     "scan",
+    "walkins",
     "settings",
     "users",
   ],
@@ -101,8 +108,9 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<UserRole, PermissionKey[]> = {
     "orders",
     "buyers",
     "scan",
+    "walkins",
   ],
-  GATE_STAFF: ["scan", "orders"],
+  GATE_STAFF: ["scan", "orders", "walkins", "tickets"],
 };
 
 export function getUserPermissions(user: AuthUser): PermissionKey[] {

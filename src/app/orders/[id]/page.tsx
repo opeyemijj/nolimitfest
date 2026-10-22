@@ -107,6 +107,7 @@ export default async function OrderConfirmationPage(props: {
   );
   const balanceTax = Math.round(baseRemainingBalance * 0.05 * 100) / 100;
   const totalBalanceDue = Math.round((baseRemainingBalance + balanceTax) * 100) / 100;
+  const fullTotalWithTax = Math.round((depositPaid + totalBalanceDue) * 100) / 100;
 
   return (
     <div className="min-h-screen bg-[#08090E] text-white pt-24 pb-16 px-4 sm:px-6 relative overflow-hidden">
@@ -190,11 +191,11 @@ export default async function OrderConfirmationPage(props: {
                     <strong className="text-[#FFD600]">
                       {order.currency} {depositPaid.toLocaleString()}
                     </strong>{" "}
-                    has been received. The remaining 80% balance of{" "}
+                    has been received (Total: <strong>{order.currency} {fullTotalWithTax.toLocaleString()}</strong>). The remaining balance of{" "}
                     <strong className="text-amber-400">
                       {order.currency} {totalBalanceDue.toLocaleString()}
                     </strong>{" "}
-                    ({order.currency} {baseRemainingBalance.toLocaleString()} + 5% tax) is due upon arrival at the door.
+                    is to be paid at entrance upon arrival.
                   </>
                 ) : (
                   <>

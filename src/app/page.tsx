@@ -6,6 +6,9 @@ import CitySelector from "@/components/home/CitySelector";
 import FAQSection from "@/components/home/FAQSection";
 import { getAllEvents, getTicketTiers, DbTicketTier } from "@/lib/data-service";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
   const events = await getAllEvents();
   const initialTiers: Record<string, DbTicketTier[]> = {};

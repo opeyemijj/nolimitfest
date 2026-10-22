@@ -12,6 +12,7 @@ import {
   Globe,
   ChevronDown,
   MessageCircle,
+  QrCode,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { festivalEvents, getActiveEvent } from "@/data/events";
@@ -21,6 +22,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [cityDropdown, setCityDropdown] = useState(false);
+  const [walkInDropdown, setWalkInDropdown] = useState(false);
   const [showLeads, setShowLeads] = useState(false);
   const [leadCount, setLeadCount] = useState(0);
   const pathname = usePathname();
@@ -183,6 +185,68 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Walk-in Guest Entrance Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setWalkInDropdown(true)}
+              onMouseLeave={() => setWalkInDropdown(false)}
+            >
+              <Link
+                href="/walk-in"
+                className={`text-sm font-semibold tracking-wide transition-all duration-200 flex items-center gap-1.5 py-1 ${
+                  pathname?.startsWith("/walk-in")
+                    ? "text-[#FFD600]"
+                    : "text-gray-300 hover:text-white"
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Walk-in</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform ${walkInDropdown ? "rotate-180" : ""}`}
+                />
+              </Link>
+
+              {walkInDropdown && (
+                <div className="absolute left-0 mt-2 w-64 rounded-2xl bg-[#121420]/95 border border-white/15 p-2 shadow-2xl z-50 backdrop-blur-2xl space-y-1">
+                  <Link
+                    href="/walk-in"
+                    onClick={() => setWalkInDropdown(false)}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-white/10 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                      <Flame className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white group-hover:text-amber-300">
+                        Walk-in Registration
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Quick form for entrance guests
+                      </p>
+                    </div>
+                  </Link>
+
+                  <Link
+                    href="/walk-in/qr"
+                    onClick={() => setWalkInDropdown(false)}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-white/10 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#00E5FF]/20 text-[#00E5FF] flex items-center justify-center shrink-0">
+                      <QrCode className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white group-hover:text-[#00E5FF]">
+                        View Form Barcode / QR
+                      </p>
+                      <p className="text-[10px] text-gray-400">
+                        Gate scan code to open form
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Actions: Direct WhatsApp & Buy Tickets */}
@@ -244,6 +308,31 @@ export default function Navbar() {
                   <span className="text-gray-500 text-xs">→</span>
                 </Link>
               ))}
+            </div>
+
+            {/* Walk-in Guest Gate Section */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 space-y-2">
+              <span className="text-[10px] uppercase font-black text-amber-300 block tracking-wider font-mono">
+                Entrance Gate • Walk-in Guests
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/walk-in"
+                  onClick={() => setIsOpen(false)}
+                  className="p-2.5 rounded-xl bg-amber-400 text-black font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow-md font-mono"
+                >
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Register</span>
+                </Link>
+                <Link
+                  href="/walk-in/qr"
+                  onClick={() => setIsOpen(false)}
+                  className="p-2.5 rounded-xl bg-white/10 border border-white/15 text-white font-bold text-xs uppercase flex items-center justify-center gap-1.5 font-mono"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <span>Gate QR</span>
+                </Link>
+              </div>
             </div>
 
             <div className="pt-2 border-t border-white/10 flex flex-col gap-2">

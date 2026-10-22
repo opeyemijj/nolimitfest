@@ -392,6 +392,7 @@ export default function GateScannerPage() {
                     );
                     const balanceTax = Math.round(baseBalance * 0.05 * 100) / 100;
                     const totalDue = Math.round((baseBalance + balanceTax) * 100) / 100;
+                    const fullTotal = Math.round((paid + totalDue) * 100) / 100;
                     const curr = t.orderCurrency || "AED";
 
                     if (!isDeposit || totalDue <= 0) return null;
@@ -403,34 +404,37 @@ export default function GateScannerPage() {
                           <span>COLLECT TABLE BALANCE BEFORE ADMISSION</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left">
-                          <div className="p-3 rounded-xl bg-black/70 border border-white/10">
-                            <span className="text-[10px] text-gray-400 uppercase font-bold block">
-                              Paid Online (20% + Tax)
+                        <div className="grid grid-cols-3 gap-2 max-w-md mx-auto text-left">
+                          <div className="p-2.5 rounded-xl bg-black/70 border border-white/10">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold block truncate">
+                              Total
                             </span>
-                            <span className="text-sm font-black text-emerald-400 font-mono block">
+                            <span className="text-sm sm:text-base font-black text-white font-mono block">
+                              {curr} {fullTotal.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-black/70 border border-white/10">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold block truncate">
+                              Paid online
+                            </span>
+                            <span className="text-sm sm:text-base font-black text-emerald-400 font-mono block">
                               {curr} {paid.toLocaleString()}
                             </span>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-amber-500/20 border-2 border-amber-400 shadow-lg">
-                            <span className="text-[10px] text-amber-300 uppercase font-bold block">
-                              Collect at Door (80% + Tax)
+                          <div className="p-2.5 rounded-xl bg-amber-500/20 border-2 border-amber-400 shadow-lg">
+                            <span className="text-[10px] text-amber-300 uppercase font-bold block truncate">
+                              To be paid at entrance
                             </span>
-                            <span className="text-lg font-black text-white font-mono block">
+                            <span className="text-sm sm:text-base font-black text-white font-mono block">
                               {curr} {totalDue.toLocaleString()}
                             </span>
                           </div>
                         </div>
 
-                        <div className="max-w-sm mx-auto p-2.5 rounded-xl bg-black/50 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-center justify-between">
-                          <span>Base: <strong>{curr} {baseBalance.toLocaleString()}</strong></span>
-                          <span>5% Tax: <strong>{curr} {balanceTax.toLocaleString()}</strong></span>
-                          <span className="text-white font-bold">Total: <strong>{curr} {totalDue.toLocaleString()}</strong></span>
-                        </div>
-
                         <p className="text-xs text-amber-200 font-black max-w-md mx-auto leading-relaxed bg-black/40 py-2 px-3 rounded-xl border border-amber-500/30">
-                          ⚠️ Verify payment of <strong>{curr} {totalDue.toLocaleString()}</strong> ({curr} {baseBalance.toLocaleString()} + 5% tax) before issuing {t.paxPerUnit || 1} wristband(s).
+                          ⚠️ Verify payment of <strong>{curr} {totalDue.toLocaleString()}</strong> remaining balance before issuing {t.paxPerUnit || 1} wristband(s).
                         </p>
                       </div>
                     );
