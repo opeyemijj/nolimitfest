@@ -90,6 +90,24 @@ export default async function OrderConfirmationPage(props: {
   const validTickets =
     order.tickets?.filter((t) => isTicketConfirmedAndValid(t)) || [];
 
+  const isDepositOrder = Boolean(
+    order.isDeposit ||
+      (order.remainingBalance && order.remainingBalance > 0) ||
+      order.notes?.toLowerCase().includes("deposit")
+  );
+  const depositPaid = Number(order.depositAmount || order.totalAmount || 0);
+  const baseRemainingBalance = Number(
+    order.remainingBalance && order.remainingBalance > 0
+      ? order.remainingBalance
+      : isDepositOrder && order.depositAmount
+        ? Number(order.depositAmount) * 4
+        : isDepositOrder && depositPaid > 0
+          ? Math.round((depositPaid / 1.05) * 4)
+          : 0
+  );
+  const balanceTax = Math.round(baseRemainingBalance * 0.05 * 100) / 100;
+  const totalBalanceDue = Math.round((baseRemainingBalance + balanceTax) * 100) / 100;
+
   return (
     <div className="min-h-screen bg-[#08090E] text-white pt-24 pb-16 px-4 sm:px-6 relative overflow-hidden">
       {/* Background Ambience */}
@@ -161,22 +179,22 @@ export default async function OrderConfirmationPage(props: {
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white">
-                {order.isDeposit ? "Table Deposit Confirmed!" : "Order Confirmed!"}
+                {isDepositOrder ? "Table Deposit Confirmed!" : "Order Confirmed!"}
               </h1>
               <p className="text-sm text-gray-400 max-w-md mx-auto">
                 Thank you,{" "}
                 <strong className="text-white">{order.customerName}</strong>!{" "}
-                {order.isDeposit ? (
+                {isDepositOrder ? (
                   <>
                     Your 20% table deposit of{" "}
                     <strong className="text-[#FFD600]">
-                      {order.currency} {(order.depositAmount || order.totalAmount).toLocaleString()}
+                      {order.currency} {depositPaid.toLocaleString()}
                     </strong>{" "}
                     has been received. The remaining 80% balance of{" "}
                     <strong className="text-amber-400">
-                      {order.currency} {(order.remainingBalance || 0).toLocaleString()}
+                      {order.currency} {totalBalanceDue.toLocaleString()}
                     </strong>{" "}
-                    is due upon arrival at the door.
+                    ({order.currency} {baseRemainingBalance.toLocaleString()} + 5% tax) is due upon arrival at the door.
                   </>
                 ) : (
                   <>
@@ -193,13 +211,13 @@ export default async function OrderConfirmationPage(props: {
                 <span>Order #{order.orderNumber}</span>
                 <span className="text-gray-500">•</span>
                 <span className="text-emerald-400 font-bold">
-                  {order.isDeposit ? "20% DEPOSIT PAID" : "PAID"}
+                  {isDepositOrder ? "20% DEPOSIT PAID" : "PAID"}
                 </span>
-                {order.isDeposit && (order.remainingBalance || 0) > 0 && (
+                {isDepositOrder && totalBalanceDue > 0 && (
                   <>
                     <span className="text-gray-500">•</span>
                     <span className="text-amber-300 font-bold">
-                      DUE AT DOOR: {order.currency} {(order.remainingBalance || 0).toLocaleString()}
+                      DUE AT DOOR (80% + TAX): {order.currency} {totalBalanceDue.toLocaleString()}
                     </span>
                   </>
                 )}

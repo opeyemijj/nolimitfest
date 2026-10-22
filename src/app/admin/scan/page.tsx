@@ -380,17 +380,21 @@ export default function GateScannerPage() {
                         (t.remainingBalance && t.remainingBalance > 0) ||
                         t.orderNotes?.toLowerCase().includes("deposit")
                     );
-                    const paid = Number(t.depositAmount || t.orderTotalAmount || 0);
-                    const due = Number(
+                    const paid = Number(t.orderTotalAmount || t.depositAmount || 0);
+                    const baseBalance = Number(
                       t.remainingBalance && t.remainingBalance > 0
                         ? t.remainingBalance
-                        : isDeposit && paid > 0
-                          ? paid * 4
-                          : 0
+                        : isDeposit && t.depositAmount
+                          ? Number(t.depositAmount) * 4
+                          : isDeposit && paid > 0
+                            ? Math.round((paid / 1.05) * 4)
+                            : 0
                     );
+                    const balanceTax = Math.round(baseBalance * 0.05 * 100) / 100;
+                    const totalDue = Math.round((baseBalance + balanceTax) * 100) / 100;
                     const curr = t.orderCurrency || "AED";
 
-                    if (!isDeposit || due <= 0) return null;
+                    if (!isDeposit || totalDue <= 0) return null;
 
                     return (
                       <div className="p-5 rounded-2xl border-2 border-amber-400 bg-amber-950/90 text-center shadow-[0_0_35px_rgba(245,158,11,0.35)] space-y-3">
@@ -402,7 +406,7 @@ export default function GateScannerPage() {
                         <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto text-left">
                           <div className="p-3 rounded-xl bg-black/70 border border-white/10">
                             <span className="text-[10px] text-gray-400 uppercase font-bold block">
-                              Paid Online (20%)
+                              Paid Online (20% + Tax)
                             </span>
                             <span className="text-sm font-black text-emerald-400 font-mono block">
                               {curr} {paid.toLocaleString()}
@@ -411,16 +415,22 @@ export default function GateScannerPage() {
 
                           <div className="p-3 rounded-xl bg-amber-500/20 border-2 border-amber-400 shadow-lg">
                             <span className="text-[10px] text-amber-300 uppercase font-bold block">
-                              Collect at Door (80%)
+                              Collect at Door (80% + Tax)
                             </span>
                             <span className="text-lg font-black text-white font-mono block">
-                              {curr} {due.toLocaleString()}
+                              {curr} {totalDue.toLocaleString()}
                             </span>
                           </div>
                         </div>
 
+                        <div className="max-w-sm mx-auto p-2.5 rounded-xl bg-black/50 border border-amber-500/30 text-[11px] text-amber-200/90 flex items-center justify-between">
+                          <span>Base: <strong>{curr} {baseBalance.toLocaleString()}</strong></span>
+                          <span>5% Tax: <strong>{curr} {balanceTax.toLocaleString()}</strong></span>
+                          <span className="text-white font-bold">Total: <strong>{curr} {totalDue.toLocaleString()}</strong></span>
+                        </div>
+
                         <p className="text-xs text-amber-200 font-black max-w-md mx-auto leading-relaxed bg-black/40 py-2 px-3 rounded-xl border border-amber-500/30">
-                          ⚠️ Verify payment of <strong>{curr} {due.toLocaleString()}</strong> balance before issuing {t.paxPerUnit || 1} wristband(s).
+                          ⚠️ Verify payment of <strong>{curr} {totalDue.toLocaleString()}</strong> ({curr} {baseBalance.toLocaleString()} + 5% tax) before issuing {t.paxPerUnit || 1} wristband(s).
                         </p>
                       </div>
                     );

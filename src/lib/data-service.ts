@@ -648,18 +648,19 @@ export async function performTicketCheckIn(
     (activeTicket.remainingBalance && activeTicket.remainingBalance > 0) ||
     activeTicket.orderNotes?.toLowerCase().includes("deposit")
   );
-  const depositPaid = Number(activeTicket.depositAmount || activeTicket.orderTotalAmount || 0);
-  const balanceDue = Number(
+  const baseBalance = Number(
     activeTicket.remainingBalance && activeTicket.remainingBalance > 0
       ? activeTicket.remainingBalance
-      : isDepositOrder && depositPaid > 0
-        ? depositPaid * 4
+      : isDepositOrder && (activeTicket.depositAmount || activeTicket.orderTotalAmount)
+        ? Number(activeTicket.depositAmount || activeTicket.orderTotalAmount) * 4
         : 0
   );
+  const taxAmount = Math.round(baseBalance * 0.05 * 100) / 100;
+  const totalBalanceDue = Math.round((baseBalance + taxAmount) * 100) / 100;
   const currency = activeTicket.orderCurrency || "AED";
   const balanceNotice =
-    isDepositOrder && balanceDue > 0
-      ? ` • ⚠️ COLLECT BALANCE: ${currency} ${balanceDue.toLocaleString()}`
+    isDepositOrder && totalBalanceDue > 0
+      ? ` • ⚠️ COLLECT BALANCE: ${currency} ${totalBalanceDue.toLocaleString()} (${currency} ${baseBalance.toLocaleString()} + 5% tax)`
       : "";
 
   return {
