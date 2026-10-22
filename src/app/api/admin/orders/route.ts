@@ -47,15 +47,31 @@ export async function GET(req: NextRequest) {
 
   if (query) {
     whereClauses.push(
-      `(LOWER(o.customer_name) LIKE $${paramIdx} OR LOWER(o.customer_email) LIKE $${paramIdx + 1} OR LOWER(o.order_number) LIKE $${paramIdx + 2} OR o.id IN (SELECT order_id FROM tickets WHERE LOWER(ticket_code) LIKE $${paramIdx + 3}))`,
+      `(LOWER(o.customer_name) LIKE $${paramIdx} OR LOWER(o.customer_email) LIKE $${paramIdx + 1} OR LOWER(o.order_number) LIKE $${paramIdx + 2} OR o.id = $${paramIdx + 3} OR LOWER(o.id) LIKE $${paramIdx + 4} OR o.id IN (SELECT order_id FROM tickets WHERE LOWER(ticket_code) LIKE $${paramIdx + 5}))`,
     );
-    params.push(`%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`);
-    paramIdx += 4;
+    params.push(`%${query}%`, `%${query}%`, `%${query}%`, query, `%${query}%`, `%${query}%`);
+    paramIdx += 6;
   }
 
   const whereSQL =
     whereClauses.length > 0 ? "WHERE " + whereClauses.join(" AND ") : "";
 
+  const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, Math.min(200, parseInt(req.nextUrl.searchParams.get("limit") || "50", 10)));
+  const offset = (page - 1) * limit;
+
+  // Total count for pagination
+  const countSql = `
+    SELECT COUNT(DISTINCT o.id) AS total
+    FROM orders o
+    LEFT JOIN tickets t ON o.id = t.order_id
+    LEFT JOIN events e  ON o.event_id = e.id
+    ${whereSQL}
+  `;
+  const countRes = await dbQueryOne<{ total: string | number }>(countSql, params);
+  const total = Number(countRes?.total || 0);
+
+  const dataParams = [...params, limit, offset];
   const sql = `
     SELECT
       o.id,
@@ -89,11 +105,19 @@ export async function GET(req: NextRequest) {
       o.status, o.notes, o.stripe_session_id, o.stripe_dispute_id, o.dispute_reason,
       o.void_reason, o.voided_at, o.voided_by, o.created_at, e.name
     ORDER BY o.created_at DESC
-    LIMIT 100
+    LIMIT $${paramIdx++} OFFSET $${paramIdx++}
   `;
 
-  const orders = await dbQuery(sql, params);
-  return NextResponse.json({ orders });
+  const orders = await dbQuery(sql, dataParams);
+  return NextResponse.json({
+    orders,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  });
 }
 
 // Issue Complimentary Pass (VIP / Artist / Sponsor)

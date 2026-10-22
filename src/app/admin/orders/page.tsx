@@ -19,11 +19,15 @@ import {
   Ban,
   ShieldAlert,
 } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [isCompModalOpen, setIsCompModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [resendingOrderId, setResendingOrderId] = useState<string | null>(null);
@@ -132,15 +136,23 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (targetPage = currentPage) => {
     try {
+      setIsLoading(true);
       const params = new URLSearchParams();
+      params.append("page", targetPage.toString());
+      params.append("limit", "50");
       if (searchQuery) params.append("q", searchQuery);
       if (selectedStatus !== "ALL") params.append("status", selectedStatus);
 
       const res = await fetch(`/api/admin/orders?${params.toString()}`);
       const data = await res.json();
       if (data.orders) setOrders(data.orders);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages || 1);
+        setTotalOrders(data.pagination.total || 0);
+        setCurrentPage(data.pagination.page || 1);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -149,12 +161,19 @@ export default function AdminOrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    setCurrentPage(1);
+    fetchOrders(1);
   }, [selectedStatus]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchOrders();
+    setCurrentPage(1);
+    fetchOrders(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchOrders(newPage);
   };
 
   // Export Gate Manifest CSV
@@ -478,6 +497,14 @@ export default function AdminOrdersPage() {
             </table>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalOrders}
+          pageSize={50}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* COMP PASS MODAL */}

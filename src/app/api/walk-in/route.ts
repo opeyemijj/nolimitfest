@@ -1,10 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dbQueryOne, dbExecute } from "@/lib/db";
+import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
 import { generateTicketSignature } from "@/lib/qrcode";
 import { calculateServiceFee } from "@/lib/fees";
 import crypto from "node:crypto";
 
 export const dynamic = "force-dynamic";
+
+export async function GET(req: NextRequest) {
+  try {
+    const eventId = req.nextUrl.searchParams.get("eventId") || "dubai-2026";
+    const tiers = await dbQuery<any>(
+      `SELECT
+         id,
+         event_id AS "eventId",
+         name,
+         category,
+         price,
+         currency,
+         status,
+         capacity,
+         sold_count AS "soldCount",
+         pax_per_unit AS "paxPerUnit",
+         badge,
+         color,
+         wristband_color AS "wristbandColor",
+         perks,
+         sort_order AS "sortOrder"
+       FROM ticket_tiers
+       WHERE (event_id = $1 OR event_id = 'dubai-2026')
+         AND status != 'inactive'
+       ORDER BY sort_order ASC, price ASC`,
+      [eventId],
+    );
+
+    return NextResponse.json({ tiers });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Failed to fetch ticket tiers." },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

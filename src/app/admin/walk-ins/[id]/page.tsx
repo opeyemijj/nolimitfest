@@ -39,20 +39,13 @@ export default function AdminWalkInDetailPage() {
   const fetchOrderDetail = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/admin/orders?q=${encodeURIComponent(id)}`);
+      const res = await fetch(`/api/admin/walk-ins/${encodeURIComponent(id)}`);
       const data = await res.json();
-      if (data.orders && data.orders.length > 0) {
-        const found = data.orders[0];
-        setOrder(found);
-
-        // Fetch tickets for this order
-        const buyersRes = await fetch(`/api/admin/buyers?q=${encodeURIComponent(found.orderNumber)}`);
-        const buyersData = await buyersRes.json();
-        if (buyersData.records) {
-          setTickets(buyersData.records);
-        }
+      if (res.ok && data.order) {
+        setOrder(data.order);
+        setTickets(data.tickets || []);
       } else {
-        setErrorMessage("Walk-in order not found.");
+        setErrorMessage(data.error || "Walk-in order not found.");
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to load order.");

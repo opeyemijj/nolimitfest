@@ -25,6 +25,10 @@ export default async function WalkInInvoicePage(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await props.params;
+  let cleanId = decodeURIComponent(id || "").trim();
+  if (cleanId.includes("/walk-in/invoice/")) {
+    cleanId = cleanId.split("/walk-in/invoice/").pop()?.split("?")[0] || cleanId;
+  }
 
   // 1. Fetch Order
   const order = await dbQueryOne<any>(
@@ -44,8 +48,8 @@ export default async function WalkInInvoicePage(props: {
        e.venue AS "eventVenue"
      FROM orders o
      LEFT JOIN events e ON o.event_id = e.id
-     WHERE o.id = $1 OR o.order_number = $1`,
-    [id],
+     WHERE o.id = $1 OR o.order_number = $1 OR o.order_number ILIKE $1`,
+    [cleanId],
   );
 
   if (!order) {

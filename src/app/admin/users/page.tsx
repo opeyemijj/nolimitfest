@@ -22,6 +22,7 @@ import {
   RefreshCw,
   ShieldAlert,
 } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 import {
   AuthUser,
   UserRole,
@@ -60,6 +61,8 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,6 +138,16 @@ export default function AdminUsersPage() {
       return true;
     });
   }, [users, roleFilter, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleFilter, statusFilter, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -550,7 +563,7 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredUsers.map((u) => {
+                {paginatedUsers.map((u) => {
                   const isAllEvents =
                     !u.assignedEvents ||
                     u.assignedEvents.includes("ALL") ||
@@ -698,6 +711,14 @@ export default function AdminUsersPage() {
             </table>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={filteredUsers.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* EDIT & CREATE MODAL */}

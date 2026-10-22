@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, hasPermission, getUserAssignedEvents } from "@/lib/auth";
-import { dbQuery } from "@/lib/db";
+import { dbQuery, dbQueryOne } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   const tierId = searchParams.get("tierId");
   const status = searchParams.get("status");
   const query = searchParams.get("q")?.trim().toLowerCase();
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, Math.min(200, parseInt(searchParams.get("limit") || "50", 10)));
+  const offset = (page - 1) * limit;
 
   const assignedEvents = getUserAssignedEvents(user);
 
@@ -155,41 +158,60 @@ export async function GET(req: NextRequest) {
     paramIndex++;
   }
 
-  if (whereClauses.length > 0) {
-    sql += " WHERE " + whereClauses.join(" AND ");
-  }
+  const whereSql = whereClauses.length > 0 ? " WHERE " + whereClauses.join(" AND ") : "";
 
-  sql += " ORDER BY o.created_at DESC, t.created_at DESC LIMIT 1000";
+  // Compute exact summary metrics across the entire filtered dataset
+  const summarySql = `
+    WITH filtered_orders AS (
+      SELECT DISTINCT o.id, o.status, o.total_amount
+      FROM tickets t
+      JOIN orders o ON t.order_id = o.id
+      LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+      LEFT JOIN events e ON o.event_id = e.id
+      ${whereSql}
+    ),
+    filtered_tickets AS (
+      SELECT t.id, t.status
+      FROM tickets t
+      JOIN orders o ON t.order_id = o.id
+      LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+      LEFT JOIN events e ON o.event_id = e.id
+      ${whereSql}
+    )
+    SELECT
+      (SELECT COUNT(*) FROM filtered_tickets) AS "totalPasses",
+      (SELECT COUNT(*) FROM filtered_orders) AS "totalBuyers",
+      (SELECT COALESCE(SUM(CASE WHEN status = 'CHECKED_IN' THEN 1 ELSE 0 END), 0) FROM filtered_tickets) AS "checkedInCount",
+      (SELECT COALESCE(SUM(CASE WHEN status = 'PAID' THEN total_amount ELSE 0 END), 0) FROM filtered_orders) AS "totalRevenue"
+  `;
 
-  const records = await dbQuery(sql, params);
+  const summaryRow = await dbQueryOne<any>(summarySql, params);
+  const totalPasses = Number(summaryRow?.totalPasses || 0);
+  const totalBuyers = Number(summaryRow?.totalBuyers || 0);
+  const totalRevenue = Number(summaryRow?.totalRevenue || 0);
+  const checkedInCount = Number(summaryRow?.checkedInCount || 0);
 
-  // Compute summary metrics on the filtered dataset
-  const uniqueOrderIds = new Set<string>();
-  let totalRevenue = 0;
-  let checkedInCount = 0;
+  const dataParams = [...params, limit, offset];
+  const dataSql = `${sql} ${whereSql} ORDER BY o.created_at DESC, t.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
 
-  for (const r of records) {
-    if (!uniqueOrderIds.has(r.orderId)) {
-      uniqueOrderIds.add(r.orderId);
-      if (r.orderStatus === "PAID") {
-        totalRevenue += Number(r.orderTotalAmount) || 0;
-      }
-    }
-    if (r.ticketStatus === "CHECKED_IN") {
-      checkedInCount++;
-    }
-  }
+  const records = await dbQuery(dataSql, dataParams);
 
   return NextResponse.json({
     records,
+    pagination: {
+      page,
+      limit,
+      total: totalPasses,
+      totalPages: Math.max(1, Math.ceil(totalPasses / limit)),
+    },
     summary: {
-      totalPasses: records.length,
-      totalBuyers: uniqueOrderIds.size,
+      totalPasses,
+      totalBuyers,
       totalRevenue,
       checkedInCount,
       checkedInRate:
-        records.length > 0
-          ? Math.round((checkedInCount / records.length) * 100)
+        totalPasses > 0
+          ? Math.round((checkedInCount / totalPasses) * 100)
           : 0,
     },
     events,

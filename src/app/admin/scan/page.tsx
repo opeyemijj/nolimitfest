@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Camera,
   QrCode,
@@ -25,6 +26,7 @@ import {
 import { DbTicket } from "@/lib/data-service";
 
 export default function GateScannerPage() {
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -143,10 +145,23 @@ export default function GateScannerPage() {
   // Handle scanned or entered code
   const handleDetectedCode = async (rawString: string) => {
     if (isProcessing) return;
+
+    // Intercept walk-in invoice QR codes
+    const trimmed = rawString.trim();
+    if (trimmed.includes("/admin/walk-ins/")) {
+      const walkInId = trimmed.split("/admin/walk-ins/").pop()?.split("?")[0]?.split("/")[0] || trimmed;
+      router.push(`/admin/walk-ins/${walkInId}`);
+      return;
+    }
+    if (trimmed.startsWith("WALK-") || trimmed.startsWith("ord-walkin-")) {
+      router.push(`/admin/walk-ins/${trimmed}`);
+      return;
+    }
+
     setIsProcessing(true);
 
     // Clean code: extract NLF-... from URL if URL was scanned
-    let code = rawString.trim();
+    let code = trimmed;
     if (code.includes("/tickets/")) {
       const parts = code.split("/tickets/");
       code = parts[1].split("?")[0].split("/")[0];

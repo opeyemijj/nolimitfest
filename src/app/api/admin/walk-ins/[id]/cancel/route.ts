@@ -14,12 +14,20 @@ export async function POST(
   }
 
   const { id } = await props.params;
+  let cleanId = decodeURIComponent(id || "").trim();
+  if (cleanId.includes("/admin/walk-ins/")) {
+    cleanId = cleanId.split("/admin/walk-ins/").pop()?.split("?")[0] || cleanId;
+  }
+  if (cleanId.includes("/walk-in/invoice/")) {
+    cleanId = cleanId.split("/walk-in/invoice/").pop()?.split("?")[0] || cleanId;
+  }
+
   const body = await req.json().catch(() => ({}));
   const reason = body.reason || "Cancelled at entrance counter by staff";
 
   const order = await dbQueryOne<any>(
-    "SELECT * FROM orders WHERE id = $1 OR order_number = $1",
-    [id],
+    "SELECT * FROM orders WHERE id = $1 OR order_number = $1 OR order_number ILIKE $1",
+    [cleanId],
   );
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });

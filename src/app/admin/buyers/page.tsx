@@ -26,6 +26,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 
 interface BuyerRecord {
   ticketId: string;
@@ -111,6 +112,9 @@ function BuyersTableContent() {
   const [searchQuery, setSearchQuery] = useState<string>(
     searchParams.get("q") || "",
   );
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalPasses, setTotalPasses] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -124,10 +128,12 @@ function BuyersTableContent() {
   }, [searchParams]);
 
   // Fetch data
-  const fetchData = async () => {
+  const fetchData = async (targetPage = currentPage) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
+      params.append("page", targetPage.toString());
+      params.append("limit", "50");
       if (selectedEventId && selectedEventId !== "ALL") {
         params.append("eventId", selectedEventId);
       }
@@ -146,6 +152,11 @@ function BuyersTableContent() {
       const data = await res.json();
 
       setRecords(data.records || []);
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages || 1);
+        setTotalPasses(data.pagination.total || 0);
+        setCurrentPage(data.pagination.page || 1);
+      }
       setSummary(
         data.summary || {
           totalPasses: 0,
@@ -165,7 +176,8 @@ function BuyersTableContent() {
   };
 
   useEffect(() => {
-    fetchData();
+    setCurrentPage(1);
+    fetchData(1);
   }, [selectedEventId, selectedTierId, selectedStatus]);
 
   // Filter available tiers dynamically based on selected event
@@ -191,7 +203,8 @@ function BuyersTableContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchData();
+    setCurrentPage(1);
+    fetchData(1);
   };
 
   const handleResetFilters = () => {
@@ -199,6 +212,12 @@ function BuyersTableContent() {
     setSelectedTierId("ALL");
     setSelectedStatus("ALL");
     setSearchQuery("");
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchData(newPage);
   };
 
   const hasActiveFilters =
@@ -742,6 +761,14 @@ function BuyersTableContent() {
             </table>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalPasses}
+          pageSize={50}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

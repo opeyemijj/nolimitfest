@@ -20,6 +20,7 @@ import {
   Users,
   Receipt,
 } from "lucide-react";
+import Pagination from "@/components/admin/Pagination";
 
 interface WalkInRecord {
   id: string;
@@ -51,11 +52,16 @@ export default function AdminWalkInsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalWalkIns, setTotalWalkIns] = useState(0);
 
-  const fetchWalkIns = async () => {
+  const fetchWalkIns = async (targetPage = currentPage) => {
     try {
       setIsLoading(true);
       const url = new URL("/api/admin/walk-ins", window.location.origin);
+      url.searchParams.set("page", targetPage.toString());
+      url.searchParams.set("limit", "50");
       if (statusFilter !== "ALL") url.searchParams.set("status", statusFilter);
       if (searchQuery.trim()) url.searchParams.set("q", searchQuery.trim());
 
@@ -64,6 +70,11 @@ export default function AdminWalkInsPage() {
         const data = await res.json();
         setRecords(data.walkIns || []);
         if (data.metrics) setMetrics(data.metrics);
+        if (data.pagination) {
+          setTotalPages(data.pagination.totalPages || 1);
+          setTotalWalkIns(data.pagination.total || 0);
+          setCurrentPage(data.pagination.page || 1);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch walk-ins:", err);
@@ -73,12 +84,19 @@ export default function AdminWalkInsPage() {
   };
 
   useEffect(() => {
-    fetchWalkIns();
+    setCurrentPage(1);
+    fetchWalkIns(1);
   }, [statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchWalkIns();
+    setCurrentPage(1);
+    fetchWalkIns(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchWalkIns(newPage);
   };
 
   const handleExportCsv = () => {
@@ -384,6 +402,14 @@ export default function AdminWalkInsPage() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalWalkIns}
+          pageSize={50}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

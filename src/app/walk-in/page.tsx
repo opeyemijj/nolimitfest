@@ -19,6 +19,7 @@ import {
   ArrowRight,
   ShieldCheck,
   QrCode,
+  Crown,
 } from "lucide-react";
 import { calculateServiceFee, SERVICE_FEE_LABEL } from "@/lib/fees";
 
@@ -48,6 +49,7 @@ export default function WalkInRegistrationPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [selectedTierId, setSelectedTierId] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
+  const [tierCategoryFilter, setTierCategoryFilter] = useState<"ALL" | "VIP" | "GENERAL">("ALL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -55,10 +57,10 @@ export default function WalkInRegistrationPage() {
   useEffect(() => {
     async function loadTiers() {
       try {
-        const res = await fetch("/api/admin/tickets?eventId=dubai-2026").catch(() => null);
+        const res = await fetch("/api/walk-in?eventId=dubai-2026").catch(() => null);
         if (res && res.ok) {
           const data = await res.json();
-          if (Array.isArray(data.tiers)) {
+          if (Array.isArray(data.tiers) && data.tiers.length > 0) {
             setTiers(data.tiers);
             const firstAvailable = data.tiers.find(
               (t: Tier) => t.status === "active",
@@ -70,7 +72,7 @@ export default function WalkInRegistrationPage() {
           }
         }
 
-        // Fallback default tiers if not authenticated or loading fails
+        // Comprehensive Fallback tiers covering all active festival passes & VIP tables
         const fallback: Tier[] = [
           {
             id: "tier-dxb-phase-3",
@@ -80,7 +82,19 @@ export default function WalkInRegistrationPage() {
             currency: "AED",
             status: "active",
             capacity: 500,
-            badge: "SELLING FAST",
+            paxPerUnit: 1,
+            badge: "NOW SELLING FAST",
+          },
+          {
+            id: "tier-dxb-door",
+            name: "Event Door / Walk-in",
+            category: "phase",
+            price: 250,
+            currency: "AED",
+            status: "active",
+            capacity: 300,
+            paxPerUnit: 1,
+            badge: "AT THE DOOR",
           },
           {
             id: "tier-dxb-squad-4",
@@ -90,7 +104,19 @@ export default function WalkInRegistrationPage() {
             currency: "AED",
             status: "active",
             capacity: 200,
-            badge: "GROUP SAVER",
+            paxPerUnit: 4,
+            badge: "SAVE 20%",
+          },
+          {
+            id: "tier-dxb-squad-6",
+            name: "Squad Pack (6 Passes)",
+            category: "group",
+            price: 800,
+            currency: "AED",
+            status: "active",
+            capacity: 100,
+            paxPerUnit: 6,
+            badge: "SAVE 20%",
           },
           {
             id: "tier-dxb-table-4",
@@ -100,7 +126,63 @@ export default function WalkInRegistrationPage() {
             currency: "AED",
             status: "active",
             capacity: 25,
+            paxPerUnit: 4,
             badge: "VIP ZONE",
+          },
+          {
+            id: "tier-dxb-table-5",
+            name: "Sofa Table For 5",
+            category: "table",
+            price: 3000,
+            currency: "AED",
+            status: "active",
+            capacity: 15,
+            paxPerUnit: 5,
+            badge: "VIP LOUNGE",
+          },
+          {
+            id: "tier-dxb-table-6",
+            name: "Sofa Table for 6",
+            category: "table",
+            price: 4000,
+            currency: "AED",
+            status: "active",
+            capacity: 15,
+            paxPerUnit: 6,
+            badge: "VIP HOSPITALITY",
+          },
+          {
+            id: "tier-dxb-table-8",
+            name: "VIP Cabana Table (8 Pax)",
+            category: "table",
+            price: 6000,
+            currency: "AED",
+            status: "active",
+            capacity: 10,
+            paxPerUnit: 8,
+            badge: "ULTRA VIP",
+          },
+          {
+            id: "tier-dxb-table-10",
+            name: "VIP Cabana for 10",
+            category: "vvip",
+            price: 7000,
+            currency: "AED",
+            status: "active",
+            capacity: 8,
+            paxPerUnit: 10,
+            badge: "ULTRA LUXURY",
+          },
+          {
+            id: "tier-dxb-vvip-dj",
+            name: "VVIP DJ Deck Experience (10 Pax)",
+            category: "vvip",
+            price: 10000,
+            currency: "AED",
+            status: "active",
+            capacity: 4,
+            paxPerUnit: 10,
+            badge: "EXCLUSIVE",
           },
         ];
         setTiers(fallback);
@@ -275,7 +357,45 @@ export default function WalkInRegistrationPage() {
                 <Ticket className="w-4 h-4 text-[#FFD600]" />
                 <span>2. Select Festival Ticket Tier</span>
               </h2>
-              <span className="text-[10px] text-gray-400">Live Inventory</span>
+              <span className="text-[10px] text-gray-400">All Active Passes</span>
+            </div>
+
+            {/* Filter Tabs: All / VIP & Tables / General Passes */}
+            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-black/50 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setTierCategoryFilter("ALL")}
+                className={`py-2 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all text-center ${
+                  tierCategoryFilter === "ALL"
+                    ? "bg-white/15 text-white shadow-md border border-white/20"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                All ({tiers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setTierCategoryFilter("VIP")}
+                className={`py-2 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 text-center ${
+                  tierCategoryFilter === "VIP"
+                    ? "bg-gradient-to-r from-amber-500/30 to-yellow-500/25 text-amber-300 border border-amber-400/60 shadow-md shadow-amber-500/20"
+                    : "text-amber-400/80 hover:text-amber-300"
+                }`}
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+                <span>VIP &amp; Tables</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTierCategoryFilter("GENERAL")}
+                className={`py-2 px-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all text-center ${
+                  tierCategoryFilter === "GENERAL"
+                    ? "bg-white/15 text-white shadow-md border border-white/20"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                General Passes
+              </button>
             </div>
 
             {isLoadingTiers ? (
@@ -283,55 +403,93 @@ export default function WalkInRegistrationPage() {
                 Loading live ticket tiers...
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-2.5 max-h-60 overflow-y-auto pr-1">
-                {tiers.map((t) => {
-                  const isSoldOut = t.status === "sold_out";
-                  const isSelected = selectedTierId === t.id;
+              <div className="grid grid-cols-1 gap-2.5 max-h-80 sm:max-h-96 overflow-y-auto pr-1">
+                {tiers
+                  .filter((t) => {
+                    const isVIP =
+                      t.category === "table" ||
+                      t.category === "vvip" ||
+                      t.name.toLowerCase().includes("vip") ||
+                      t.name.toLowerCase().includes("sofa") ||
+                      t.name.toLowerCase().includes("cabana");
 
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      disabled={isSoldOut}
-                      onClick={() => setSelectedTierId(t.id)}
-                      className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                        isSoldOut
-                          ? "bg-black/30 border-white/5 opacity-50 cursor-not-allowed"
-                          : isSelected
-                            ? "bg-gradient-to-r from-[#FF5722]/20 to-[#FFD600]/15 border-[#FF5722] shadow-lg shadow-orange-500/15"
-                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm">
-                            {t.name}
+                    if (tierCategoryFilter === "VIP") return isVIP;
+                    if (tierCategoryFilter === "GENERAL") return !isVIP;
+                    return true;
+                  })
+                  .map((t) => {
+                    const isSoldOut = t.status === "sold_out";
+                    const isSelected = selectedTierId === t.id;
+                    const isVIP =
+                      t.category === "table" ||
+                      t.category === "vvip" ||
+                      t.name.toLowerCase().includes("vip") ||
+                      t.name.toLowerCase().includes("sofa") ||
+                      t.name.toLowerCase().includes("cabana");
+
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        disabled={isSoldOut}
+                        onClick={() => setSelectedTierId(t.id)}
+                        className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                          isSoldOut
+                            ? "bg-black/30 border-white/5 opacity-50 cursor-not-allowed"
+                            : isSelected
+                              ? isVIP
+                                ? "bg-gradient-to-r from-amber-500/25 to-yellow-500/20 border-amber-400 shadow-lg shadow-amber-500/20"
+                                : "bg-gradient-to-r from-[#FF5722]/20 to-[#FFD600]/15 border-[#FF5722] shadow-lg shadow-orange-500/15"
+                              : isVIP
+                                ? "bg-amber-500/[0.04] border-amber-500/20 hover:bg-amber-500/10 hover:border-amber-400/40"
+                                : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {isVIP && (
+                              <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            )}
+                            <span className={`font-bold text-sm ${isVIP ? "text-amber-200" : "text-white"}`}>
+                              {t.name}
+                            </span>
+                            {t.badge && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${
+                                  isVIP
+                                    ? "bg-amber-500/20 border border-amber-400/50 text-amber-300"
+                                    : "bg-[#FF5722]/20 border border-[#FF5722]/40 text-[#FF6E40]"
+                                }`}
+                              >
+                                {t.badge}
+                              </span>
+                            )}
+                            {isSoldOut && (
+                              <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-black uppercase">
+                                SOLD OUT
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-gray-400 block font-mono">
+                            {isVIP
+                              ? `VIP Hospitality • Includes ${t.paxPerUnit || 1} Guest Passes`
+                              : t.paxPerUnit && t.paxPerUnit > 1
+                                ? `Squad Pack • Includes ${t.paxPerUnit} Guest Passes`
+                                : "Festival Admission Pass"}
                           </span>
-                          {t.badge && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#FF5722]/20 border border-[#FF5722]/40 text-[#FF6E40] text-[9px] font-black uppercase">
-                              {t.badge}
-                            </span>
-                          )}
-                          {isSoldOut && (
-                            <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[9px] font-black uppercase">
-                              SOLD OUT
-                            </span>
-                          )}
                         </div>
-                        <span className="text-[11px] text-gray-400 block font-mono">
-                          {t.category === "table" ? "Table Hospitality Pass" : "Festival Admission Pass"}
-                        </span>
-                      </div>
 
-                      <div className="text-right pl-3">
-                        <span className="text-base font-black text-white font-mono block">
-                          {t.currency} {Number(t.price).toLocaleString()}
-                        </span>
-                        <span className="text-[10px] text-gray-400 block">per pass</span>
-                      </div>
-                    </button>
-                  );
-                })}
+                        <div className="text-right pl-3 shrink-0">
+                          <span className={`text-base font-black font-mono block ${isVIP ? "text-amber-300" : "text-white"}`}>
+                            {t.currency} {Number(t.price).toLocaleString()}
+                          </span>
+                          <span className="text-[10px] text-gray-400 block">
+                            {isVIP || (t.paxPerUnit && t.paxPerUnit > 1) ? "package total" : "per pass"}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
             )}
           </div>

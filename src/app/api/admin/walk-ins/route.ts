@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, hasPermission } from "@/lib/auth";
-import { dbQuery } from "@/lib/db";
+import { dbQuery, dbQueryOne } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get("status") || "ALL";
   const query = searchParams.get("q")?.trim().toLowerCase();
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.max(1, Math.min(200, parseInt(searchParams.get("limit") || "50", 10)));
+  const offset = (page - 1) * limit;
 
   const whereClauses: string[] = [
     `(o.order_number LIKE 'WALK-%' OR o.notes ILIKE '%walk-in%')`
@@ -35,6 +38,19 @@ export async function GET(req: NextRequest) {
 
   const whereSql = whereClauses.length > 0 ? "WHERE " + whereClauses.join(" AND ") : "";
 
+  // Count total for pagination
+  const countSql = `
+    SELECT COUNT(DISTINCT o.id) AS total
+    FROM orders o
+    LEFT JOIN tickets t ON o.id = t.order_id
+    LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
+    LEFT JOIN events e ON o.event_id = e.id
+    ${whereSql}
+  `;
+  const countRes = await dbQueryOne<{ total: string | number }>(countSql, params);
+  const total = Number(countRes?.total || 0);
+
+  const dataParams = [...params, limit, offset];
   const sql = `
     SELECT
       o.id,
@@ -60,9 +76,10 @@ export async function GET(req: NextRequest) {
     GROUP BY o.id, o.order_number, o.customer_name, o.customer_email, o.customer_phone,
              o.total_amount, o.currency, o.status, o.notes, o.created_at, e.name
     ORDER BY o.created_at DESC
+    LIMIT $${paramIdx++} OFFSET $${paramIdx++}
   `;
 
-  const walkIns = await dbQuery(sql, params);
+  const walkIns = await dbQuery(sql, dataParams);
 
   // Compute live counter metrics
   const allWalkIns = await dbQuery<any>(`
@@ -84,5 +101,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     walkIns,
     metrics,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
   });
 }
