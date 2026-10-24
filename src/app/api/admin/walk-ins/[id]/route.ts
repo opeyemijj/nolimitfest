@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser, hasPermission } from "@/lib/auth";
-import { dbQuery, dbQueryOne } from "@/lib/db";
+import { dbQuery, dbQueryOne, dbExecute } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -87,5 +87,55 @@ export async function GET(
   return NextResponse.json({
     order,
     tickets,
+  });
+}
+
+export async function DELETE(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> },
+) {
+  const user = await getAuthUser();
+  if (
+    !user ||
+    (!hasPermission(user, "walkins") &&
+      !hasPermission(user, "orders"))
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await props.params;
+  let cleanId = decodeURIComponent(id || "").trim();
+
+  if (cleanId.includes("/admin/walk-ins/")) {
+    cleanId = cleanId.split("/admin/walk-ins/").pop()?.split("?")[0] || cleanId;
+  }
+  if (cleanId.includes("/walk-in/invoice/")) {
+    cleanId = cleanId.split("/walk-in/invoice/").pop()?.split("?")[0] || cleanId;
+  }
+
+  if (!cleanId) {
+    return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
+  }
+
+  // Look up order
+  const order = await dbQueryOne<any>(
+    "SELECT id, order_number, customer_name, status FROM orders WHERE id = $1 OR order_number = $1 OR order_number ILIKE $1",
+    [cleanId],
+  );
+
+  if (!order) {
+    return NextResponse.json({ error: "Walk-in order not found." }, { status: 404 });
+  }
+
+  // Delete all associated tickets
+  await dbExecute("DELETE FROM tickets WHERE order_id = $1", [order.id]);
+
+  // Delete the order itself
+  await dbExecute("DELETE FROM orders WHERE id = $1", [order.id]);
+
+  return NextResponse.json({
+    success: true,
+    message: `Order #${order.order_number} and all associated tickets have been deleted.`,
+    deletedOrder: order,
   });
 }

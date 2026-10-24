@@ -94,9 +94,13 @@ export async function GET(req: NextRequest) {
       o.created_at           AS "createdAt",
       e.name                 AS "eventName",
       COUNT(t.id)            AS "ticketsCount",
-      SUM(CASE WHEN t.status = 'CHECKED_IN' THEN 1 ELSE 0 END) AS "checkedInCount"
+      COALESCE(SUM(COALESCE(tt.pax_per_unit, 1)), 0) AS "expectedGuests",
+      STRING_AGG(DISTINCT tt.name, ', ') AS "tierNames",
+      SUM(CASE WHEN t.status = 'CHECKED_IN' THEN 1 ELSE 0 END) AS "checkedInCount",
+      SUM(CASE WHEN t.status = 'CHECKED_IN' THEN COALESCE(tt.pax_per_unit, 1) ELSE 0 END) AS "checkedInGuests"
     FROM orders o
     LEFT JOIN tickets t ON o.id = t.order_id
+    LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
     LEFT JOIN events e  ON o.event_id = e.id
     ${whereSQL}
     GROUP BY

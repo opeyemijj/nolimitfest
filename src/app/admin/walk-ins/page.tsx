@@ -19,6 +19,7 @@ import {
   DollarSign,
   Users,
   Receipt,
+  Trash2,
 } from "lucide-react";
 import Pagination from "@/components/admin/Pagination";
 
@@ -97,6 +98,29 @@ export default function AdminWalkInsPage() {
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     fetchWalkIns(newPage);
+  };
+
+  const handleDeleteWalkIn = async (record: WalkInRecord) => {
+    if (
+      !confirm(
+        `Permanently delete walk-in order #${record.orderNumber} for ${record.customerName}? This will completely remove the order, recorded payment, and associated tickets from the system.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/walk-ins/${record.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fetchWalkIns(currentPage);
+      } else {
+        alert(data.error || "Failed to delete walk-in order.");
+      }
+    } catch {
+      alert("Network error deleting order.");
+    }
   };
 
   const handleExportCsv = () => {
@@ -383,17 +407,28 @@ export default function AdminWalkInsPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <Link
-                          href={`/admin/walk-ins/${r.id}`}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 transition-all ${
-                            isPending
-                              ? "bg-amber-400 hover:bg-amber-300 text-black shadow-md shadow-amber-500/20"
-                              : "bg-white/10 hover:bg-white/20 text-white"
-                          }`}
-                        >
-                          <span>{isPending ? "Collect" : "View"}</span>
-                          <ArrowRight className="w-3 h-3" />
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/admin/walk-ins/${r.id}`}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1 transition-all ${
+                              isPending
+                                ? "bg-amber-400 hover:bg-amber-300 text-black shadow-md shadow-amber-500/20"
+                                : "bg-white/10 hover:bg-white/20 text-white"
+                            }`}
+                          >
+                            <span>{isPending ? "Collect" : "View"}</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWalkIn(r)}
+                            className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                            title="Delete Walk-in Record & Tickets"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

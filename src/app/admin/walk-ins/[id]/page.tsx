@@ -19,6 +19,7 @@ import {
   MessageCircle,
   Sparkles,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 
 export default function AdminWalkInDetailPage() {
@@ -117,6 +118,34 @@ export default function AdminWalkInDetailPage() {
     }
   };
 
+  const handleDeleteOrder = async () => {
+    if (
+      !confirm(
+        `Permanently delete walk-in order #${order.orderNumber} for ${order.customerName}? This will completely remove the order record, recorded payment, and associated tickets from the database.`,
+      )
+    ) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`/api/admin/walk-ins/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || "Order deleted successfully.");
+        router.push("/admin/walk-ins");
+      } else {
+        alert(data.error || "Failed to delete order.");
+      }
+    } catch {
+      alert("Network error deleting order.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#08090E] text-white p-6 flex items-center justify-center">
@@ -169,9 +198,21 @@ export default function AdminWalkInDetailPage() {
             <span>Back to Walk-in Desk</span>
           </Link>
 
-          <span className="text-xs font-mono font-bold text-gray-400">
-            {order.orderNumber}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono font-bold text-gray-400">
+              {order.orderNumber}
+            </span>
+            <button
+              type="button"
+              onClick={handleDeleteOrder}
+              disabled={isProcessing}
+              className="px-2.5 py-1 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 text-xs font-bold inline-flex items-center gap-1.5 transition-colors disabled:opacity-40"
+              title="Delete Walk-in Order Record & Tickets"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
 
         {/* Status Notification */}

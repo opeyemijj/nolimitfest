@@ -95,6 +95,7 @@ function BuyersTableContent() {
   const [summary, setSummary] = useState({
     totalPasses: 0,
     totalBuyers: 0,
+    totalExpectedGuests: 0,
     totalRevenue: 0,
     checkedInCount: 0,
     checkedInRate: 0,
@@ -319,11 +320,27 @@ function BuyersTableContent() {
       )}
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* Total Expected Guests */}
+        <div className="p-4 rounded-2xl bg-gradient-to-b from-[#00E5FF]/10 to-[#121524] border border-[#00E5FF]/40 space-y-1">
+          <div className="flex items-center justify-between text-[#00E5FF]">
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              Expected Guests
+            </span>
+            <Users className="w-4 h-4 text-[#00E5FF]" />
+          </div>
+          <p className="text-2xl font-black text-white font-mono">
+            {summary.totalExpectedGuests.toLocaleString()}
+          </p>
+          <p className="text-[10px] text-cyan-300 font-semibold">
+            Based on squad &amp; table pax sizes
+          </p>
+        </div>
+
         <div className="p-4 rounded-2xl bg-[#121524] border border-white/10 space-y-1">
           <div className="flex items-center justify-between text-gray-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">
-              Total Guest Passes
+              Total Passes Sold
             </span>
             <Tag className="w-4 h-4 text-[#FF5722]" />
           </div>
@@ -363,7 +380,7 @@ function BuyersTableContent() {
           <p className="text-[10px] text-gray-400">Confirmed paid orders</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#121524] border border-white/10 space-y-1">
+        <div className="p-4 rounded-2xl bg-[#121524] border border-white/10 space-y-1 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between text-gray-400">
             <span className="text-[11px] font-bold uppercase tracking-wider">
               Gate Check-in

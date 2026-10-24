@@ -18,6 +18,7 @@ import {
   Send,
   Ban,
   ShieldAlert,
+  Users,
 } from "lucide-react";
 import Pagination from "@/components/admin/Pagination";
 
@@ -354,7 +355,7 @@ export default function AdminOrdersPage() {
                 <tr className="border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider">
                   <th className="py-3 px-3">Order Number</th>
                   <th className="py-3 px-3">Customer / Guest</th>
-                  <th className="py-3 px-3">Passes</th>
+                  <th className="py-3 px-3">Passes &amp; Expected Guests</th>
                   <th className="py-3 px-3">Check-In Status</th>
                   <th className="py-3 px-3">Amount</th>
                   <th className="py-3 px-3">Status</th>
@@ -384,15 +385,23 @@ export default function AdminOrdersPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3.5 px-3 font-medium text-gray-300">
-                      {ord.ticketsCount || 1} pass(es)
+                    <td className="py-3.5 px-3">
+                      <div className="font-bold text-white flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#00E5FF]" />
+                        <span>
+                          {Number(ord.expectedGuests) || Number(ord.ticketsCount) || 1} Expected Guest{Number(ord.expectedGuests) === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-400">
+                        {ord.ticketsCount || 1} pass(es) {ord.tierNames ? `• ${ord.tierNames}` : ""}
+                      </div>
                     </td>
                     <td className="py-3.5 px-3">
                       <span className="text-[11px] text-gray-300">
                         <strong className="text-emerald-400">
-                          {ord.checkedInCount || 0}
+                          {ord.checkedInGuests ?? ord.checkedInCount ?? 0}
                         </strong>{" "}
-                        / {ord.ticketsCount || 1} Checked In
+                        / {Number(ord.expectedGuests) || Number(ord.ticketsCount) || 1} Admitted
                       </span>
                     </td>
                     <td className="py-3.5 px-3 font-mono font-bold text-[#FFD600]">

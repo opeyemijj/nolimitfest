@@ -171,7 +171,7 @@ export async function GET(req: NextRequest) {
       ${whereSql}
     ),
     filtered_tickets AS (
-      SELECT t.id, t.status
+      SELECT t.id, t.status, COALESCE(tt.pax_per_unit, 1) AS pax_per_unit, o.status AS order_status
       FROM tickets t
       JOIN orders o ON t.order_id = o.id
       LEFT JOIN ticket_tiers tt ON t.tier_id = tt.id
@@ -181,6 +181,7 @@ export async function GET(req: NextRequest) {
     SELECT
       (SELECT COUNT(*) FROM filtered_tickets) AS "totalPasses",
       (SELECT COUNT(*) FROM filtered_orders) AS "totalBuyers",
+      (SELECT COALESCE(SUM(CASE WHEN order_status = 'PAID' AND status != 'VOIDED' AND status != 'CANCELLED' THEN pax_per_unit ELSE 0 END), 0) FROM filtered_tickets) AS "totalExpectedGuests",
       (SELECT COALESCE(SUM(CASE WHEN status = 'CHECKED_IN' THEN 1 ELSE 0 END), 0) FROM filtered_tickets) AS "checkedInCount",
       (SELECT COALESCE(SUM(CASE WHEN status = 'PAID' THEN total_amount ELSE 0 END), 0) FROM filtered_orders) AS "totalRevenue"
   `;
@@ -188,6 +189,7 @@ export async function GET(req: NextRequest) {
   const summaryRow = await dbQueryOne<any>(summarySql, params);
   const totalPasses = Number(summaryRow?.totalPasses || 0);
   const totalBuyers = Number(summaryRow?.totalBuyers || 0);
+  const totalExpectedGuests = Number(summaryRow?.totalExpectedGuests || 0);
   const totalRevenue = Number(summaryRow?.totalRevenue || 0);
   const checkedInCount = Number(summaryRow?.checkedInCount || 0);
 
@@ -207,6 +209,7 @@ export async function GET(req: NextRequest) {
     summary: {
       totalPasses,
       totalBuyers,
+      totalExpectedGuests,
       totalRevenue,
       checkedInCount,
       checkedInRate:

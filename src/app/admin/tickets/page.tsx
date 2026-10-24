@@ -227,16 +227,16 @@ export default function AdminTicketsPage() {
                   </span>
                 </div>
 
-                {/* Progress bar */}
-                <div className="mt-4 space-y-1">
+                {/* Progress bar & Expected Guests */}
+                <div className="mt-4 space-y-1.5">
                   <div className="flex justify-between text-[11px] text-gray-400">
                     <span>
                       Sold:{" "}
-                      <strong className="text-white">{tier.soldCount}</strong>
+                      <strong className="text-white">{tier.soldCount} passes</strong>
                     </span>
                     <span>
                       Remaining:{" "}
-                      <strong className="text-emerald-400">{remaining}</strong>
+                      <strong className="text-emerald-400">{remaining} passes</strong>
                     </span>
                   </div>
                   <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
@@ -246,6 +246,20 @@ export default function AdminTicketsPage() {
                         width: `${(tier.soldCount / tier.capacity) * 100}%`,
                       }}
                     />
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                    <span className="text-gray-400 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <span>Expected Guests:</span>
+                    </span>
+                    <span className="font-mono font-black text-[#00E5FF]">
+                      {tier.soldCount * (tier.paxPerUnit || 1)} Guests
+                      {tier.paxPerUnit > 1 && (
+                        <span className="text-[10px] text-gray-400 font-normal ml-1">
+                          ({tier.soldCount} × {tier.paxPerUnit} pax)
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </div>
 
